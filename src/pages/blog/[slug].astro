@@ -1,0 +1,38 @@
+---
+import { getCollection, render } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+  return posts.map(post => ({
+    params: { slug: post.id },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+---
+
+<Layout title={post.data.title} description={post.data.description}>
+  <article class="bg-white rounded-lg shadow-sm p-8">
+    <h1 class="text-3xl font-bold mb-3 text-gray-900">{post.data.title}</h1>
+
+    <div class="flex items-center gap-3 text-sm text-gray-400 mb-6 pb-6 border-b">
+      <time datetime={post.data.pubDate.toISOString()}>
+        {post.data.pubDate.toLocaleDateString('ja-JP')}
+      </time>
+      {post.data.tags && post.data.tags.map(tag => (
+        <span class="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full text-xs">{tag}</span>
+      ))}
+    </div>
+
+    <div class="prose prose-indigo max-w-none">
+      <Content />
+    </div>
+  </article>
+
+  <div class="mt-6">
+    <a href="/" class="text-indigo-600 hover:underline text-sm">&larr; 記事一覧に戻る</a>
+  </div>
+</Layout>

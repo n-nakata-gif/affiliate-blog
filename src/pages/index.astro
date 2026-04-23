@@ -1,0 +1,34 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../layouts/Layout.astro';
+
+const posts = (await getCollection('blog')).sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+);
+---
+
+<Layout title="My Affiliate Blog - ホーム" description="おすすめ商品・サービスのレビューブログ">
+  <h1 class="text-3xl font-bold mb-2">My Affiliate Blog</h1>
+  <p class="text-gray-500 mb-8">おすすめ商品・サービスをレビューしています</p>
+
+  <div class="space-y-6">
+    {posts.map(post => (
+      <article class="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
+        <a href={`/blog/${post.id}`}>
+          <h2 class="text-xl font-semibold text-indigo-700 hover:underline mb-2">
+            {post.data.title}
+          </h2>
+        </a>
+        <p class="text-gray-600 text-sm mb-3">{post.data.description}</p>
+        <div class="flex items-center gap-3 text-xs text-gray-400">
+          <time datetime={post.data.pubDate.toISOString()}>
+            {post.data.pubDate.toLocaleDateString('ja-JP')}
+          </time>
+          {post.data.tags && post.data.tags.map(tag => (
+            <span class="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full">{tag}</span>
+          ))}
+        </div>
+      </article>
+    ))}
+  </div>
+</Layout>
