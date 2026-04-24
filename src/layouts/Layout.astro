@@ -3,7 +3,8 @@ export interface Props {
   title: string;
   description?: string;
 }
-const { title, description = 'アフィリエイトブログ' } = Astro.props;
+
+const { title, description = 'NEXIGENブログ' } = Astro.props;
 const adsenseId = import.meta.env.PUBLIC_ADSENSE_ID;
 ---
 
@@ -26,7 +27,7 @@ const adsenseId = import.meta.env.PUBLIC_ADSENSE_ID;
   <body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
     <header class="bg-white shadow-sm">
       <div class="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
-        <a href="/" class="text-xl font-bold text-indigo-600 hover:text-indigo-800">My Affiliate Blog</a>
+        <a href="/" class="text-xl font-bold text-indigo-600 hover:text-indigo-800">NEXIGEN</a>
         <nav class="flex gap-4 text-sm">
           <a href="/" class="hover:text-indigo-600">ホーム</a>
           <a href="/privacy" class="hover:text-indigo-600">プライバシーポリシー</a>
@@ -34,12 +35,10 @@ const adsenseId = import.meta.env.PUBLIC_ADSENSE_ID;
         </nav>
       </div>
     </header>
-
     <main class="flex-1 max-w-3xl mx-auto px-4 py-8 w-full">
       {adsenseId && (
         <div class="mb-6">
-          <ins
-            class="adsbygoogle"
+          <ins class="adsbygoogle"
             style="display:block"
             data-ad-client={adsenseId}
             data-ad-slot="AUTO"
@@ -49,13 +48,10 @@ const adsenseId = import.meta.env.PUBLIC_ADSENSE_ID;
           <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
         </div>
       )}
-
       <slot />
-
       {adsenseId && (
         <div class="mt-8">
-          <ins
-            class="adsbygoogle"
+          <ins class="adsbygoogle"
             style="display:block"
             data-ad-client={adsenseId}
             data-ad-slot="AUTO"
@@ -66,7 +62,6 @@ const adsenseId = import.meta.env.PUBLIC_ADSENSE_ID;
         </div>
       )}
     </main>
-
     <footer class="bg-white border-t mt-8">
       <div class="max-w-3xl mx-auto px-4 py-6 text-center text-sm text-gray-500">
         <p>
@@ -74,7 +69,7 @@ const adsenseId = import.meta.env.PUBLIC_ADSENSE_ID;
           &nbsp;|&nbsp;
           <a href="/contact" class="hover:underline">お問い合わせ</a>
         </p>
-        <p class="mt-2">&copy; {new Date().getFullYear()} My Affiliate Blog. All rights reserved.</p>
+        <p class="mt-2">&copy; {new Date().getFullYear()} NEXIGEN. All rights reserved.</p>
         <p class="mt-1 text-xs">本サイトはアフィリエイト広告を利用しています。</p>
       </div>
     </footer>
