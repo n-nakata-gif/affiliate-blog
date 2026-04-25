@@ -1,5 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
+
+const mailtoHref = "mailto:nori.nakata1004@gmail.com?subject=%E3%80%90NEXIGEN%E3%83%96%E3%83%AD%E3%82%B0%20%E3%81%8A%E5%95%8F%E3%81%84%E5%90%88%E3%82%8F%E3%81%9B%E3%80%91";
 ---
 
 <Layout title="お問い合わせ | NEXIGEN" description="NEXIGENへのお問い合わせはこちらから。">
@@ -9,23 +11,22 @@ import Layout from '../layouts/Layout.astro';
       <p class="text-sm" style="color:#c4b5fd;">ご質問・ご意見はこちらからお送りください。</p>
     </div>
 
-    <div class="px-8 py-8">
-      {/* Google フォームの URL を取得したら下記の src を差し替えてください */}
-      <iframe
-        src="https://docs.google.com/forms/d/e/【フォームIDをここに入力】/viewform?embedded=true"
-        width="100%"
-        height="700"
-        frameborder="0"
-        marginheight="0"
-        marginwidth="0"
-        class="rounded-lg"
-        title="お問い合わせフォーム"
-      >
-        読み込んでいます…
-      </iframe>
+    <div class="px-8 py-12 flex flex-col items-center text-center gap-6">
+      <p class="text-slate-600 text-base leading-relaxed">
+        お問い合わせはメールにてお受けしています。<br>
+        下記のボタンからメールをお送りください。
+      </p>
 
-      <p class="mt-5 text-xs text-slate-400 text-center">
-        ※ フォームが表示されない場合は、ページを再読み込みしてください。
+      <a
+        href={mailtoHref}
+        class="inline-block px-8 py-4 rounded-xl text-white font-bold text-base transition-opacity hover:opacity-80"
+        style="background: linear-gradient(135deg, #7c3aed, #4f46e5);"
+      >
+        メールでお問い合わせ
+      </a>
+
+      <p class="text-xs text-slate-400">
+        件名には「【NEXIGENブログ お問い合わせ】」が自動入力されます。
       </p>
     </div>
   </div>
