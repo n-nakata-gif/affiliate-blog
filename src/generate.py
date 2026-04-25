@@ -1,3 +1,4 @@
+import argparse
 import os
 import sys
 import re
@@ -21,6 +22,66 @@ MODEL = "claude-opus-4-7"
 MIN_CHARS = 3000
 TOPICS_PATH = "data/topics.json"
 
+GENRE_CONFIG = {
+    "business": {
+        "system": (
+            "あなたはビジネス・副業ジャンルの誠実な日本語ブログライターです。"
+            "読者の利益を最優先にし、指定された構成・文字数・形式を厳守して、"
+            "読者が「読んでよかった」と思える記事を書きます。"
+            "デメリットや注意点も正直に書き、誇張表現は使いません。"
+        ),
+        "default_tags": ["ビジネス", "副業"],
+        "article_type": "business",
+        "genre_note": "",
+    },
+    "investment": {
+        "system": (
+            "あなたは投資・資産運用ジャンルの誠実な日本語ブログライターです。"
+            "読者の資産形成を支援するため、リスクと利益を公平に伝えます。"
+            "「必ず儲かる」等の断言は絶対に使わず、投資にはリスクがあることを必ず明記します。"
+            "税制・制度情報は最新情報を参照するよう促し、専門家への相談を推奨します。"
+        ),
+        "default_tags": ["投資", "資産運用", "NISA"],
+        "article_type": "investment",
+        "genre_note": (
+            "\n## 投資記事の必須事項\n"
+            "- 「投資にはリスクがあります」を必ず記載する\n"
+            "- 「必ず儲かる」「元本保証」等の表現は使わない\n"
+            "- 税制・制度情報には「最新情報は金融機関・税務署でご確認ください」を添える\n"
+        ),
+    },
+    "travel": {
+        "system": (
+            "あなたは旅行情報の魅力的な日本語ブログライターです。"
+            "読者が旅先をイメージできるよう、具体的な場所・費用・移動手段を盛り込みます。"
+            "実際に行けるような実用的な情報と、旅の魅力を生き生きと伝えます。"
+        ),
+        "default_tags": ["旅行", "観光", "旅"],
+        "article_type": "travel",
+        "genre_note": (
+            "\n## 旅行記事の必須事項\n"
+            "- 具体的なアクセス方法・所要時間・費用の目安を含める\n"
+            "- 「〜年〜月時点の情報です」など情報の時点を明示する\n"
+            "- 季節・天候などの注意点を記載する\n"
+        ),
+    },
+    "gourmet": {
+        "system": (
+            "あなたはグルメ・食の楽しさを伝える日本語ブログライターです。"
+            "読者が食べたくなるような臨場感と具体性を大切にし、"
+            "味・食感・香り・見た目などの感覚的な描写を豊かに表現します。"
+        ),
+        "default_tags": ["グルメ", "食べ物", "グルメスポット"],
+        "article_type": "gourmet",
+        "genre_note": (
+            "\n## グルメ記事の必須事項\n"
+            "- 味・食感・香り・見た目などの五感に訴える描写を含める\n"
+            "- 価格帯・営業時間・定休日などの実用情報を記載する\n"
+            "- 「〜年〜月時点の情報です」など情報の時点を明示する\n"
+        ),
+    },
+}
+
 
 # ── トピック読み込み ──────────────────────────────────────────
 
@@ -29,14 +90,16 @@ def load_topics() -> list:
         return json.load(f)
 
 
-def select_topic(topics: list, date_str: str) -> dict:
+def select_topic(topics: list, date_str: str, genre: str) -> dict:
     if not topics:
         raise ValueError(f"{TOPICS_PATH} が空です")
-    # analyze.py がランク順に並べた想定で先頭を使用、日付ローテーションでバリエーションを確保
-    idx = int(date_str) % len(topics)
-    t = topics[idx]
+    filtered = [t for t in topics if t.get("genre", "business") == genre]
+    if not filtered:
+        filtered = topics
+    idx = int(date_str) % len(filtered)
+    t = filtered[idx]
     if isinstance(t, str):
-        return {"title": t, "tags": ["ビジネス", "副業"]}
+        return {"title": t, "genre": genre, "tags": GENRE_CONFIG[genre]["default_tags"]}
     return t
 
 
@@ -61,13 +124,14 @@ def count_body_chars(md: str) -> int:
 
 # ── 記事生成（Claude API） ────────────────────────────────────
 
-def build_prompt(topic: dict, date_str: str) -> str:
+def build_prompt(topic: dict, date_str: str, genre: str) -> str:
     today = datetime.strptime(date_str, "%Y%m%d").strftime("%Y-%m-%d")
+    config = GENRE_CONFIG.get(genre, GENRE_CONFIG["business"])
 
-    title_hint  = _get(topic, "title", "topic", "keyword")
-    tags        = _get(topic, "tags", default=["ビジネス", "副業"])
-    summary     = _get(topic, "summary", "notes", "description",
-                        default="記事タイトルから最適な内容を考えてください")
+    title_hint    = _get(topic, "title", "topic", "keyword")
+    tags          = _get(topic, "tags", default=config["default_tags"])
+    summary       = _get(topic, "summary", "notes", "description",
+                          default="記事タイトルから最適な内容を考えてください")
     key_points    = _get(topic, "key_points", "points", default=[])
     keyword_main  = _get(topic, "keyword_main",  default="")
     keyword_sub   = _get(topic, "keyword_sub",   default=[])
@@ -77,7 +141,6 @@ def build_prompt(topic: dict, date_str: str) -> str:
     kp_str   = ("\n".join(f"- {p}" for p in key_points)
                 if key_points else "（自由に構成してください）")
 
-    # SEOフィールドがある場合のみセクションを生成
     if keyword_main:
         sub_str = (json.dumps(keyword_sub, ensure_ascii=False)
                    if isinstance(keyword_sub, list) else str(keyword_sub))
@@ -92,14 +155,16 @@ def build_prompt(topic: dict, date_str: str) -> str:
     else:
         seo_section = ""
 
-    return f"""以下のトピックについて、ビジネス・副業ジャンルのブログ記事（Markdown形式）を作成してください。
+    genre_note = config["genre_note"]
+
+    return f"""以下のトピックについて、ブログ記事（Markdown形式）を作成してください。
 
 ## トピック情報
 - テーマ: {title_hint}
 - 概要: {summary}
 - キーポイント:
 {kp_str}
-{seo_section}
+{seo_section}{genre_note}
 ## 記事の要件
 
 ### frontmatter（必ずこの形式で出力）
@@ -153,19 +218,15 @@ tags: {tags_str}
 """
 
 
-def generate_article(client: anthropic.Anthropic, prompt: str) -> str:
+def generate_article(client: anthropic.Anthropic, prompt: str, genre: str) -> str:
+    config = GENRE_CONFIG.get(genre, GENRE_CONFIG["business"])
     response = client.messages.create(
         model=MODEL,
         max_tokens=8096,
         system=[
             {
                 "type": "text",
-                "text": (
-                    "あなたはビジネス・副業ジャンルの誠実な日本語ブログライターです。"
-                    "読者の利益を最優先にし、指定された構成・文字数・形式を厳守して、"
-                    "読者が「読んでよかった」と思える記事を書きます。"
-                    "デメリットや注意点も正直に書き、誇張表現は使いません。"
-                ),
+                "text": config["system"],
                 "cache_control": {"type": "ephemeral"},
             }
         ],
@@ -235,9 +296,7 @@ def gh(method: str, path: str, token: str, body=None):
 
 
 def push_file(token: str, repo_path: str, content: str, commit_message: str) -> str:
-    """単一ファイルをContents APIでpushし、コミットSHAを返す"""
     encoded = base64.b64encode(content.encode("utf-8")).decode("ascii")
-    # 既存ファイルのSHAを取得（更新時に必要）
     try:
         existing = gh("GET", f"contents/{repo_path}?ref={BRANCH}", token)
         sha = existing.get("sha")
@@ -272,6 +331,16 @@ def extract_tags(content: str) -> list:
 # ── メイン ────────────────────────────────────────────────────
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--genre",
+        choices=["business", "investment", "travel", "gourmet"],
+        default="business",
+    )
+    args = parser.parse_args()
+    genre = args.genre
+    config = GENRE_CONFIG[genre]
+
     api_key  = os.environ.get("ANTHROPIC_API_KEY")
     gh_token = os.environ.get("GH_TOKEN")
 
@@ -288,25 +357,25 @@ def main():
     date_str = now.strftime("%Y%m%d")
 
     topics = load_topics()
-    topic  = select_topic(topics, date_str)
+    topic  = select_topic(topics, date_str, genre)
 
     client = anthropic.Anthropic(api_key=api_key)
 
-    prompt  = build_prompt(topic, date_str)
-    article = generate_article(client, prompt)
+    prompt  = build_prompt(topic, date_str, genre)
+    article = generate_article(client, prompt, genre)
     article = ensure_min_chars(client, article, prompt)
 
     # ── ファクトチェック ─────────────────────────────────────
     from factcheck import factcheck_article
-    fc_result = factcheck_article(article, "business")
+    fc_result = factcheck_article(article, config["article_type"])
     if not fc_result["is_safe"]:
         print("ERROR: ファクトチェック失敗 - 投稿中止", file=sys.stderr)
         sys.exit(1)
     article = fc_result["verified_content"]
 
     # ── GitHub push ──────────────────────────────────────────
-    repo_path      = f"src/content/blog/article_{date_str}.md"
-    commit_message = f"auto: add article {date_str}"
+    repo_path      = f"src/content/blog/{genre}_{date_str}.md"
+    commit_message = f"auto: add {genre} article {date_str}"
     commit_sha     = push_file(gh_token, repo_path, article, commit_message)
 
     commit_url = f"https://github.com/{REPO}/commit/{commit_sha}"
@@ -315,7 +384,7 @@ def main():
     # ── メール通知 ───────────────────────────────────────────
     from notify import send_notification
     send_notification(
-        article_type="business",
+        article_type=config["article_type"],
         title=extract_title(article),
         article_url=commit_url,
         blog_url=BLOG_URL,
