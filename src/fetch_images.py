@@ -1,3 +1,4 @@
+import argparse
 import os
 import sys
 import json
@@ -24,6 +25,14 @@ CATEGORY_QUERY_MAP = {
     "Electronics": "electronics gadgets technology",
     "Computers": "computer laptop technology",
     "ガジェット・家電": "smart home gadgets electronics",
+}
+
+GENRE_QUERY_MAP = {
+    "business": "professional modern business success bright workspace",
+    "gadget":   "technology sleek modern gadget close-up electronics",
+    "investment": "finance growth chart wealth coins investment",
+    "travel":   "scenic beautiful landscape travel destination nature",
+    "gourmet":  "delicious food beautiful plating appetizing fresh ingredients",
 }
 
 ALT_TEMPLATES = {
@@ -192,6 +201,10 @@ def determine_slug(products):
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--genre", choices=list(GENRE_QUERY_MAP.keys()), default=None)
+    args = parser.parse_args()
+
     unsplash_key = os.environ.get("UNSPLASH_ACCESS_KEY")
     pixabay_key = os.environ.get("PIXABAY_API_KEY")
 
@@ -212,16 +225,19 @@ def main():
         sys.exit(1)
 
     date_str = datetime.now(timezone.utc).strftime("%Y%m%d")
-    slug = determine_slug(products)
+    slug = args.genre if args.genre else determine_slug(products)
     article_dir = Path(f"public/images/articles/{date_str}_{slug}")
     article_dir.mkdir(parents=True, exist_ok=True)
 
     alt_records = {}
     year = datetime.now(timezone.utc).year
 
-    # hero画像: メインカテゴリに対応する英語クエリで取得
-    top_category = products[0].get("category", "Electronics") if products else "Electronics"
-    hero_query = CATEGORY_QUERY_MAP.get(top_category, "gadgets technology")
+    # hero画像: --genre指定があればジャンル別クエリ、なければ商品カテゴリベースのクエリ
+    if args.genre:
+        hero_query = GENRE_QUERY_MAP[args.genre]
+    else:
+        top_category = products[0].get("category", "Electronics") if products else "Electronics"
+        hero_query = CATEGORY_QUERY_MAP.get(top_category, "gadgets technology")
 
     hero_data = fetch_fallback_image(hero_query, unsplash_key, pixabay_key)
     if hero_data:
