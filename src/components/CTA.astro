@@ -1,0 +1,30 @@
+---
+interface Props {
+  href: string;
+  variant?: 'detail' | 'buy';
+  label?: string;
+}
+
+const { href, variant = 'detail', label } = Astro.props;
+
+const defaults = { detail: '詳細はこちら', buy: '購入する' };
+const text = label ?? defaults[variant];
+
+const gradients = {
+  detail: 'linear-gradient(to right, #7c3aed, #4f46e5)',
+  buy:    'linear-gradient(to right, #d97706, #b45309)',
+};
+---
+
+<a
+  href={href}
+  target="_blank"
+  rel="noopener noreferrer nofollow"
+  class="inline-flex items-center justify-center gap-1.5 px-6 py-3 rounded-xl text-white text-sm font-bold transition-opacity"
+  style={`background: ${gradients[variant]};`}
+  onmouseenter="this.style.opacity='0.85'"
+  onmouseleave="this.style.opacity='1'"
+>
+  {text}
+  {variant === 'buy' && <span aria-hidden="true">→</span>}
+</a>

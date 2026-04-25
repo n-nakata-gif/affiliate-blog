@@ -2,63 +2,31 @@
 import Layout from '../layouts/Layout.astro';
 ---
 
-<Layout title="お問い合わせ | My Affiliate Blog">
-  <div class="bg-white rounded-lg shadow-sm p-8">
-    <h1 class="text-2xl font-bold mb-2">お問い合わせ</h1>
-    <p class="text-gray-500 mb-8">ご質問・ご意見はこちらからお送りください。</p>
+<Layout title="お問い合わせ | NEXIGEN" description="NEXIGENへのお問い合わせはこちらから。">
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+    <div class="px-8 py-8 text-white" style="background: linear-gradient(135deg, #7c3aed, #4f46e5);">
+      <h1 class="text-2xl font-black mb-1">お問い合わせ</h1>
+      <p class="text-sm" style="color:#c4b5fd;">ご質問・ご意見はこちらからお送りください。</p>
+    </div>
 
-    <form
-      name="contact"
-      method="POST"
-      action="/contact/success"
-      class="space-y-6"
-    >
-      <div>
-        <label for="name" class="block text-sm font-medium text-gray-700 mb-1">お名前 <span class="text-red-500">*</span></label>
-        <input
-          type="text"
-          id="name"
-          name="name"
-          required
-          class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-          placeholder="山田 太郎"
-        />
-      </div>
-
-      <div>
-        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">メールアドレス <span class="text-red-500">*</span></label>
-        <input
-          type="email"
-          id="email"
-          name="email"
-          required
-          class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-          placeholder="example@email.com"
-        />
-      </div>
-
-      <div>
-        <label for="message" class="block text-sm font-medium text-gray-700 mb-1">お問い合わせ内容 <span class="text-red-500">*</span></label>
-        <textarea
-          id="message"
-          name="message"
-          required
-          rows="6"
-          class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-          placeholder="お問い合わせ内容をご記入ください"
-        ></textarea>
-      </div>
-
-      <button
-        type="submit"
-        class="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition-colors font-medium"
+    <div class="px-8 py-8">
+      {/* Google フォームの URL を取得したら下記の src を差し替えてください */}
+      <iframe
+        src="https://docs.google.com/forms/d/e/【フォームIDをここに入力】/viewform?embedded=true"
+        width="100%"
+        height="700"
+        frameborder="0"
+        marginheight="0"
+        marginwidth="0"
+        class="rounded-lg"
+        title="お問い合わせフォーム"
       >
-        送信する
-      </button>
-    </form>
+        読み込んでいます…
+      </iframe>
 
-    <p class="mt-6 text-xs text-gray-400">
-      ※ お問い合わせへの回答は数日以内にメールにてお送りします。
-    </p>
+      <p class="mt-5 text-xs text-slate-400 text-center">
+        ※ フォームが表示されない場合は、ページを再読み込みしてください。
+      </p>
+    </div>
   </div>
 </Layout>

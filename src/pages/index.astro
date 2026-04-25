@@ -5,30 +5,57 @@ import Layout from '../layouts/Layout.astro';
 const posts = (await getCollection('blog')).sort(
   (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
 );
+
+const websiteSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'NEXIGEN',
+  url: 'https://nexigen-blog.com',
+  description: '最新ガジェット・ライフスタイルアイテムの本音レビューブログ',
+};
 ---
 
-<Layout title="My Affiliate Blog - ホーム" description="おすすめ商品・サービスのレビューブログ">
-  <h1 class="text-3xl font-bold mb-2">My Affiliate Blog</h1>
-  <p class="text-gray-500 mb-8">おすすめ商品・サービスをレビューしています</p>
+<Layout title="NEXIGEN - 最新ガジェット・ライフスタイルの本音レビュー" description="最新ガジェット・ライフスタイルアイテムの本音レビューブログ">
+  <Fragment slot="head">
+    <script type="application/ld+json" set:html={JSON.stringify(websiteSchema)} />
+  </Fragment>
 
-  <div class="space-y-6">
+  <div class="rounded-2xl p-10 mb-10 text-center text-white" style="background: linear-gradient(135deg, #7c3aed, #4f46e5, #0891b2);">
+    <p class="text-sm font-semibold tracking-widest uppercase mb-3" style="color: #c4b5fd;">Review Blog</p>
+    <h1 class="text-5xl font-black mb-4 tracking-tight">NEXIGEN</h1>
+    <p class="text-base max-w-sm mx-auto leading-relaxed" style="color: #e0e7ff;">最新ガジェット・ライフスタイルアイテムの<br />本音レビューをお届けします</p>
+  </div>
+
+  <div class="flex items-center gap-4 mb-6">
+    <h2 class="text-sm font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">最新記事</h2>
+    <div class="flex-1 h-px bg-slate-200"></div>
+  </div>
+
+  <div class="space-y-4">
     {posts.map(post => (
-      <article class="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
-        <a href={`/blog/${post.id}`}>
-          <h2 class="text-xl font-semibold text-indigo-700 hover:underline mb-2">
-            {post.data.title}
-          </h2>
-        </a>
-        <p class="text-gray-600 text-sm mb-3">{post.data.description}</p>
-        <div class="flex items-center gap-3 text-xs text-gray-400">
-          <time datetime={post.data.pubDate.toISOString()}>
-            {post.data.pubDate.toLocaleDateString('ja-JP')}
-          </time>
-          {post.data.tags && post.data.tags.map(tag => (
-            <span class="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full">{tag}</span>
-          ))}
+      <article class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden group" style="transition: box-shadow 0.2s, transform 0.2s;" onmouseenter="this.style.boxShadow='0 8px 30px rgba(0,0,0,0.10)';this.style.transform='translateY(-2px)'" onmouseleave="this.style.boxShadow='';this.style.transform=''">
+        <div class="p-6">
+          <a href={`/blog/${post.id}`} class="block">
+            <h3 class="text-base font-bold text-slate-800 mb-2 leading-snug" style="transition: color 0.15s;" onmouseenter="this.style.color='#7c3aed'" onmouseleave="this.style.color=''">
+              {post.data.title}
+            </h3>
+          </a>
+          <p class="text-slate-500 text-sm leading-relaxed mb-4">{post.data.description}</p>
+          <div class="flex items-center justify-between">
+            <time class="text-xs text-slate-400" datetime={post.data.pubDate.toISOString()}>
+              {post.data.pubDate.toLocaleDateString('ja-JP')}
+            </time>
+            {post.data.tags && (
+              <div class="flex gap-2 flex-wrap justify-end">
+                {post.data.tags.map(tag => (
+                  <span class="text-xs px-2.5 py-0.5 rounded-full font-medium" style="background:#f5f3ff; color:#7c3aed;">{tag}</span>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </article>
     ))}
   </div>
+
 </Layout>

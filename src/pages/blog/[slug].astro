@@ -12,27 +12,135 @@ export async function getStaticPaths() {
 
 const { post } = Astro.props;
 const { Content } = await render(post);
+
+const articleSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: post.data.title,
+  description: post.data.description,
+  datePublished: post.data.pubDate.toISOString(),
+  url: Astro.url.href,
+  publisher: {
+    '@type': 'Organization',
+    name: 'NEXIGEN',
+    url: 'https://nexigen-blog.com',
+  },
+};
 ---
 
-<Layout title={post.data.title} description={post.data.description}>
-  <article class="bg-white rounded-lg shadow-sm p-8">
-    <h1 class="text-3xl font-bold mb-3 text-gray-900">{post.data.title}</h1>
+<Layout title={`${post.data.title} | NEXIGEN`} description={post.data.description}>
+  <Fragment slot="head">
+    <script type="application/ld+json" set:html={JSON.stringify(articleSchema)} />
+  </Fragment>
 
-    <div class="flex items-center gap-3 text-sm text-gray-400 mb-6 pb-6 border-b">
-      <time datetime={post.data.pubDate.toISOString()}>
+  <div class="mb-5">
+    <a href="/" class="inline-flex items-center gap-1.5 text-sm font-medium transition-colors" style="color:#7c3aed;" onmouseenter="this.style.color='#5b21b6'" onmouseleave="this.style.color='#7c3aed'">
+      ← 記事一覧に戻る
+    </a>
+  </div>
+
+  <article class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+
+    <div class="px-8 py-10 text-white" style="background: linear-gradient(135deg, #7c3aed, #4f46e5, #0891b2);">
+      {post.data.tags && (
+        <div class="flex flex-wrap gap-2 mb-4">
+          {post.data.tags.map(tag => (
+            <span class="text-xs px-3 py-1 rounded-full font-medium" style="background:rgba(255,255,255,0.2); color:white;">{tag}</span>
+          ))}
+        </div>
+      )}
+      <h1 class="text-2xl font-black leading-tight mb-4">{post.data.title}</h1>
+      <time class="text-sm" style="color:#c4b5fd;" datetime={post.data.pubDate.toISOString()}>
         {post.data.pubDate.toLocaleDateString('ja-JP')}
       </time>
-      {post.data.tags && post.data.tags.map(tag => (
-        <span class="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full text-xs">{tag}</span>
-      ))}
     </div>
 
-    <div class="prose prose-indigo max-w-none">
+    <div class="px-8 py-8 article-content">
       <Content />
     </div>
+
   </article>
 
-  <div class="mt-6">
-    <a href="/" class="text-indigo-600 hover:underline text-sm">&larr; 記事一覧に戻る</a>
-  </div>
 </Layout>
+
+<style is:global>
+  .article-content h2 {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #1e293b;
+    margin-top: 2.5rem;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #ede9fe;
+  }
+  .article-content h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #334155;
+    margin-top: 1.75rem;
+    margin-bottom: 0.5rem;
+  }
+  .article-content p {
+    color: #475569;
+    line-height: 1.85;
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+  }
+  .article-content ul,
+  .article-content ol {
+    color: #475569;
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+    line-height: 1.85;
+    font-size: 0.95rem;
+  }
+  .article-content li {
+    margin-bottom: 0.3rem;
+  }
+  .article-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1.5rem;
+    font-size: 0.875rem;
+    border-radius: 0.5rem;
+    overflow: hidden;
+  }
+  .article-content th {
+    background: #ede9fe;
+    color: #5b21b6;
+    font-weight: 700;
+    padding: 0.75rem 1rem;
+    text-align: left;
+  }
+  .article-content td {
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid #f1f5f9;
+    color: #475569;
+  }
+  .article-content tr:last-child td {
+    border-bottom: none;
+  }
+  .article-content blockquote {
+    border-left: 4px solid #8b5cf6;
+    background: #faf5ff;
+    padding: 0.875rem 1.25rem;
+    border-radius: 0 0.5rem 0.5rem 0;
+    margin: 1.25rem 0;
+    color: #6d28d9;
+    font-size: 0.875rem;
+    line-height: 1.7;
+  }
+  .article-content strong {
+    color: #1e293b;
+    font-weight: 700;
+  }
+  .article-content hr {
+    border: none;
+    border-top: 1px solid #e2e8f0;
+    margin: 2rem 0;
+  }
+  .article-content a {
+    color: #7c3aed;
+    text-decoration: underline;
+  }
+</style>

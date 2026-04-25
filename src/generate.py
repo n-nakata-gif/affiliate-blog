@@ -1,0 +1,328 @@
+import os
+import sys
+import re
+import json
+import base64
+import logging
+import urllib.request
+import urllib.error
+from datetime import datetime, timezone
+from pathlib import Path
+
+import anthropic
+
+logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+logger = logging.getLogger(__name__)
+
+BLOG_URL = "https://affiliate-blog.nori-nakata1004.workers.dev"
+REPO = "n-nakata-gif/affiliate-blog"
+BRANCH = "main"
+MODEL = "claude-opus-4-7"
+MIN_CHARS = 3000
+TOPICS_PATH = "data/topics.json"
+
+
+# ── トピック読み込み ──────────────────────────────────────────
+
+def load_topics() -> list:
+    with open(TOPICS_PATH, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def select_topic(topics: list, date_str: str) -> dict:
+    if not topics:
+        raise ValueError(f"{TOPICS_PATH} が空です")
+    # analyze.py がランク順に並べた想定で先頭を使用、日付ローテーションでバリエーションを確保
+    idx = int(date_str) % len(topics)
+    t = topics[idx]
+    if isinstance(t, str):
+        return {"title": t, "tags": ["ビジネス", "副業"]}
+    return t
+
+
+def _get(topic: dict, *keys, default=""):
+    for k in keys:
+        v = topic.get(k)
+        if v:
+            return v
+    return default
+
+
+# ── 文字数カウント ────────────────────────────────────────────
+
+def count_body_chars(md: str) -> int:
+    text = re.sub(r"^---[\s\S]*?---\n", "", md, count=1)
+    text = re.sub(r"<[^>]+>", "", text)
+    text = re.sub(r"!\[([^\]]*)\]\([^)]*\)", r"\1", text)
+    text = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", text)
+    text = re.sub(r"[#*`|]", "", text)
+    return len(re.sub(r"\n+", "\n", text).strip())
+
+
+# ── 記事生成（Claude API） ────────────────────────────────────
+
+def build_prompt(topic: dict, date_str: str) -> str:
+    today = datetime.strptime(date_str, "%Y%m%d").strftime("%Y-%m-%d")
+
+    title_hint  = _get(topic, "title", "topic", "keyword")
+    tags        = _get(topic, "tags", default=["ビジネス", "副業"])
+    summary     = _get(topic, "summary", "notes", "description",
+                        default="記事タイトルから最適な内容を考えてください")
+    key_points    = _get(topic, "key_points", "points", default=[])
+    keyword_main  = _get(topic, "keyword_main",  default="")
+    keyword_sub   = _get(topic, "keyword_sub",   default=[])
+    target_reader = _get(topic, "target_reader", default="")
+
+    tags_str = json.dumps(tags, ensure_ascii=False)
+    kp_str   = ("\n".join(f"- {p}" for p in key_points)
+                if key_points else "（自由に構成してください）")
+
+    # SEOフィールドがある場合のみセクションを生成
+    if keyword_main:
+        sub_str = (json.dumps(keyword_sub, ensure_ascii=False)
+                   if isinstance(keyword_sub, list) else str(keyword_sub))
+        seo_section = (
+            f"\n## SEO要件\n"
+            f"- メインキーワード「{keyword_main}」をtitle・冒頭100字・h2見出し1つ以上に自然に含める\n"
+            f"- サブキーワード {sub_str} を各セクションに自然に分散させる\n"
+            f"- ターゲット読者: {target_reader}\n"
+            f"- h2見出しは4〜6個、各h2の下にh3を2〜3個設ける\n"
+            f"- メタディスクリプションは120字以内\n"
+        )
+    else:
+        seo_section = ""
+
+    return f"""以下のトピックについて、ビジネス・副業ジャンルのブログ記事（Markdown形式）を作成してください。
+
+## トピック情報
+- テーマ: {title_hint}
+- 概要: {summary}
+- キーポイント:
+{kp_str}
+{seo_section}
+## 記事の要件
+
+### frontmatter（必ずこの形式で出力）
+```
+---
+title: "（読者が思わずクリックしたくなる具体的なタイトル）"
+description: "（150字以内・記事で得られる価値を具体的に説明）"
+pubDate: {today}
+tags: {tags_str}
+---
+```
+
+### 本文構成（合計{MIN_CHARS}字以上・日本語）
+
+1. **導入（PREP法の P: 結論・要点）**（200字以上）
+   - 読者の悩みや状況に共感する書き出し
+   - この記事で何が分かるかを明示
+   - 具体的な数字・期待値を提示
+
+2. **なぜ重要か（PREP法の R: 理由）**（300字以上）
+   - 読者がこの情報を必要とする背景
+   - 知らないと損することをデータや事例で説明
+   - ただし確認できない数値は「〜といわれています」と表現する
+
+3. **具体的な方法・事例（PREP法の E: 例）**（600字以上）
+   - 実際に機能する具体的なステップや手法
+   - 成功だけでなく失敗事例・注意点・リスクも正直に記載
+   - 読者が「自分もできそう」と感じられる温かみのある表現
+   - デメリットや向いていない人についても明記する
+
+4. **実践のポイントと落とし穴**（300字以上）
+   - 初心者がつまずきやすいポイント
+   - 本当に効果があったものだけを厳選して推薦
+   - 「おすすめ」と書くものは根拠を必ず添える
+
+5. **まとめ（PREP法の再 P: 結論）**（200字以上）
+   - 記事全体の要点を簡潔にまとめ
+   - 読者への励ましと次のアクションを提案
+
+6. **FAQ**（3問以上、各100字以上）
+   - 読者がよく持つリアルな疑問に丁寧に回答
+   - 「絶対」「必ず」「100%」等の誇張表現は使わない
+
+## 最重要：記事執筆の姿勢
+- **誠実さを最優先**: PVや収益より読者の利益を優先する
+- **デメリットも正直に書く**: 良い点だけを誇張しない
+- **確認できない数値は柔らかい表現に**: 「〜といわれています」「〜とされています」
+- **誇張表現禁止**: 「絶対」「必ず」「100%」「最高」は根拠なく使わない
+- **魂のこもった文章**: 一人の読者に語りかけるように書く
+- frontmatterから末尾まで完全に出力すること（省略・要約禁止）
+"""
+
+
+def generate_article(client: anthropic.Anthropic, prompt: str) -> str:
+    response = client.messages.create(
+        model=MODEL,
+        max_tokens=8096,
+        system=[
+            {
+                "type": "text",
+                "text": (
+                    "あなたはビジネス・副業ジャンルの誠実な日本語ブログライターです。"
+                    "読者の利益を最優先にし、指定された構成・文字数・形式を厳守して、"
+                    "読者が「読んでよかった」と思える記事を書きます。"
+                    "デメリットや注意点も正直に書き、誇張表現は使いません。"
+                ),
+                "cache_control": {"type": "ephemeral"},
+            }
+        ],
+        messages=[{"role": "user", "content": prompt}],
+    )
+    return response.content[0].text
+
+
+def supplement_article(client: anthropic.Anthropic, article: str, current_chars: int) -> str:
+    shortage = MIN_CHARS - current_chars
+    response = client.messages.create(
+        model=MODEL,
+        max_tokens=4096,
+        messages=[
+            {
+                "role": "user",
+                "content": (
+                    f"以下のMarkdown記事は本文が約{current_chars}字で、"
+                    f"目標の{MIN_CHARS}字に約{shortage}字不足しています。\n"
+                    "以下のルールで加筆して完全な記事として出力してください：\n"
+                    "- 各セクションをより詳しく（実体験・具体的なステップ・注意点を追加）\n"
+                    "- FAQに1〜2問追加\n"
+                    "- 誠実さを保ち、誇張表現は引き続き使わない\n"
+                    "- frontmatter・見出し構成はそのまま保持する\n\n"
+                    f"--- 元の記事 ---\n{article}\n"
+                ),
+            }
+        ],
+    )
+    return response.content[0].text
+
+
+def ensure_min_chars(client: anthropic.Anthropic, article: str, prompt: str) -> str:
+    chars = count_body_chars(article)
+    if chars >= MIN_CHARS:
+        return article
+    logger.info("本文 %d字 < %d字 → 補完実行", chars, MIN_CHARS)
+    article = supplement_article(client, article, chars)
+    chars = count_body_chars(article)
+    if chars < MIN_CHARS:
+        logger.error("補完後も %d字（目標 %d字）", chars, MIN_CHARS)
+    return article
+
+
+# ── GitHub API ────────────────────────────────────────────────
+
+def gh(method: str, path: str, token: str, body=None):
+    url = f"https://api.github.com/repos/{REPO}/{path}"
+    data = json.dumps(body).encode() if body else None
+    req = urllib.request.Request(
+        url,
+        data=data,
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28",
+            "Content-Type": "application/json",
+        },
+        method=method,
+    )
+    try:
+        with urllib.request.urlopen(req) as resp:
+            return json.loads(resp.read())
+    except urllib.error.HTTPError as e:
+        body_text = e.read().decode("utf-8", errors="replace")
+        raise RuntimeError(f"GitHub API {method} {path} → {e.code}: {body_text}") from e
+
+
+def push_file(token: str, repo_path: str, content: str, commit_message: str) -> str:
+    """単一ファイルをContents APIでpushし、コミットSHAを返す"""
+    encoded = base64.b64encode(content.encode("utf-8")).decode("ascii")
+    # 既存ファイルのSHAを取得（更新時に必要）
+    try:
+        existing = gh("GET", f"contents/{repo_path}?ref={BRANCH}", token)
+        sha = existing.get("sha")
+    except RuntimeError as e:
+        if "404" in str(e):
+            sha = None
+        else:
+            raise
+
+    body = {"message": commit_message, "content": encoded, "branch": BRANCH}
+    if sha:
+        body["sha"] = sha
+
+    result = gh("PUT", f"contents/{repo_path}", token, body)
+    return result["commit"]["sha"]
+
+
+# ── frontmatterパース ─────────────────────────────────────────
+
+def extract_title(content: str) -> str:
+    m = re.search(r'^title:\s*["\']?(.+?)["\']?\s*$', content, re.MULTILINE)
+    return m.group(1).strip() if m else ""
+
+
+def extract_tags(content: str) -> list:
+    m = re.search(r'^tags:\s*\[(.+?)\]', content, re.MULTILINE)
+    if not m:
+        return []
+    return [t.strip().strip("\"'") for t in m.group(1).split(',')]
+
+
+# ── メイン ────────────────────────────────────────────────────
+
+def main():
+    api_key  = os.environ.get("ANTHROPIC_API_KEY")
+    gh_token = os.environ.get("GH_TOKEN")
+
+    missing = [k for k, v in {"ANTHROPIC_API_KEY": api_key, "GH_TOKEN": gh_token}.items() if not v]
+    if missing:
+        print(f"ERROR: 環境変数が未設定です: {', '.join(missing)}", file=sys.stderr)
+        sys.exit(1)
+
+    if not Path(TOPICS_PATH).exists():
+        print(f"ERROR: {TOPICS_PATH} が見つかりません", file=sys.stderr)
+        sys.exit(1)
+
+    now      = datetime.now(timezone.utc)
+    date_str = now.strftime("%Y%m%d")
+
+    topics = load_topics()
+    topic  = select_topic(topics, date_str)
+
+    client = anthropic.Anthropic(api_key=api_key)
+
+    prompt  = build_prompt(topic, date_str)
+    article = generate_article(client, prompt)
+    article = ensure_min_chars(client, article, prompt)
+
+    # ── ファクトチェック ─────────────────────────────────────
+    from factcheck import factcheck_article
+    fc_result = factcheck_article(article, "business")
+    if not fc_result["is_safe"]:
+        print("ERROR: ファクトチェック失敗 - 投稿中止", file=sys.stderr)
+        sys.exit(1)
+    article = fc_result["verified_content"]
+
+    # ── GitHub push ──────────────────────────────────────────
+    repo_path      = f"src/content/blog/article_{date_str}.md"
+    commit_message = f"auto: add article {date_str}"
+    commit_sha     = push_file(gh_token, repo_path, article, commit_message)
+
+    commit_url = f"https://github.com/{REPO}/commit/{commit_sha}"
+    print(commit_url)
+
+    # ── メール通知 ───────────────────────────────────────────
+    from notify import send_notification
+    send_notification(
+        article_type="business",
+        title=extract_title(article),
+        article_url=commit_url,
+        blog_url=BLOG_URL,
+        tags=extract_tags(article),
+        word_count=count_body_chars(article),
+    )
+
+
+if __name__ == "__main__":
+    main()

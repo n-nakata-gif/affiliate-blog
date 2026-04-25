@@ -2,28 +2,42 @@
 import Layout from '../layouts/Layout.astro';
 ---
 
-<Layout title="プライバシーポリシー | My Affiliate Blog">
-  <article class="bg-white rounded-lg shadow-sm p-8 prose max-w-none">
-    <h1>プライバシーポリシー</h1>
+<Layout title="プライバシーポリシー | NEXIGEN">
+  <article class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+    <div class="px-8 py-8 text-white" style="background: linear-gradient(135deg, #7c3aed, #4f46e5);">
+      <h1 class="text-2xl font-black">プライバシーポリシー</h1>
+    </div>
+    <div class="px-8 py-8 space-y-6 text-sm text-slate-600 leading-relaxed">
 
-    <p>本ブログ（以下「当サイト」）では、個人情報の取り扱いについて以下の通り定めます。</p>
+      <p>本ブログ（以下「当サイト」）では、個人情報の取り扱いについて以下の通り定めます。</p>
 
-    <h2>個人情報の収集について</h2>
-    <p>当サイトでは、お問い合わせフォームのご利用時にメールアドレス・お名前などの個人情報をご入力いただく場合があります。取得した個人情報は、お問い合わせへの回答のみに利用し、第三者への提供は行いません。</p>
+      <section>
+        <h2 class="text-base font-bold text-slate-800 mb-2 pb-2 border-b-2 border-violet-100">個人情報の収集について</h2>
+        <p>当サイトでは、お問い合わせフォームのご利用時にメールアドレス・お名前などの個人情報をご入力いただく場合があります。取得した個人情報は、お問い合わせへの回答のみに利用し、第三者への提供は行いません。</p>
+      </section>
 
-    <h2>広告について</h2>
-    <p>当サイトでは、Google AdSense等の広告サービスを利用しています。これらのサービスは、ユーザーの興味に基づいた広告を表示するためにCookieを使用することがあります。Cookieを無効にする方法や詳細については、各広告サービスのプライバシーポリシーをご参照ください。</p>
-    <p>本サイトはアフィリエイト広告（Amazonアソシエイト等）を利用しています。</p>
+      <section>
+        <h2 class="text-base font-bold text-slate-800 mb-2 pb-2 border-b-2 border-violet-100">広告について</h2>
+        <p>当サイトでは、Google AdSense等の広告サービスを利用しています。これらのサービスは、ユーザーの興味に基づいた広告を表示するためにCookieを使用することがあります。Cookieを無効にする方法や詳細については、各広告サービスのプライバシーポリシーをご参照ください。</p>
+        <p class="mt-2">本サイトはアフィリエイト広告（Amazonアソシエイト等）を利用しています。</p>
+      </section>
 
-    <h2>アクセス解析について</h2>
-    <p>当サイトでは、Google Analytics等のアクセス解析ツールを利用することがあります。これらのツールはCookieを使用し、個人を特定しない形式でデータを収集します。</p>
+      <section>
+        <h2 class="text-base font-bold text-slate-800 mb-2 pb-2 border-b-2 border-violet-100">アクセス解析について</h2>
+        <p>当サイトでは、Google Analytics等のアクセス解析ツールを利用することがあります。これらのツールはCookieを使用し、個人を特定しない形式でデータを収集します。</p>
+      </section>
 
-    <h2>免責事項</h2>
-    <p>当サイトの情報は可能な限り正確を期していますが、内容の正確性・完全性を保証するものではありません。当サイトを利用して生じたいかなる損害についても、当サイトは責任を負いません。</p>
+      <section>
+        <h2 class="text-base font-bold text-slate-800 mb-2 pb-2 border-b-2 border-violet-100">免責事項</h2>
+        <p>当サイトの情報は可能な限り正確を期していますが、内容の正確性・完全性を保証するものではありません。当サイトを利用して生じたいかなる損害についても、当サイトは責任を負いません。</p>
+      </section>
 
-    <h2>プライバシーポリシーの変更</h2>
-    <p>本ポリシーは予告なく変更する場合があります。変更後のポリシーは本ページに掲載した時点から効力を生じるものとします。</p>
+      <section>
+        <h2 class="text-base font-bold text-slate-800 mb-2 pb-2 border-b-2 border-violet-100">プライバシーポリシーの変更</h2>
+        <p>本ポリシーは予告なく変更する場合があります。変更後のポリシーは本ページに掲載した時点から効力を生じるものとします。</p>
+      </section>
 
-    <p class="text-sm text-gray-500">最終更新日: {new Date().toLocaleDateString('ja-JP')}</p>
+      <p class="text-xs text-slate-400 pt-2 border-t border-slate-100">最終更新日: {new Date().toLocaleDateString('ja-JP')}</p>
+    </div>
   </article>
 </Layout>
