@@ -9,6 +9,7 @@ on:
 
 jobs:
   business-post:
+    if: github.event.schedule == '0 0 * * 2,5,0' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
 
     steps:
