@@ -321,8 +321,8 @@ def main():
         sys.exit(1)
 
     if not Path(PRODUCTS_PATH).exists():
-        print(f"ERROR: {PRODUCTS_PATH} not found", file=sys.stderr)
-        sys.exit(1)
+        logger.warning("%s が見つかりません。ガジェット記事生成をスキップします", PRODUCTS_PATH)
+        return
 
     now = datetime.now(timezone.utc)
     date_str = now.strftime("%Y%m%d")
@@ -330,8 +330,8 @@ def main():
 
     products = load_products()
     if not products:
-        print(f"ERROR: {PRODUCTS_PATH} is empty", file=sys.stderr)
-        sys.exit(1)
+        logger.warning("%s が空です。ガジェット記事生成をスキップします", PRODUCTS_PATH)
+        return
 
     images_data = load_images(date_str)
     selected = select_products(products, weekday)
@@ -375,14 +375,21 @@ def main():
 
     title_m = re.search(r'^title:\s*["\']?(.+?)["\']?\s*$', article, re.MULTILINE)
     tags_m = re.search(r'^tags:\s*\[(.+?)\]', article, re.MULTILINE)
-    from notify import send_notification
+    title_str = title_m.group(1).strip() if title_m else f"ガジェット記事 {date_str}"
+
+    from notify import send_notification, post_to_x
     send_notification(
         article_type="gadget",
-        title=title_m.group(1).strip() if title_m else f"ガジェット記事 {date_str}",
+        title=title_str,
         article_url=url,
         blog_url=BLOG_URL,
         tags=[t.strip().strip("\"'") for t in tags_m.group(1).split(',')] if tags_m else [category_ja],
         word_count=count_body_chars(article),
+    )
+    post_to_x(
+        article_type="gadget",
+        title=title_str,
+        blog_url=BLOG_URL,
     )
 
 
