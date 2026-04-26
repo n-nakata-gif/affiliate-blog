@@ -1,6 +1,5 @@
 import argparse
 import os
-import sys
 import json
 import time
 import logging
@@ -214,15 +213,15 @@ def main():
         logger.error("PIXABAY_API_KEY is not set; Pixabay fallback disabled")
 
     if not Path(PRODUCTS_PATH).exists():
-        print(f"ERROR: {PRODUCTS_PATH} not found", file=sys.stderr)
-        sys.exit(1)
+        logger.warning("%s が見つかりません。画像取得をスキップします", PRODUCTS_PATH)
+        return
 
     with open(PRODUCTS_PATH, "r", encoding="utf-8") as f:
         products = json.load(f)
 
     if not products:
-        print("ERROR: products.json is empty", file=sys.stderr)
-        sys.exit(1)
+        logger.warning("products.json が空です。画像取得をスキップします")
+        return
 
     date_str = datetime.now(timezone.utc).strftime("%Y%m%d")
     slug = args.genre if args.genre else determine_slug(products)
@@ -232,11 +231,12 @@ def main():
     alt_records = {}
     year = datetime.now(timezone.utc).year
 
+    top_category = products[0].get("category", "Electronics") if products else "Electronics"
+
     # hero画像: --genre指定があればジャンル別クエリ、なければ商品カテゴリベースのクエリ
     if args.genre:
         hero_query = GENRE_QUERY_MAP[args.genre]
     else:
-        top_category = products[0].get("category", "Electronics") if products else "Electronics"
         hero_query = CATEGORY_QUERY_MAP.get(top_category, "gadgets technology")
 
     hero_data = fetch_fallback_image(hero_query, unsplash_key, pixabay_key)
