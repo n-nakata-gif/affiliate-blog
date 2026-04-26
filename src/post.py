@@ -96,7 +96,7 @@ def main():
     url = f"https://github.com/{REPO}/commit/{commit_sha}"
     print(url)
 
-    from notify import send_notification
+    from notify import send_notification, post_to_x
     send_notification(
         article_type="business",
         title=_extract_title(content),
@@ -104,6 +104,11 @@ def main():
         blog_url=BLOG_URL,
         tags=_extract_tags(content),
         word_count=_count_chars(content),
+    )
+    post_to_x(
+        article_type="business",
+        title=_extract_title(content),
+        blog_url=BLOG_URL,
     )
 
 
