@@ -9,18 +9,48 @@ JST = timezone(timedelta(hours=9))
 ACCENT = {
     "business": "#4CAF50",
     "gadget": "#FF9800",
+    "investment": "#2196F3",
+    "travel": "#00BCD4",
+    "gourmet": "#E91E63",
 }
 
 SUBJECT_TEMPLATE = {
     "business": "【NEXIGEN】ビジネス記事を投稿しました｜{title}",
     "gadget": "【NEXIGEN】ガジェット記事を投稿しました｜{title}",
+    "investment": "【NEXIGEN】投資記事を投稿しました｜{title}",
+    "travel": "【NEXIGEN】旅行記事を投稿しました｜{title}",
+    "gourmet": "【NEXIGEN】グルメ記事を投稿しました｜{title}",
+}
+
+_LABELS = {
+    "business": "ビジネス",
+    "gadget": "ガジェット",
+    "investment": "投資",
+    "travel": "旅行",
+    "gourmet": "グルメ",
+}
+
+_X_HASHTAGS = {
+    "business": "#副業 #ビジネス #NEXIGEN",
+    "gadget": "#ガジェット #テック #NEXIGEN",
+    "investment": "#投資 #資産運用 #NEXIGEN",
+    "travel": "#旅行 #国内旅行 #NEXIGEN",
+    "gourmet": "#グルメ #食 #NEXIGEN",
+}
+
+_X_INTROS = {
+    "business": "副業・ビジネスで差をつけるヒントをお届けします。",
+    "gadget": "話題のガジェットをピックアップしました。",
+    "investment": "資産を育てるための最新情報をまとめました。",
+    "travel": "次の旅先選びに役立つ情報をご紹介します。",
+    "gourmet": "食通も唸る一品を発見しました。",
 }
 
 
 def _build_html(article_type, title, article_url, blog_url, tags, word_count):
     now_jst = datetime.now(JST).strftime("%Y年%m月%d日 %H:%M JST")
     accent = ACCENT.get(article_type, "#4CAF50")
-    label = "ビジネス" if article_type == "business" else "ガジェット"
+    label = _LABELS.get(article_type, article_type)
 
     tags_html = ""
     if tags:
@@ -124,3 +154,43 @@ def send_notification(
         print("メール送信完了")
     except Exception as e:
         print(f"ERROR: メール送信失敗: {e}")
+
+
+def post_to_x(article_type: str, title: str, blog_url: str) -> None:
+    api_key = os.environ.get("X_API_KEY")
+    api_secret = os.environ.get("X_API_SECRET")
+    access_token = os.environ.get("X_ACCESS_TOKEN")
+    access_secret = os.environ.get("X_ACCESS_SECRET")
+    if not all([api_key, api_secret, access_token, access_secret]):
+        print("X APIキー未設定のためスキップ")
+        return
+
+    try:
+        import tweepy
+    except ImportError:
+        print("tweepyが見つかりません。スキップ")
+        return
+
+    intro = _X_INTROS.get(article_type, "新しい記事を投稿しました。")
+    hashtags = _X_HASHTAGS.get(article_type, "#NEXIGEN")
+
+    # Twitterは短縮URL(t.co)を23字として計算
+    url_chars = 23
+    fixed_len = len(intro) + 1 + 1 + url_chars + 1 + len(hashtags)
+    max_title_len = 140 - fixed_len
+    trimmed = title if len(title) <= max_title_len else title[: max_title_len - 1] + "…"
+
+    tweet = f"{intro}\n{trimmed}\n{blog_url}\n{hashtags}"
+
+    client = tweepy.Client(
+        consumer_key=api_key,
+        consumer_secret=api_secret,
+        access_token=access_token,
+        access_token_secret=access_secret,
+    )
+
+    try:
+        client.create_tweet(text=tweet)
+        print("X投稿完了")
+    except Exception as e:
+        print(f"ERROR: X投稿失敗: {e}")

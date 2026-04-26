@@ -9,6 +9,32 @@ npm install
 npm run dev
 ```
 
+## GitHub Secrets 一覧
+
+GitHub リポジトリの「Settings → Secrets and variables → Actions」で設定します。
+
+| Secret名 | 用途 |
+|---|---|
+| `ANTHROPIC_API_KEY` | Claude AI API |
+| `GH_TOKEN` | GitHub への記事コミット |
+| `GMAIL_USER` | メール通知の送信元アドレス |
+| `GMAIL_APP_PASSWORD` | Gmail アプリパスワード |
+| `AMAZON_ACCESS_KEY` | Amazon PA-API |
+| `AMAZON_SECRET_KEY` | Amazon PA-API |
+| `AMAZON_ASSOCIATE_TAG` | Amazon アソシエイトタグ |
+| `RAKUTEN_APP_ID` | 楽天 API |
+| `RAKUTEN_AFFILIATE_ID` | 楽天アフィリエイト ID |
+| `UNSPLASH_ACCESS_KEY` | Unsplash 画像取得 |
+| `PIXABAY_API_KEY` | Pixabay 画像取得 |
+| `X_API_KEY` | X (Twitter) 自動投稿 |
+| `X_API_SECRET` | X (Twitter) 自動投稿 |
+| `X_ACCESS_TOKEN` | X (Twitter) 自動投稿 |
+| `X_ACCESS_SECRET` | X (Twitter) 自動投稿 |
+
+> X の4つのキーが未設定の場合、X投稿はスキップされます（メール通知は正常に動作します）。
+
+---
+
 ## 環境変数の設定
 
 `.env.example` をコピーして `.env` ファイルを作成し、AdSense IDを設定します。
