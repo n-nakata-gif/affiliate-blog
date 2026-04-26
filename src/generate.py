@@ -407,8 +407,14 @@ def push_file(token: str, repo_path: str, content: str, commit_message: str) -> 
     if sha:
         body["sha"] = sha
 
-    result = gh("PUT", f"contents/{repo_path}", token, body)
-    return result["commit"]["sha"]
+    try:
+        result = gh("PUT", f"contents/{repo_path}", token, body)
+        return result["commit"]["sha"]
+    except RuntimeError as e:
+        if "409" in str(e):
+            logger.warning("409 Conflict: %s は既に存在するためスキップします", repo_path)
+            return None
+        raise
 
 
 # ── frontmatterパース ─────────────────────────────────────────
@@ -472,6 +478,10 @@ def main():
     repo_path      = f"src/content/blog/{genre}_{date_str}.md"
     commit_message = f"auto: add {genre} article {date_str}"
     commit_sha     = push_file(gh_token, repo_path, article, commit_message)
+
+    if commit_sha is None:
+        print(f"スキップ: {repo_path} は既に存在します")
+        return
 
     commit_url = f"https://github.com/{REPO}/commit/{commit_sha}"
     print(commit_url)
