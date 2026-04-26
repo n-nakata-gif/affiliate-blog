@@ -424,6 +424,19 @@ def extract_title(content: str) -> str:
     return m.group(1).strip() if m else ""
 
 
+
+def extract_description(content: str) -> str:
+    m = re.search(r'^description:\s*["\'\']?(.+?)["\'\']?\s*$', content, re.MULTILINE)
+    return m.group(1).strip() if m else ""
+
+
+def extract_first_image(content: str) -> str:
+    """記事本文から最初の画像URLを取得"""
+    m = re.search(r'!\[.*?\]\((https?://[^\)]+)\)', content)
+    if m:
+        return m.group(1)
+    return "https://cdn.pixabay.com/photo/2016/11/29/08/41/apple-1868496_1280.jpg"
+
 def extract_tags(content: str) -> list:
     m = re.search(r'^tags:\s*\[(.+?)\]', content, re.MULTILINE)
     if not m:
@@ -500,6 +513,19 @@ def main():
         title=extract_title(article),
         blog_url=BLOG_URL,
     )
+    # ── Pinterest 自動投稿 ───────────────────────────────────
+    try:
+        from pinterest_post import post_to_pinterest
+        post_to_pinterest(
+            title=extract_title(article),
+            description=extract_description(article),
+            link=f"{BLOG_URL}/blog/{genre}_{date_str}/",
+            image_url=extract_first_image(article),
+            genre=genre,
+        )
+    except Exception as e:
+        print(f"Pinterest投稿スキップ: {e}")
+
 
 
 if __name__ == "__main__":
