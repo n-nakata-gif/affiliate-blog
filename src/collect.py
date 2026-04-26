@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import logging
+import time
 from datetime import datetime, timezone
 
 import anthropic
@@ -46,12 +47,22 @@ _PROMPT = """\
 
 def collect_business_topics(client: anthropic.Anthropic) -> list:
     today = datetime.now(timezone.utc).strftime("%Y年%m月%d日")
-    response = client.messages.create(
-        model=MODEL,
-        max_tokens=4096,
-        system=[{"type": "text", "text": _SYSTEM, "cache_control": {"type": "ephemeral"}}],
-        messages=[{"role": "user", "content": _PROMPT.format(today=today)}],
-    )
+    for attempt in range(3):
+        try:
+            response = client.messages.create(
+                model=MODEL,
+                max_tokens=4096,
+                system=[{"type": "text", "text": _SYSTEM, "cache_control": {"type": "ephemeral"}}],
+                messages=[{"role": "user", "content": _PROMPT.format(today=today)}],
+            )
+            break
+        except anthropic.RateLimitError:
+            if attempt < 2:
+                logger.warning("レートリミット。60秒後にリトライ (%d/3)", attempt + 1)
+                time.sleep(60)
+            else:
+                logger.error("レートリミットのため3回失敗しました。スキップします")
+                return []
     raw = response.content[0].text.strip()
 
     # コードブロックで囲まれている場合を除去

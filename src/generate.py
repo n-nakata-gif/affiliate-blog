@@ -298,44 +298,62 @@ tags: {tags_str}
 
 
 def generate_article(client: anthropic.Anthropic, prompt: str, genre: str) -> str:
+    import time
     config = GENRE_CONFIG.get(genre, GENRE_CONFIG["business"])
-    response = client.messages.create(
-        model=MODEL,
-        max_tokens=8096,
-        system=[
-            {
-                "type": "text",
-                "text": config["system"],
-                "cache_control": {"type": "ephemeral"},
-            }
-        ],
-        messages=[{"role": "user", "content": prompt}],
-    )
-    return response.content[0].text
+    for attempt in range(3):
+        try:
+            response = client.messages.create(
+                model=MODEL,
+                max_tokens=8096,
+                system=[
+                    {
+                        "type": "text",
+                        "text": config["system"],
+                        "cache_control": {"type": "ephemeral"},
+                    }
+                ],
+                messages=[{"role": "user", "content": prompt}],
+            )
+            return response.content[0].text
+        except anthropic.RateLimitError:
+            if attempt < 2:
+                logger.warning("レートリミット。60秒後にリトライ (%d/3)", attempt + 1)
+                time.sleep(60)
+            else:
+                raise
 
 
 def supplement_article(client: anthropic.Anthropic, article: str, current_chars: int) -> str:
+    import time
     shortage = MIN_CHARS - current_chars
-    response = client.messages.create(
-        model=MODEL,
-        max_tokens=4096,
-        messages=[
-            {
-                "role": "user",
-                "content": (
-                    f"以下のMarkdown記事は本文が約{current_chars}字で、"
-                    f"目標の{MIN_CHARS}字に約{shortage}字不足しています。\n"
-                    "以下のルールで加筆して完全な記事として出力してください：\n"
-                    "- 各セクションをより詳しく（実体験・具体的なステップ・注意点を追加）\n"
-                    "- FAQに1〜2問追加\n"
-                    "- 誠実さを保ち、誇張表現は引き続き使わない\n"
-                    "- frontmatter・見出し構成はそのまま保持する\n\n"
-                    f"--- 元の記事 ---\n{article}\n"
-                ),
-            }
-        ],
-    )
-    return response.content[0].text
+    for attempt in range(3):
+        try:
+            response = client.messages.create(
+                model=MODEL,
+                max_tokens=4096,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": (
+                            f"以下のMarkdown記事は本文が約{current_chars}字で、"
+                            f"目標の{MIN_CHARS}字に約{shortage}字不足しています。\n"
+                            "以下のルールで加筆して完全な記事として出力してください：\n"
+                            "- 各セクションをより詳しく（実体験・具体的なステップ・注意点を追加）\n"
+                            "- FAQに1〜2問追加\n"
+                            "- 誠実さを保ち、誇張表現は引き続き使わない\n"
+                            "- frontmatter・見出し構成はそのまま保持する\n\n"
+                            f"--- 元の記事 ---\n{article}\n"
+                        ),
+                    }
+                ],
+            )
+            return response.content[0].text
+        except anthropic.RateLimitError:
+            if attempt < 2:
+                logger.warning("レートリミット。60秒後にリトライ (%d/3)", attempt + 1)
+                time.sleep(60)
+            else:
+                raise
 
 
 def ensure_min_chars(client: anthropic.Anthropic, article: str, prompt: str) -> str:
