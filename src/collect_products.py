@@ -1,5 +1,4 @@
 import os
-import sys
 import json
 import time
 import logging
@@ -249,9 +248,4 @@ def main():
 
 
 if __name__ == "__main__":
-    missing = [v for v in ["AMAZON_ACCESS_KEY", "AMAZON_SECRET_KEY", "AMAZON_ASSOCIATE_TAG"] if not os.environ.get(v)]
-    if missing:
-        print(f"ERROR: missing env vars: {', '.join(missing)}", file=sys.stderr)
-        sys.exit(1)
-
     main()
