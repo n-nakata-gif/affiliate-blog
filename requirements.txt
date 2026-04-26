@@ -1,2 +1,3 @@
+anthropic
 requests-oauthlib
 tweepy
