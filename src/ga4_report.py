@@ -111,8 +111,8 @@ if __name__ == "__main__":
     try:
         report = fetch_ga4_report(property_id)
     except Exception as e:
-        print(f"GA4取得失敗: {e}")
-        raise SystemExit(1)
+        print(f"GA4取得失敗（スキップ）: {e}")
+        raise SystemExit(0)
     print(f"期間: {report['period']}")
     print(f"PV: {report['summary']['pageviews']}, Sessions: {report['summary']['sessions']}")
     send_report(report)
