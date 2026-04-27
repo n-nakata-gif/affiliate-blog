@@ -2,8 +2,8 @@ name: Weekly Analytics & Keyword Report
 
 on:
   schedule:
-    - cron: "0 1 * * 1"   # 毎週月曜 10:00 JST (UTC+1 ≈ JST-9)
-  workflow_dispatch:       # 手動実行も可能
+    - cron: "0 1 * * 1"
+  workflow_dispatch:
 
 jobs:
   ga4-report:
@@ -44,14 +44,10 @@ jobs:
           GMAIL_USER:               ${{ secrets.GMAIL_USER }}
           GMAIL_APP_PASSWORD:       ${{ secrets.GMAIL_APP_PASSWORD }}
         run: python src/keyword_suggest.py
-      - name: Commit keyword suggestions
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: |
-          if [ -f data/keyword_suggestions.json ]; then
-            git config --global user.email "github-actions[bot]@users.noreply.github.com"
-            git config --global user.name "github-actions[bot]"
-            git add data/keyword_suggestions.json
-            git diff --staged --quiet || git commit -m "auto: update keyword suggestions $(date -u +%Y%m%d)"
-            git push https://x-access-token:${GH_TOKEN}@github.com/n-nakata-gif/affiliate-blog.git HEAD:main
-          fi
+      - name: Save keyword suggestions as artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: keyword-suggestions
+          path: data/keyword_suggestions.json
+          if-no-files-found: ignore
