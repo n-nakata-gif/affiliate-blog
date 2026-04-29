@@ -520,6 +520,27 @@ _GOURMET_LINKS = [
     {"name": "Oisix（オイシックス）", "url": "https://www.oisix.com", "desc": "有機野菜・安心食材のお試しセット"},
 ]
 
+_BUSINESS_LINKS = [
+    {"name": "クラウドワークス", "url": "https://crowdworks.jp", "desc": "副業・フリーランス案件を探す"},
+    {"name": "ランサーズ", "url": "https://www.lancers.jp", "desc": "スキルを活かした副業マッチング"},
+    {"name": "ストアカ", "url": "https://www.street-academy.com", "desc": "ビジネス・副業スキルを学ぶ"},
+    {"name": "Udemy", "url": "https://www.udemy.com/ja/", "desc": "オンライン講座でスキルアップ"},
+]
+
+_INVESTMENT_LINKS = [
+    {"name": "SBI証券", "url": "https://www.sbisec.co.jp", "desc": "新NISA・つみたて投資ならSBI証券"},
+    {"name": "楽天証券", "url": "https://www.rakuten-sec.co.jp", "desc": "楽天ポイントで投資デビュー"},
+    {"name": "マネーフォワード ME", "url": "https://moneyforward.com", "desc": "資産・家計を一括管理"},
+    {"name": "ウェルスナビ", "url": "https://www.wealthnavi.com", "desc": "おまかせロボアドバイザー投資"},
+]
+
+_GADGET_LINKS = [
+    {"name": "Amazon", "url": "https://www.amazon.co.jp", "desc": "最新ガジェットをお得に購入"},
+    {"name": "ヨドバシカメラ", "url": "https://www.yodobashi.com", "desc": "家電・ガジェットをポイント還元で"},
+    {"name": "楽天市場", "url": "https://www.rakuten.co.jp", "desc": "楽天ポイントでお得にショッピング"},
+    {"name": "価格.com", "url": "https://kakaku.com", "desc": "最安値・スペック比較で賢く購入"},
+]
+
 
 def fetch_rakuten_products(keyword: str, app_id: str, affiliate_id: str, n: int = 3) -> list:
     """楽天市場商品検索 API でキーワード検索し上位 n 件を返す"""
@@ -587,13 +608,17 @@ def build_affiliate_section(genre: str, keyword: str, products: list) -> str:
             )
 
     # ジャンル別固定リンク
+    _GENRE_LINK_MAP = {
+        "travel":     (_TRAVEL_LINKS,     "旅行の予約・比較サービス"),
+        "gourmet":    (_GOURMET_LINKS,    "グルメ・食の関連サービス"),
+        "business":   (_BUSINESS_LINKS,   "副業・スキルアップに役立つサービス"),
+        "investment": (_INVESTMENT_LINKS, "投資・資産運用に役立つサービス"),
+        "gadget":     (_GADGET_LINKS,     "ガジェット購入に役立つサービス"),
+    }
     genre_links = []
-    if genre == "travel":
-        genre_links = _TRAVEL_LINKS
-        lines.append("\n### 旅行の予約・比較サービス\n")
-    elif genre == "gourmet":
-        genre_links = _GOURMET_LINKS
-        lines.append("\n### グルメ・食の関連サービス\n")
+    if genre in _GENRE_LINK_MAP:
+        genre_links, section_title = _GENRE_LINK_MAP[genre]
+        lines.append(f"\n### {section_title}\n")
 
     if genre_links:
         lines.append(
