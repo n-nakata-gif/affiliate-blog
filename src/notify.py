@@ -4,23 +4,57 @@ from datetime import datetime, timezone, timedelta
 JST = timezone(timedelta(hours=9))
 
 _X_HASHTAGS = {
-    "business": "#副業 #ビジネス #Novlify",
-    "gadget": "#ガジェット #テック #Novlify",
+    "business":   "#副業 #ビジネス #Novlify",
+    "gadget":     "#ガジェット #テック #Novlify",
     "investment": "#投資 #資産運用 #Novlify",
-    "travel": "#旅行 #国内旅行 #Novlify",
-    "gourmet": "#グルメ #食 #Novlify",
+    "travel":     "#旅行 #国内旅行 #Novlify",
+    "gourmet":    "#グルメ #食 #Novlify",
 }
 
-_X_INTROS = {
-    "business": "副業・ビジネスで差をつけるヒントをお届けします。",
-    "gadget": "話題のガジェットをピックアップしました。",
-    "investment": "資産を育てるための最新情報をまとめました。",
-    "travel": "次の旅先選びに役立つ情報をご紹介します。",
-    "gourmet": "食通も唸る一品を発見しました。",
-}
+_X_ESSENCE_PROMPT = """\
+次のブログ記事の「読む価値が伝わるエッセンス」を80〜100文字で生成してください。
+
+条件：
+- 記事の最も重要なポイントや読者へのメリットを1〜2文に凝縮する
+- 「〜の方法」「〜のコツ」など具体的なベネフィットを含める
+- 「です・ます」調
+- 宣伝・誘導文句は避け、素直な情報として書く
+- 絵文字は1〜2個まで使用可
+- 出力は本文のみ（見出し・記号・改行不要）
+
+【記事タイトル】
+{title}
+
+【記事の冒頭300文字】
+{intro}
+"""
 
 
-def post_to_x(article_type: str, title: str, blog_url: str) -> None:
+def generate_x_essence(article_type: str, title: str, article_body: str) -> str:
+    """Claude APIで記事のエッセンス（約100文字）を生成する"""
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    if not api_key:
+        return ""
+    try:
+        import anthropic
+        from generate import MODEL
+        client = anthropic.Anthropic(api_key=api_key)
+        # frontmatterを除いた本文の先頭300文字を使用
+        body_start = article_body.split("---", 2)[-1].strip()[:300]
+        prompt = _X_ESSENCE_PROMPT.format(title=title, intro=body_start)
+        resp = client.messages.create(
+            model=MODEL,
+            max_tokens=200,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return resp.content[0].text.strip()
+    except Exception as e:
+        print(f"[X] エッセンス生成失敗（スキップ）: {e}")
+        return ""
+
+
+def post_to_x(article_type: str, title: str, blog_url: str,
+              article_body: str = "") -> None:
     api_key = os.environ.get("X_API_KEY")
     api_secret = os.environ.get("X_API_SECRET")
     access_token = os.environ.get("X_ACCESS_TOKEN")
@@ -33,7 +67,6 @@ def post_to_x(article_type: str, title: str, blog_url: str) -> None:
         print("X APIキー未設定のためスキップ")
         return
 
-    # 先頭4文字のみ表示して認証情報を確認
     print(f"[X] API_KEY先頭: {api_key[:4]}..., ACCESS_TOKEN先頭: {access_token[:4]}...")
 
     try:
@@ -43,16 +76,24 @@ def post_to_x(article_type: str, title: str, blog_url: str) -> None:
         print("tweepyが見つかりません。スキップ")
         return
 
-    intro = _X_INTROS.get(article_type, "新しい記事を投稿しました。")
     hashtags = _X_HASHTAGS.get(article_type, "#Novlify")
 
-    # Twitterは短縮URL(t.co)を23字として計算
-    url_chars = 23
-    fixed_len = len(intro) + 1 + 1 + url_chars + 1 + len(hashtags)
-    max_title_len = 140 - fixed_len
-    trimmed = title if len(title) <= max_title_len else title[: max_title_len - 1] + "…"
+    # 記事のエッセンスを生成（約100文字）
+    essence = ""
+    if article_body:
+        essence = generate_x_essence(article_type, title, article_body)
 
-    tweet = f"{intro}\n{trimmed}\n{blog_url}\n{hashtags}"
+    # エッセンスが取れなければタイトルで代替
+    if not essence:
+        essence = title
+
+    # 文字数調整（URL は t.co で23字固定）
+    url_chars = 23
+    max_essence = 280 - url_chars - len(hashtags) - 3  # 改行2 + 余白1
+    if len(essence) > max_essence:
+        essence = essence[: max_essence - 1] + "…"
+
+    tweet = f"{essence}\n{blog_url}\n{hashtags}"
     print(f"[X] ツイート文字数: {len(tweet)}")
     print(f"[X] ツイート内容:\n{tweet}")
 

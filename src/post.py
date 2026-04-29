@@ -7,7 +7,7 @@ import urllib.request
 import urllib.error
 import json
 
-BLOG_URL = "https://affiliate-blog.nori-nakata1004.workers.dev"
+BLOG_URL = "https://nexigen-blog.com"
 REPO = "n-nakata-gif/affiliate-blog"
 BRANCH = "main"
 ARTICLE_SRC = "output/article.md"

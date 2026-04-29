@@ -16,7 +16,7 @@ import anthropic
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
-BLOG_URL = "https://affiliate-blog.nori-nakata1004.workers.dev"
+BLOG_URL = "https://nexigen-blog.com"
 REPO = "n-nakata-gif/affiliate-blog"
 BRANCH = "main"
 MODEL = "claude-opus-4-7"
@@ -882,6 +882,7 @@ def main():
         article_type=config["article_type"],
         title=extract_title(article),
         blog_url=BLOG_URL,
+        article_body=article,
     )
     # ── Pinterest 自動投稿 ───────────────────────────────────
     try:
