@@ -525,6 +525,7 @@ _BUSINESS_LINKS = [
     {"name": "ランサーズ", "url": "https://www.lancers.jp", "desc": "スキルを活かした副業マッチング"},
     {"name": "ストアカ", "url": "https://www.street-academy.com", "desc": "ビジネス・副業スキルを学ぶ"},
     {"name": "Udemy", "url": "https://www.udemy.com/ja/", "desc": "オンライン講座でスキルアップ"},
+    {"name": "Amazon（副業・ビジネス書）", "url": "https://www.amazon.co.jp/s?k=%E5%89%AF%E6%A5%AD+%E3%83%93%E3%82%B8%E3%83%8D%E3%82%B9&tag=nexigen22-22", "desc": "副業・ビジネス関連書籍をAmazonで"},
 ]
 
 _INVESTMENT_LINKS = [
@@ -532,10 +533,11 @@ _INVESTMENT_LINKS = [
     {"name": "楽天証券", "url": "https://www.rakuten-sec.co.jp", "desc": "楽天ポイントで投資デビュー"},
     {"name": "マネーフォワード ME", "url": "https://moneyforward.com", "desc": "資産・家計を一括管理"},
     {"name": "ウェルスナビ", "url": "https://www.wealthnavi.com", "desc": "おまかせロボアドバイザー投資"},
+    {"name": "Amazon（投資・資産運用書）", "url": "https://www.amazon.co.jp/s?k=%E6%8A%95%E8%B3%87+%E8%B3%87%E7%94%A3%E9%81%8B%E7%94%A8&tag=nexigen22-22", "desc": "投資・お金の本をAmazonで"},
 ]
 
 _GADGET_LINKS = [
-    {"name": "Amazon", "url": "https://www.amazon.co.jp", "desc": "最新ガジェットをお得に購入"},
+    {"name": "Amazon", "url": "https://www.amazon.co.jp/?tag=nexigen22-22", "desc": "最新ガジェットをお得に購入"},
     {"name": "ヨドバシカメラ", "url": "https://www.yodobashi.com", "desc": "家電・ガジェットをポイント還元で"},
     {"name": "楽天市場", "url": "https://www.rakuten.co.jp", "desc": "楽天ポイントでお得にショッピング"},
     {"name": "価格.com", "url": "https://kakaku.com", "desc": "最安値・スペック比較で賢く購入"},
