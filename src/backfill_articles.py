@@ -72,9 +72,19 @@ def backfill_affiliate(md_files: list, gh_token: str,
         genre = detect_genre(md_path.name)
         keyword = extract_keyword_from_md(content)
 
+        # ジャンル別の短い検索キーワード（長いと楽天API 400エラー）
+        _RAKUTEN_GENRE_KW = {
+            "business":   "副業 ビジネス",
+            "investment": "投資 資産運用",
+            "gadget":     "ガジェット テック",
+            "travel":     "旅行グッズ",
+            "gourmet":    "グルメ ギフト",
+        }
+        rakuten_kw = _RAKUTEN_GENRE_KW.get(genre, keyword[:15])
+
         # 楽天商品取得（API設定があれば）
         if rakuten_app_id and rakuten_aff_id:
-            products = fetch_rakuten_products(keyword, rakuten_app_id, rakuten_aff_id, n=3)
+            products = fetch_rakuten_products(rakuten_kw, rakuten_app_id, rakuten_aff_id, n=3)
             time.sleep(0.5)
         else:
             products = []

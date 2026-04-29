@@ -523,12 +523,14 @@ _GOURMET_LINKS = [
 
 def fetch_rakuten_products(keyword: str, app_id: str, affiliate_id: str, n: int = 3) -> list:
     """楽天市場商品検索 API でキーワード検索し上位 n 件を返す"""
+    # キーワードを20文字以内に短縮（長いと400エラーになる）
+    short_kw = keyword[:20]
     params = {
         "applicationId": app_id,
         "affiliateId": affiliate_id,
-        "keyword": keyword,
+        "keyword": short_kw,
         "hits": n,
-        "sort": "-reviewCount",
+        "sort": "standard",
         "availability": 1,
     }
     url = "https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601?" + urllib.parse.urlencode(params)
@@ -545,10 +547,14 @@ def fetch_rakuten_products(keyword: str, app_id: str, affiliate_id: str, n: int 
                 "price": item.get("itemPrice", 0),
                 "image": (item.get("mediumImageUrls") or [{}])[0].get("imageUrl", ""),
             })
-        logger.info("楽天API: %d件取得 (keyword=%s)", len(results), keyword[:20])
+        logger.info("楽天API: %d件取得 (keyword=%s)", len(results), short_kw)
         return results
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8", errors="replace")
+        logger.warning("楽天API呼び出し失敗 (keyword=%s): HTTP %s: %s", short_kw, e.code, body[:300])
+        return []
     except Exception as e:
-        logger.warning("楽天API呼び出し失敗 (keyword=%s): %s", keyword, e)
+        logger.warning("楽天API呼び出し失敗 (keyword=%s): %s", short_kw, e)
         return []
 
 
@@ -744,8 +750,17 @@ def main():
     rakuten_app_id    = os.environ.get("RAKUTEN_APP_ID", "")
     rakuten_aff_id    = os.environ.get("RAKUTEN_AFFILIATE_ID", "")
     title_hint = _get(topic, "title", "topic", "keyword")
+    # ジャンル別の短い検索キーワード（楽天APIは長いキーワードで400エラーになるため）
+    _RAKUTEN_GENRE_KW = {
+        "business":   "副業 ビジネス",
+        "investment": "投資 資産運用",
+        "gadget":     "ガジェット テック",
+        "travel":     "旅行グッズ",
+        "gourmet":    "グルメ ギフト",
+    }
+    rakuten_kw = _RAKUTEN_GENRE_KW.get(genre, title_hint[:15])
     if rakuten_app_id and rakuten_aff_id:
-        rakuten_products = fetch_rakuten_products(title_hint, rakuten_app_id, rakuten_aff_id, n=3)
+        rakuten_products = fetch_rakuten_products(rakuten_kw, rakuten_app_id, rakuten_aff_id, n=3)
     else:
         logger.info("RAKUTEN_APP_ID/AFFILIATE_ID 未設定のため楽天商品取得スキップ")
         rakuten_products = []
