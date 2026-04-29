@@ -2,9 +2,11 @@
 export interface Props {
   title: string;
   description?: string;
+  image?: string;
 }
-const { title, description = 'NEXIGEN - 最新ガジェット・ライフスタイルの本音レビュー' } = Astro.props;
+const { title, description = 'NEXIGEN - 副業・投資・旅行・グルメの本音情報', image } = Astro.props;
 const adsenseId = import.meta.env.PUBLIC_ADSENSE_ID;
+const ogImage = image || 'https://cdn.pixabay.com/photo/2016/11/29/08/41/apple-1868496_1280.jpg';
 ---
 
 <!DOCTYPE html>
@@ -18,10 +20,17 @@ const adsenseId = import.meta.env.PUBLIC_ADSENSE_ID;
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={Astro.url.href} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" href="/favicon.ico" />
+    <!-- Noto Sans JP (Google Fonts) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap"
+      rel="stylesheet"
+    />
     <title>{title}</title>
     {adsenseId && (
       <script
@@ -31,25 +40,141 @@ const adsenseId = import.meta.env.PUBLIC_ADSENSE_ID;
       ></script>
     )}
     <slot name="head" />
-  </head>
-  <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col" style="font-family: 'Inter', system-ui, sans-serif;">
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        background: #f7f7f7;
+        color: #333;
+        font-family: 'Noto Sans JP', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN',
+          Meiryo, sans-serif;
+        font-size: 16px;
+        line-height: 1.8;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      a { color: inherit; }
+      img { max-width: 100%; height: auto; }
 
-    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50">
-      <div class="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-        <a href="/" class="text-2xl font-black tracking-tight" style="background: linear-gradient(to right, #a78bfa, #22d3ee); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
-          NEXIGEN
-        </a>
-        <nav class="flex gap-6 text-sm font-medium">
-          <a href="/" class="text-slate-400 hover:text-white transition-colors">ホーム</a>
-          <a href="/privacy-policy" class="text-slate-400 hover:text-white transition-colors">プライバシー</a>
-          <a href="/contact" class="text-slate-400 hover:text-white transition-colors">お問い合わせ</a>
+      /* ヘッダー */
+      .site-header {
+        background: #fff;
+        border-bottom: 3px solid #f59e0b;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      }
+      .site-header__inner {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 0 20px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .site-logo {
+        font-size: 1.4rem;
+        font-weight: 900;
+        text-decoration: none;
+        color: #1a1a1a;
+        letter-spacing: 0.05em;
+      }
+      .site-logo span { color: #f59e0b; }
+      .site-nav { display: flex; gap: 24px; }
+      .site-nav a {
+        text-decoration: none;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #555;
+        transition: color 0.2s;
+      }
+      .site-nav a:hover { color: #f59e0b; }
+
+      /* メイン */
+      .site-main {
+        flex: 1;
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 32px 20px;
+        width: 100%;
+      }
+
+      /* フッター */
+      .site-footer {
+        background: #1a1a1a;
+        color: #aaa;
+        margin-top: auto;
+      }
+      .site-footer__inner {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 32px 20px;
+      }
+      .site-footer__top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 20px;
+      }
+      .site-footer__logo {
+        font-size: 1.2rem;
+        font-weight: 900;
+        color: #fff;
+        text-decoration: none;
+      }
+      .site-footer__logo span { color: #f59e0b; }
+      .site-footer__nav {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+      }
+      .site-footer__nav a {
+        font-size: 0.85rem;
+        text-decoration: none;
+        color: #aaa;
+        transition: color 0.2s;
+      }
+      .site-footer__nav a:hover { color: #fff; }
+      .site-footer__bottom {
+        border-top: 1px solid #333;
+        padding-top: 16px;
+        font-size: 0.8rem;
+        text-align: center;
+        line-height: 1.6;
+        color: #666;
+      }
+
+      /* レスポンシブ */
+      @media (max-width: 640px) {
+        .site-nav { gap: 14px; }
+        .site-nav a { font-size: 0.8rem; }
+        .site-main { padding: 20px 14px; }
+        .site-footer__top { flex-direction: column; align-items: flex-start; }
+      }
+    </style>
+  </head>
+  <body>
+
+    <header class="site-header">
+      <div class="site-header__inner">
+        <a href="/" class="site-logo">NEXI<span>GEN</span></a>
+        <nav class="site-nav">
+          <a href="/">ホーム</a>
+          <a href="/privacy-policy">プライバシー</a>
+          <a href="/contact">お問い合わせ</a>
         </nav>
       </div>
     </header>
 
-    <main class="flex-1 max-w-4xl mx-auto px-6 py-10 w-full">
+    <main class="site-main">
       {adsenseId && (
-        <div class="mb-8">
+        <div style="margin-bottom:24px;text-align:center;">
           <ins
             class="adsbygoogle"
             style="display:block"
@@ -65,7 +190,7 @@ const adsenseId = import.meta.env.PUBLIC_ADSENSE_ID;
       <slot />
 
       {adsenseId && (
-        <div class="mt-10">
+        <div style="margin-top:32px;text-align:center;">
           <ins
             class="adsbygoogle"
             style="display:block"
@@ -79,19 +204,19 @@ const adsenseId = import.meta.env.PUBLIC_ADSENSE_ID;
       )}
     </main>
 
-    <footer class="bg-slate-900 text-slate-400 mt-auto">
-      <div class="max-w-4xl mx-auto px-6 py-8">
-        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 text-sm">
-          <span class="font-black text-white tracking-tight text-xl" style="background: linear-gradient(to right, #a78bfa, #22d3ee); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">NEXIGEN</span>
-          <div class="flex flex-wrap gap-5 justify-center sm:justify-end">
-            <a href="/privacy-policy" class="hover:text-white transition-colors">プライバシーポリシー</a>
-            <a href="/disclaimer" class="hover:text-white transition-colors">免責事項</a>
-            <a href="/contact" class="hover:text-white transition-colors">お問い合わせ</a>
-          </div>
+    <footer class="site-footer">
+      <div class="site-footer__inner">
+        <div class="site-footer__top">
+          <a href="/" class="site-footer__logo">NEXI<span>GEN</span></a>
+          <nav class="site-footer__nav">
+            <a href="/privacy-policy">プライバシーポリシー</a>
+            <a href="/disclaimer">免責事項</a>
+            <a href="/contact">お問い合わせ</a>
+          </nav>
         </div>
-        <div class="border-t border-slate-800 mt-5 pt-5 text-xs text-center space-y-1">
+        <div class="site-footer__bottom">
           <p>&copy; {new Date().getFullYear()} NEXIGEN. All rights reserved.</p>
-          <p class="text-slate-600">本サイトはアフィリエイト広告を利用しています。</p>
+          <p>本サイトはアフィリエイト広告を利用しています。</p>
         </div>
       </div>
     </footer>
