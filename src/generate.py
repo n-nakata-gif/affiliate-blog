@@ -6,6 +6,7 @@ import json
 import base64
 import logging
 import urllib.request
+import urllib.parse
 import urllib.error
 from datetime import datetime, timezone
 from pathlib import Path
@@ -368,6 +369,101 @@ def ensure_min_chars(client: anthropic.Anthropic, article: str, prompt: str) -> 
     return article
 
 
+# ── Pixabay 画像取得 ──────────────────────────────────────────
+
+_GENRE_IMAGE_QUERIES = {
+    "business": "professional business workspace success",
+    "investment": "finance investment growth chart",
+    "travel": "travel landscape scenic beautiful",
+    "gourmet": "delicious food beautiful plating",
+}
+
+
+def fetch_pixabay_image_urls(query: str, api_key: str, n: int = 3) -> list:
+    """Pixabay API から n 枚の画像情報（url, alt）を取得して返す"""
+    params = {
+        "key": api_key,
+        "q": query,
+        "image_type": "photo",
+        "orientation": "horizontal",
+        "safesearch": "true",
+        "per_page": max(n, 3),
+        "order": "popular",
+        "lang": "ja",
+    }
+    endpoint = "https://pixabay.com/api/?" + urllib.parse.urlencode(params)
+    try:
+        with urllib.request.urlopen(endpoint, timeout=15) as resp:
+            data = json.loads(resp.read())
+        results = []
+        for hit in data.get("hits", [])[:n]:
+            url = hit.get("webformatURL", "")
+            if url:
+                results.append({
+                    "url": url,
+                    "alt": hit.get("tags", query).split(",")[0].strip(),
+                    "page": hit.get("pageURL", ""),
+                })
+        logger.info("Pixabay: %d件取得 (query=%s)", len(results), query[:30])
+        return results
+    except Exception as e:
+        logger.warning("Pixabay画像取得失敗 (query=%s): %s", query, e)
+        return []
+
+
+def insert_images_into_article(article: str, images: list) -> str:
+    """記事の3箇所（h1直後・中間・まとめ前）に画像を挿入する"""
+    if not images:
+        return article
+
+    def img_block(img: dict) -> str:
+        return (
+            f'\n<figure style="margin:1.5rem 0;text-align:center;">'
+            f'<img src="{img["url"]}" alt="{img["alt"]}" '
+            f'style="width:100%;max-width:800px;height:auto;border-radius:8px;" loading="lazy">'
+            f'</figure>\n'
+        )
+
+    # frontmatter を除いた body 部分のみ操作
+    fm_match = re.match(r'^---\n[\s\S]*?\n---\n', article)
+    if fm_match:
+        frontmatter = article[:fm_match.end()]
+        body = article[fm_match.end():]
+    else:
+        frontmatter = ""
+        body = article
+
+    lines = body.split('\n')
+
+    # 挿入位置を先に全部決めておく（後で逆順に挿入してインデックスズレを防ぐ）
+    insertions = []  # (line_index, text)
+
+    # 1枚目: h1 の直後
+    h1_idx = next((i for i, l in enumerate(lines) if l.startswith('# ')), -1)
+    if h1_idx >= 0 and len(images) >= 1:
+        insertions.append((h1_idx + 1, img_block(images[0])))
+
+    # 2枚目: h2 見出しの中間付近
+    h2_indices = [i for i, l in enumerate(lines) if re.match(r'^## ', l)]
+    if len(h2_indices) >= 2 and len(images) >= 2:
+        mid_idx = h2_indices[len(h2_indices) // 2]
+        insertions.append((mid_idx, img_block(images[1])))
+
+    # 3枚目: まとめセクションの直前
+    matome_idx = next(
+        (i for i, l in enumerate(lines) if re.match(r'^##\s+まとめ|^##\s+おわりに|^##\s+最後に', l)),
+        -1,
+    )
+    if matome_idx >= 0 and len(images) >= 3:
+        insertions.append((matome_idx, img_block(images[2])))
+
+    # 逆順に挿入（インデックスがズレないように）
+    for idx, text in sorted(insertions, key=lambda x: x[0], reverse=True):
+        lines.insert(idx, text)
+
+    return frontmatter + '\n'.join(lines)
+
+
 # ── GitHub API ────────────────────────────────────────────────
 
 def gh(method: str, path: str, token: str, body=None):
@@ -480,6 +576,17 @@ def main():
     prompt  = build_prompt(topic, date_str, genre)
     article = generate_article(client, prompt, genre)
     article = ensure_min_chars(client, article, prompt)
+
+    # ── Pixabay 画像を記事に挿入 ─────────────────────────────
+    pixabay_key = os.environ.get("PIXABAY_API_KEY")
+    if pixabay_key:
+        title_hint = _get(topic, "title", "topic", "keyword")
+        img_query = f"{title_hint} {_GENRE_IMAGE_QUERIES.get(genre, genre)}"
+        images = fetch_pixabay_image_urls(img_query, pixabay_key, n=3)
+        article = insert_images_into_article(article, images)
+        logger.info("画像挿入完了: %d枚", len(images))
+    else:
+        logger.info("PIXABAY_API_KEY 未設定のため画像挿入スキップ")
 
     from factcheck import factcheck_article
     fc_result = factcheck_article(article, config["article_type"])
