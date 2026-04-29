@@ -1,0 +1,41 @@
+name: Backfill Affiliate
+
+on:
+  workflow_dispatch:
+    inputs:
+      force:
+        description: '既存のアフィリエイトセクションを強制上書きする'
+        required: false
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+      genre:
+        description: '対象ジャンル（空欄=全件）'
+        required: false
+        default: ''
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install anthropic
+      - name: Run affiliate backfill
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          RAKUTEN_APP_ID: ${{ secrets.RAKUTEN_APP_ID }}
+          RAKUTEN_AFFILIATE_ID: ${{ secrets.RAKUTEN_AFFILIATE_ID }}
+        run: |
+          ARGS="--affiliate"
+          if [ "${{ github.event.inputs.force }}" = "true" ]; then
+            ARGS="$ARGS --force"
+          fi
+          if [ -n "${{ github.event.inputs.genre }}" ]; then
+            ARGS="$ARGS --genre ${{ github.event.inputs.genre }}"
+          fi
+          python src/backfill_articles.py $ARGS

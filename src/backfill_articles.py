@@ -52,6 +52,14 @@ def extract_keyword_from_md(content: str) -> str:
 def has_affiliate_section(content: str) -> bool:
     return "おすすめ商品・サービス" in content or "アフィリエイト広告" in content
 
+def strip_affiliate_section(content: str) -> str:
+    """既存のアフィリエイトセクションを末尾から除去する"""
+    marker = "\n\n---\n\n## おすすめ商品・サービス"
+    idx = content.find(marker)
+    if idx != -1:
+        return content[:idx]
+    return content
+
 def has_conversation(content: str) -> bool:
     # 💬 が2個以上あれば会話シーンあり
     return content.count("💬") >= 2
@@ -61,13 +69,16 @@ def has_conversation(content: str) -> bool:
 
 def backfill_affiliate(md_files: list, gh_token: str,
                        rakuten_app_id: str, rakuten_aff_id: str,
-                       dry_run: bool):
+                       dry_run: bool, force: bool = False):
     updated = 0
     for md_path in md_files:
         content = md_path.read_text(encoding="utf-8")
         if has_affiliate_section(content):
-            print(f"  スキップ（既存）: {md_path.name}")
-            continue
+            if not force:
+                print(f"  スキップ（既存）: {md_path.name}")
+                continue
+            print(f"  強制更新（既存セクションを置換）: {md_path.name}")
+            content = strip_affiliate_section(content)
 
         genre = detect_genre(md_path.name)
         keyword = extract_keyword_from_md(content)
@@ -187,6 +198,7 @@ def main():
     parser.add_argument("--affiliate", action="store_true", help="アフィリエイトリンクを追加")
     parser.add_argument("--conversation", action="store_true", help="会話シーンを追加（Claude API）")
     parser.add_argument("--dry-run", action="store_true", help="実際には更新しない")
+    parser.add_argument("--force", action="store_true", help="既存セクションがあっても強制上書き")
     parser.add_argument("--genre", help="特定ジャンルのみ処理 (business/investment/travel/gourmet)")
     args = parser.parse_args()
 
@@ -212,7 +224,7 @@ def main():
         print("\n=== アフィリエイトリンク追加 ===")
         rakuten_app_id = os.environ.get("RAKUTEN_APP_ID", "")
         rakuten_aff_id = os.environ.get("RAKUTEN_AFFILIATE_ID", "")
-        backfill_affiliate(auto_files, gh_token, rakuten_app_id, rakuten_aff_id, args.dry_run)
+        backfill_affiliate(auto_files, gh_token, rakuten_app_id, rakuten_aff_id, args.dry_run, args.force)
 
     if args.conversation:
         anthropic_key = os.environ.get("ANTHROPIC_API_KEY", "")
