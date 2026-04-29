@@ -140,4 +140,12 @@ TOPIXや先進国株、新興国株などのインデックスもあります。
 
 ## おすすめ商品・サービス
 
+### 投資・資産運用に役立つサービス
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin:1rem 0;">
+<a href="https://www.sbisec.co.jp" target="_blank" rel="noopener sponsored" style="display:block;border:1px solid #e5e7eb;border-radius:8px;padding:14px;text-decoration:none;color:inherit;transition:box-shadow 0.2s;" onmouseenter="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.1)'" onmouseleave="this.style.boxShadow=''"><strong style="color:#bf0000;">SBI証券</strong><br><span style="font-size:0.85em;color:#555;">新NISA・つみたて投資ならSBI証券</span></a>
+<a href="https://www.rakuten-sec.co.jp" target="_blank" rel="noopener sponsored" style="display:block;border:1px solid #e5e7eb;border-radius:8px;padding:14px;text-decoration:none;color:inherit;transition:box-shadow 0.2s;" onmouseenter="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.1)'" onmouseleave="this.style.boxShadow=''"><strong style="color:#bf0000;">楽天証券</strong><br><span style="font-size:0.85em;color:#555;">楽天ポイントで投資デビュー</span></a>
+<a href="https://moneyforward.com" target="_blank" rel="noopener sponsored" style="display:block;border:1px solid #e5e7eb;border-radius:8px;padding:14px;text-decoration:none;color:inherit;transition:box-shadow 0.2s;" onmouseenter="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.1)'" onmouseleave="this.style.boxShadow=''"><strong style="color:#bf0000;">マネーフォワード ME</strong><br><span style="font-size:0.85em;color:#555;">資産・家計を一括管理</span></a>
+<a href="https://www.wealthnavi.com" target="_blank" rel="noopener sponsored" style="display:block;border:1px solid #e5e7eb;border-radius:8px;padding:14px;text-decoration:none;color:inherit;transition:box-shadow 0.2s;" onmouseenter="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.1)'" onmouseleave="this.style.boxShadow=''"><strong style="color:#bf0000;">ウェルスナビ</strong><br><span style="font-size:0.85em;color:#555;">おまかせロボアドバイザー投資</span></a>
+</div>
+
 <p style="font-size:0.8em;color:#999;">※本記事にはアフィリエイト広告が含まれます。</p>
