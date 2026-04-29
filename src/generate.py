@@ -926,11 +926,12 @@ def main():
     commit_url = f"https://github.com/{REPO}/commit/{commit_sha}"
     print(commit_url)
 
+    article_url = f"{BLOG_URL}/blog/{genre}_{date_str}/"
     from notify import post_to_x
     post_to_x(
         article_type=config["article_type"],
         title=extract_title(article),
-        blog_url=BLOG_URL,
+        blog_url=article_url,
         article_body=article,
     )
     # ── Pinterest 自動投稿 ───────────────────────────────────
