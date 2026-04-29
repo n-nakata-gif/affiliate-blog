@@ -17,19 +17,19 @@ JST = timezone(timedelta(hours=9))
 PINTEREST_API_BASE = "https://api.pinterest.com/v5"
 
 BOARD_NAMES = {
-    "business":   "NEXIGEN ビジネス・副業",
-    "gadget":     "NEXIGEN ガジェット・テック",
-    "investment": "NEXIGEN 投資・資産運用",
-    "travel":     "NEXIGEN 旅行・観光",
-    "gourmet":    "NEXIGEN グルメ・食",
+    "business":   "Novlify ビジネス・副業",
+    "gadget":     "Novlify ガジェット・テック",
+    "investment": "Novlify 投資・資産運用",
+    "travel":     "Novlify 旅行・観光",
+    "gourmet":    "Novlify グルメ・食",
 }
 
 BOARD_DESCRIPTIONS = {
-    "business":   "副業・ビジネスに役立つ情報をお届けするNEXIGENのボードです。",
-    "gadget":     "最新ガジェット・テックアイテムのレビューと情報をまとめたNEXIGENのボードです。",
-    "investment": "投資・資産運用の知識と最新情報をお届けするNEXIGENのボードです。",
-    "travel":     "国内外の旅行・観光情報をまとめたNEXIGENのボードです。",
-    "gourmet":    "グルメ・食の情報をお届けするNEXIGENのボードです。",
+    "business":   "副業・ビジネスに役立つ情報をお届けするNovlifyのボードです。",
+    "gadget":     "最新ガジェット・テックアイテムのレビューと情報をまとめたNovlifyのボードです。",
+    "investment": "投資・資産運用の知識と最新情報をお届けするNovlifyのボードです。",
+    "travel":     "国内外の旅行・観光情報をまとめたNovlifyのボードです。",
+    "gourmet":    "グルメ・食の情報をお届けするNovlifyのボードです。",
 }
 
 class PinterestClient:
@@ -62,13 +62,13 @@ class PinterestClient:
         return boards
 
     def get_or_create_board(self, genre: str) -> str:
-        board_name = BOARD_NAMES.get(genre, f"NEXIGEN {genre}")
+        board_name = BOARD_NAMES.get(genre, f"Novlify {genre}")
         boards = self.list_boards()
         for b in boards:
             if b["name"] == board_name:
                 print(f"既存ボード使用: {board_name} ({b['id']})")
                 return b["id"]
-        desc = BOARD_DESCRIPTIONS.get(genre, f"NEXIGENの{genre}カテゴリーボードです。")
+        desc = BOARD_DESCRIPTIONS.get(genre, f"Novlifyの{genre}カテゴリーボードです。")
         body = {"name": board_name, "description": desc, "privacy": "PUBLIC"}
         resp = requests.post(f"{PINTEREST_API_BASE}/boards", headers=self.headers, json=body, timeout=15)
         resp.raise_for_status()

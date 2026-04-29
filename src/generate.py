@@ -763,15 +763,7 @@ def main():
     commit_url = f"https://github.com/{REPO}/commit/{commit_sha}"
     print(commit_url)
 
-    from notify import send_notification, post_to_x
-    send_notification(
-        article_type=config["article_type"],
-        title=extract_title(article),
-        article_url=commit_url,
-        blog_url=BLOG_URL,
-        tags=extract_tags(article),
-        word_count=count_body_chars(article),
-    )
+    from notify import post_to_x
     post_to_x(
         article_type=config["article_type"],
         title=extract_title(article),

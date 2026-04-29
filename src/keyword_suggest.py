@@ -83,7 +83,7 @@ SEO機会KW: {json.dumps(sc_data['opportunity_keywords'][:5], ensure_ascii=False
 Search Consoleデータなし。最新トレンドと季節性を考慮してください。"""
 
     prompt = f"""あなたはSEOとコンテンツ戦略の専門家です。
-NEXIGENブログ（日本語・アフィリエイトブログ）の次回記事テーマを提案してください。
+Novlifyブログ（日本語・アフィリエイトブログ）の次回記事テーマを提案してください。
 
 {context}
 
@@ -129,7 +129,7 @@ def send_keyword_report(sc_data: dict | None, suggestions: list) -> None:
 
     now_str = datetime.now(JST).strftime("%Y/%m/%d")
     msg = MIMEMultipart("alternative")
-    msg["Subject"] = f"【NEXIGEN】キーワード分析＆テーマ提案 {now_str}"
+    msg["Subject"] = f"【Novlify】キーワード分析＆テーマ提案 {now_str}"
     msg["From"] = gmail_user
     msg["To"]   = gmail_user
 
@@ -150,7 +150,7 @@ def send_keyword_report(sc_data: dict | None, suggestions: list) -> None:
         theme_section += "</ul>"
 
     body = f"""<html><body style="font-family:sans-serif;max-width:600px;margin:0 auto;">
-<h1 style="background:#1a1a2e;color:#fff;padding:20px;">NEXIGEN キーワードレポート</h1>
+<h1 style="background:#1a1a2e;color:#fff;padding:20px;">Novlify キーワードレポート</h1>
 {sc_section}
 <h2>✍️ AI提案：次回記事テーマ</h2>
 {theme_section}

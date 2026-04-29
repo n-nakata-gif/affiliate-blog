@@ -4,7 +4,7 @@ export interface Props {
   description?: string;
   image?: string;
 }
-const { title, description = 'NEXIGEN - 副業・投資・旅行・グルメの本音情報', image } = Astro.props;
+const { title, description = 'Novlify - 副業・投資・旅行・グルメの本音情報', image } = Astro.props;
 const adsenseId = import.meta.env.PUBLIC_ADSENSE_ID;
 const ogImage = image || 'https://cdn.pixabay.com/photo/2016/11/29/08/41/apple-1868496_1280.jpg';
 ---
@@ -163,7 +163,7 @@ const ogImage = image || 'https://cdn.pixabay.com/photo/2016/11/29/08/41/apple-1
 
     <header class="site-header">
       <div class="site-header__inner">
-        <a href="/" class="site-logo">NEXI<span>GEN</span></a>
+        <a href="/" class="site-logo">Nov<span>lify</span></a>
         <nav class="site-nav">
           <a href="/">ホーム</a>
           <a href="/privacy-policy">プライバシー</a>
@@ -207,7 +207,7 @@ const ogImage = image || 'https://cdn.pixabay.com/photo/2016/11/29/08/41/apple-1
     <footer class="site-footer">
       <div class="site-footer__inner">
         <div class="site-footer__top">
-          <a href="/" class="site-footer__logo">NEXI<span>GEN</span></a>
+          <a href="/" class="site-footer__logo">Nov<span>lify</span></a>
           <nav class="site-footer__nav">
             <a href="/privacy-policy">プライバシーポリシー</a>
             <a href="/disclaimer">免責事項</a>
@@ -215,7 +215,7 @@ const ogImage = image || 'https://cdn.pixabay.com/photo/2016/11/29/08/41/apple-1
           </nav>
         </div>
         <div class="site-footer__bottom">
-          <p>&copy; {new Date().getFullYear()} NEXIGEN. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Novlify. All rights reserved.</p>
           <p>本サイトはアフィリエイト広告を利用しています。</p>
         </div>
       </div>

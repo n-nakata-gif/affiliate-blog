@@ -83,10 +83,10 @@ def send_report(data: dict) -> None:
         return
     period = data["period"]
     msg = MIMEMultipart("alternative")
-    msg["Subject"] = f"【NEXIGEN】週次レポート {period}"
+    msg["Subject"] = f"【Novlify】週次レポート {period}"
     msg["From"] = gmail_user
     msg["To"] = gmail_user
-    body = f"""<html><body><h1>NEXIGEN GA4レポート</h1>
+    body = f"""<html><body><h1>Novlify GA4レポート</h1>
     <p>期間: {data['period']}</p>
     <p>PV: {data['summary']['pageviews']:,} / セッション: {data['summary']['sessions']:,} / ユーザー: {data['summary']['users']:,}</p>
     <h2>記事別TOP10</h2><ul>"""
