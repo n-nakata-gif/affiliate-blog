@@ -464,6 +464,114 @@ def insert_images_into_article(article: str, images: list) -> str:
     return frontmatter + '\n'.join(lines)
 
 
+# ── アフィリエイトリンク ──────────────────────────────────────
+
+# 旅行・グルメ固定アフィリエイトリンク
+# ※ リンクURLはA8.net/もしもアフィリエイトの発行IDに差し替えてください
+_TRAVEL_LINKS = [
+    {"name": "じゃらんnet", "url": "https://www.jalan.net", "desc": "全国の宿・ホテルをお得に予約"},
+    {"name": "楽天トラベル", "url": "https://travel.rakuten.co.jp", "desc": "楽天ポイントで宿・航空券をお得に"},
+    {"name": "一休.com", "url": "https://www.ikyu.com", "desc": "高級旅館・ホテルの特別プラン"},
+    {"name": "Booking.com", "url": "https://www.booking.com", "desc": "世界中の宿を最安値で比較"},
+    {"name": "skyticket", "url": "https://skyticket.jp", "desc": "格安航空券・新幹線・ホテル比較"},
+]
+
+_GOURMET_LINKS = [
+    {"name": "ホットペッパーグルメ", "url": "https://www.hotpepper.jp", "desc": "お得なクーポンでレストラン予約"},
+    {"name": "一休.comレストラン", "url": "https://restaurant.ikyu.com", "desc": "高級レストランの特別プラン"},
+    {"name": "ふるさと納税（楽天）", "url": "https://www.furusato-tax.jp", "desc": "お取り寄せグルメをふるさと納税で"},
+    {"name": "Oisix（オイシックス）", "url": "https://www.oisix.com", "desc": "有機野菜・安心食材のお試しセット"},
+]
+
+
+def fetch_rakuten_products(keyword: str, app_id: str, affiliate_id: str, n: int = 3) -> list:
+    """楽天市場商品検索 API でキーワード検索し上位 n 件を返す"""
+    params = {
+        "applicationId": app_id,
+        "affiliateId": affiliate_id,
+        "keyword": keyword,
+        "hits": n,
+        "sort": "-reviewCount",
+        "availability": 1,
+    }
+    url = "https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601?" + urllib.parse.urlencode(params)
+    try:
+        with urllib.request.urlopen(url, timeout=15) as resp:
+            data = json.loads(resp.read())
+        items = data.get("Items", [])
+        results = []
+        for item_wrap in items[:n]:
+            item = item_wrap.get("Item", item_wrap)
+            results.append({
+                "name": item.get("itemName", "")[:50],
+                "url": item.get("affiliateUrl") or item.get("itemUrl", "#"),
+                "price": item.get("itemPrice", 0),
+                "image": (item.get("mediumImageUrls") or [{}])[0].get("imageUrl", ""),
+            })
+        logger.info("楽天API: %d件取得 (keyword=%s)", len(results), keyword[:20])
+        return results
+    except Exception as e:
+        logger.warning("楽天API呼び出し失敗 (keyword=%s): %s", keyword, e)
+        return []
+
+
+def build_affiliate_section(genre: str, keyword: str, products: list) -> str:
+    """記事末尾に追加するアフィリエイトリンクセクションのMarkdownを生成"""
+    lines = ["\n\n---\n\n## おすすめ商品・サービス\n"]
+
+    # 楽天商品（全ジャンル共通）
+    if products:
+        lines.append("### 楽天市場のおすすめ商品\n")
+        for p in products:
+            price_str = f"（税込 {p['price']:,}円〜）" if p.get("price") else ""
+            img_html = (
+                f'<img src="{p["image"]}" alt="{p["name"]}" '
+                f'style="width:80px;height:80px;object-fit:cover;border-radius:4px;vertical-align:middle;margin-right:8px;">'
+                if p.get("image") else ""
+            )
+            lines.append(
+                f'<div style="border:1px solid #e5e7eb;border-radius:8px;padding:12px 16px;margin:8px 0;'
+                f'display:flex;align-items:center;gap:12px;">'
+                f'{img_html}'
+                f'<div><a href="{p["url"]}" target="_blank" rel="noopener sponsored" '
+                f'style="font-weight:bold;color:#bf0000;">{p["name"]}</a>'
+                f'<br><span style="color:#666;font-size:0.9em;">{price_str}</span></div>'
+                f'</div>\n'
+            )
+
+    # ジャンル別固定リンク
+    genre_links = []
+    if genre == "travel":
+        genre_links = _TRAVEL_LINKS
+        lines.append("\n### 旅行の予約・比較サービス\n")
+    elif genre == "gourmet":
+        genre_links = _GOURMET_LINKS
+        lines.append("\n### グルメ・食の関連サービス\n")
+
+    if genre_links:
+        lines.append(
+            '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin:1rem 0;">\n'
+        )
+        for link in genre_links:
+            lines.append(
+                f'<a href="{link["url"]}" target="_blank" rel="noopener sponsored" '
+                f'style="display:block;border:1px solid #e5e7eb;border-radius:8px;padding:14px;'
+                f'text-decoration:none;color:inherit;transition:box-shadow 0.2s;" '
+                f'onmouseenter="this.style.boxShadow=\'0 4px 12px rgba(0,0,0,0.1)\'" '
+                f'onmouseleave="this.style.boxShadow=\'\'">'
+                f'<strong style="color:#bf0000;">{link["name"]}</strong><br>'
+                f'<span style="font-size:0.85em;color:#555;">{link["desc"]}</span>'
+                f'</a>\n'
+            )
+        lines.append("</div>\n")
+
+    lines.append(
+        '\n<p style="font-size:0.8em;color:#999;">'
+        "※本記事にはアフィリエイト広告が含まれます。</p>\n"
+    )
+    return "".join(lines)
+
+
 # ── GitHub API ────────────────────────────────────────────────
 
 def gh(method: str, path: str, token: str, body=None):
@@ -594,6 +702,18 @@ def main():
         print("ERROR: ファクトチェック失敗 - 投稿中止", file=sys.stderr)
         sys.exit(1)
     article = fc_result["verified_content"]
+
+    # ── アフィリエイトリンクセクションを追加 ─────────────────
+    rakuten_app_id    = os.environ.get("RAKUTEN_APP_ID", "")
+    rakuten_aff_id    = os.environ.get("RAKUTEN_AFFILIATE_ID", "")
+    title_hint = _get(topic, "title", "topic", "keyword")
+    if rakuten_app_id and rakuten_aff_id:
+        rakuten_products = fetch_rakuten_products(title_hint, rakuten_app_id, rakuten_aff_id, n=3)
+    else:
+        logger.info("RAKUTEN_APP_ID/AFFILIATE_ID 未設定のため楽天商品取得スキップ")
+        rakuten_products = []
+    affiliate_section = build_affiliate_section(genre, title_hint, rakuten_products)
+    article = article.rstrip() + "\n" + affiliate_section
 
     repo_path      = f"src/content/blog/{genre}_{date_str}.md"
     commit_message = f"auto: add {genre} article {date_str}"
