@@ -6,28 +6,41 @@ const posts = (await getCollection('blog')).sort(
   (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
 );
 
-// アイキャッチ画像を取得（記事本文の最初の画像 or デフォルト）
+// アイキャッチ画像を取得（frontmatter.heroImage → 本文内img → デフォルト）
 function getEyecatch(body: string | undefined): string {
   if (!body) return '';
-  const m = body.match(/src="(https?:\/\/[^"]+)"/);
-  return m ? m[1] : '';
+  // HTML img タグ
+  const htmlM = body.match(/src="(https?:\/\/[^"]+)"/);
+  if (htmlM) return htmlM[1];
+  // Markdown 画像記法 ![alt](url)
+  const mdM = body.match(/!\[[^\]]*\]\((https?:\/\/[^)]+)\)/);
+  if (mdM) return mdM[1];
+  return '';
 }
 
 const DEFAULT_IMAGES: Record<string, string> = {
   business:   'https://cdn.pixabay.com/photo/2015/01/08/18/29/entrepreneur-593358_1280.jpg',
-  investment: 'https://cdn.pixabay.com/photo/2017/09/07/08/54/money-2724241_1280.jpg',
+  investment: 'https://cdn.pixabay.com/photo/2019/10/09/07/28/money-4536736_1280.jpg',
   travel:     'https://cdn.pixabay.com/photo/2016/01/09/18/27/journey-1130732_1280.jpg',
   gourmet:    'https://cdn.pixabay.com/photo/2017/12/09/08/18/pizza-3007395_1280.jpg',
-  gadget:     'https://cdn.pixabay.com/photo/2017/05/24/21/33/technology-2341558_1280.jpg',
+  gadget:     'https://cdn.pixabay.com/photo/2018/01/18/07/31/iphone-3088943_1280.jpg',
 };
 
-function getDefaultImage(tags: string[]): string {
-  const genres = ['business','investment','travel','gourmet','gadget'];
+// スラグ名（例: business_20260429）からジャンルを判定、なければタグで判定
+function getDefaultImage(tags: string[], id: string): string {
+  const genres = ['business', 'investment', 'travel', 'gourmet', 'gadget'];
+  // スラグ先頭でジャンル判定（最優先）
   for (const g of genres) {
-    if (tags.some(t => t.toLowerCase().includes(g) || g.includes(t.toLowerCase()))) {
-      return DEFAULT_IMAGES[g] || '';
+    if (id.startsWith(g + '_') || id.startsWith(g + '/')) {
+      return DEFAULT_IMAGES[g];
     }
   }
+  // タグで判定（フォールバック）
+  const tagStr = tags.map(t => t.toLowerCase()).join(' ');
+  if (tagStr.includes('投資') || tagStr.includes('nisa') || tagStr.includes('資産')) return DEFAULT_IMAGES.investment;
+  if (tagStr.includes('旅行') || tagStr.includes('観光') || tagStr.includes('travel')) return DEFAULT_IMAGES.travel;
+  if (tagStr.includes('グルメ') || tagStr.includes('食') || tagStr.includes('レシピ')) return DEFAULT_IMAGES.gourmet;
+  if (tagStr.includes('ガジェット') || tagStr.includes('テック') || tagStr.includes('gadget')) return DEFAULT_IMAGES.gadget;
   return DEFAULT_IMAGES.business;
 }
 
@@ -65,7 +78,7 @@ const websiteSchema = {
   <!-- 記事グリッド -->
   <div class="post-grid">
     {posts.map(post => {
-      const eyecatch = getEyecatch(post.body) || getDefaultImage(post.data.tags || []);
+      const eyecatch = (post.data as any).heroImage || getEyecatch(post.body) || getDefaultImage(post.data.tags || [], post.id);
       return (
         <article class="post-card">
           <a href={`/blog/${post.id}`} class="post-card__img-wrap">

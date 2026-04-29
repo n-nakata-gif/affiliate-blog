@@ -24,6 +24,9 @@ from generate import (
     has_editor_note,
     extract_title,
     fetch_rakuten_products,
+    fetch_pixabay_image_urls,
+    insert_images_into_article,
+    _GENRE_IMAGE_QUERIES,
     gh,
     push_file,
     REPO,
@@ -122,6 +125,64 @@ def backfill_affiliate(md_files: list, gh_token: str,
             print(f"  ❌ エラー: {md_path.name}: {e}")
 
     print(f"\nアフィリエイトリンク追加: {updated}件更新")
+
+
+# ── 画像バックフィル（Pixabay API） ─────────────────────────
+
+def has_images(content: str) -> bool:
+    """記事に画像が既に含まれているか確認"""
+    return bool(re.search(r'<figure.*?<img|!\[.*?\]\(https?://', content))
+
+def backfill_images(md_files: list, gh_token: str, pixabay_key: str,
+                    dry_run: bool, force: bool = False):
+    updated = 0
+    for md_path in md_files:
+        content = md_path.read_text(encoding="utf-8")
+        if has_images(content):
+            if not force:
+                print(f"  スキップ（既存）: {md_path.name}")
+                continue
+            print(f"  強制更新: {md_path.name}")
+
+        genre = detect_genre(md_path.name)
+        title = extract_title(content)
+        img_query = f"{title[:20]} {_GENRE_IMAGE_QUERIES.get(genre, genre)}"
+
+        print(f"  処理中: {md_path.name} ({genre}) ...")
+
+        if dry_run:
+            print(f"  [DRY RUN] 画像追加予定: {md_path.name}")
+            continue
+
+        images = fetch_pixabay_image_urls(img_query, pixabay_key, n=3)
+        if not images:
+            print(f"  ⚠️ 画像取得失敗: {md_path.name}")
+            time.sleep(1)
+            continue
+
+        # 本文に画像を挿入
+        new_content = insert_images_into_article(content, images)
+
+        # heroImage を frontmatter に追加（まだなければ）
+        if "heroImage:" not in new_content:
+            hero_url = images[0]["url"]
+            new_content = re.sub(
+                r'^(---\n[\s\S]*?)(---\n)',
+                lambda m: m.group(1) + f'heroImage: "{hero_url}"\n' + m.group(2),
+                new_content, count=1
+            )
+
+        repo_path = f"src/content/blog/{md_path.name}"
+        try:
+            push_file(gh_token, repo_path, new_content,
+                      f"feat: Pixabay画像をバックフィル ({md_path.name})")
+            print(f"  ✅ 更新: {md_path.name}")
+            updated += 1
+            time.sleep(1.5)
+        except Exception as e:
+            print(f"  ❌ エラー: {md_path.name}: {e}")
+
+    print(f"\n画像バックフィル: {updated}件更新")
 
 
 # ── 編集者コメント追加（Claude API） ────────────────────────
@@ -272,12 +333,13 @@ def main():
     parser.add_argument("--affiliate", action="store_true", help="アフィリエイトリンクを追加")
     parser.add_argument("--conversation", action="store_true", help="会話シーンを追加（Claude API）")
     parser.add_argument("--editor-note", action="store_true", help="Noriのひとこと編集者コメントを追加（Claude API）")
+    parser.add_argument("--images", action="store_true", help="Pixabay画像を追加（PIXABAY_API_KEY必須）")
     parser.add_argument("--dry-run", action="store_true", help="実際には更新しない")
     parser.add_argument("--force", action="store_true", help="既存セクションがあっても強制上書き")
-    parser.add_argument("--genre", help="特定ジャンルのみ処理 (business/investment/travel/gourmet)")
+    parser.add_argument("--genre", help="特定ジャンルのみ処理 (business/investment/travel/gourmet/gadget)")
     args = parser.parse_args()
 
-    if not args.affiliate and not args.conversation and not args.editor_note:
+    if not args.affiliate and not args.conversation and not args.editor_note and not args.images:
         parser.print_help()
         sys.exit(1)
 
@@ -316,6 +378,14 @@ def main():
             sys.exit(1)
         print("\n=== 編集者コメント（Noriのひとこと）追加 ===")
         backfill_editor_note(auto_files, gh_token, anthropic_key, args.dry_run, args.force)
+
+    if args.images:
+        pixabay_key = os.environ.get("PIXABAY_API_KEY", "")
+        if not pixabay_key and not args.dry_run:
+            print("ERROR: PIXABAY_API_KEY が未設定です", file=sys.stderr)
+            sys.exit(1)
+        print("\n=== Pixabay画像バックフィル ===")
+        backfill_images(auto_files, gh_token, pixabay_key, args.dry_run, args.force)
 
 
 if __name__ == "__main__":

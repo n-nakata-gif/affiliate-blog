@@ -6,12 +6,14 @@ on:
       mode:
         description: '処理モード'
         required: true
-        default: 'affiliate'
+        default: 'images'
         type: choice
         options:
+          - 'images'           # Pixabay画像のみ
           - 'affiliate'        # アフィリエイトリンクのみ
           - 'editor-note'      # Noriのひとこと編集者コメントのみ
-          - 'affiliate+editor' # 両方
+          - 'affiliate+editor' # アフィリエイト＋コメント
+          - 'all'              # すべて
       force:
         description: '既存セクションを強制上書きする'
         required: false
@@ -33,22 +35,26 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install anthropic
+      - run: pip install anthropic requests
       - name: Run backfill
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           RAKUTEN_APP_ID: ${{ secrets.RAKUTEN_APP_ID }}
           RAKUTEN_AFFILIATE_ID: ${{ secrets.RAKUTEN_AFFILIATE_ID }}
+          PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
         run: |
           ARGS=""
           MODE="${{ github.event.inputs.mode }}"
 
           # モードに応じてフラグ追加
-          if [[ "$MODE" == "affiliate" || "$MODE" == "affiliate+editor" ]]; then
+          if [[ "$MODE" == "images" || "$MODE" == "all" ]]; then
+            ARGS="$ARGS --images"
+          fi
+          if [[ "$MODE" == "affiliate" || "$MODE" == "affiliate+editor" || "$MODE" == "all" ]]; then
             ARGS="$ARGS --affiliate"
           fi
-          if [[ "$MODE" == "editor-note" || "$MODE" == "affiliate+editor" ]]; then
+          if [[ "$MODE" == "editor-note" || "$MODE" == "affiliate+editor" || "$MODE" == "all" ]]; then
             ARGS="$ARGS --editor-note"
           fi
 

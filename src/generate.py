@@ -824,14 +824,25 @@ def main():
 
     # ── Pixabay 画像を記事に挿入 ─────────────────────────────
     pixabay_key = os.environ.get("PIXABAY_API_KEY")
+    hero_image_url = ""
     if pixabay_key:
         title_hint = _get(topic, "title", "topic", "keyword")
         img_query = f"{title_hint} {_GENRE_IMAGE_QUERIES.get(genre, genre)}"
         images = fetch_pixabay_image_urls(img_query, pixabay_key, n=3)
         article = insert_images_into_article(article, images)
+        if images:
+            hero_image_url = images[0]["url"]
         logger.info("画像挿入完了: %d枚", len(images))
     else:
         logger.info("PIXABAY_API_KEY 未設定のため画像挿入スキップ")
+
+    # ── heroImage を frontmatter に追加 ──────────────────────
+    if hero_image_url:
+        article = re.sub(
+            r'^(---\n[\s\S]*?)(---\n)',
+            lambda m: m.group(1) + f'heroImage: "{hero_image_url}"\n' + m.group(2),
+            article, count=1
+        )
 
     from factcheck import factcheck_article
     fc_result = factcheck_article(article, config["article_type"])
