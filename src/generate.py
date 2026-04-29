@@ -88,6 +88,16 @@ GENRE_CONFIG = {
         "default_tags": ["グルメ", "食べ物", "グルメスポット"],
         "article_type": "gourmet",
     },
+    "gadget": {
+        "system": _sys(
+            "ガジェット・テックジャンル",
+            "ガジェット・テックの記事では、スペック・価格・使い勝手を正直に評価してください。\n"
+            "「買って損した」という体験も含め、デメリットを隠さず記載してください。"
+            "価格は変動する旨を明記し、最新情報は公式サイトや各販売店でご確認くださいと添えてください。",
+        ),
+        "default_tags": ["ガジェット", "テック", "レビュー"],
+        "article_type": "gadget",
+    },
 }
 
 _BODY_SECTIONS = {
@@ -182,6 +192,33 @@ _BODY_SECTIONS = {
    - 食の楽しさを再確認・次の食体験への橋渡し
 
 7. **FAQ**（3問以上・各100字以上）
+   - 読者のリアルな疑問に丁寧に回答""",
+
+    "gadget": """\
+1. **導入**（200字以上）
+   - 「これ買ってよかった／迷っている」という読者の気持ちに共感する書き出し
+   - 記事で何がわかるかを明示
+
+2. **製品の概要・スペック**（300字以上）
+   - 価格帯・主要スペック・発売時期
+   - 「価格は変動します。最新情報は各販売サイトでご確認ください」を明記
+
+3. **実際に使ってみた感想（良い点）**（400字以上）
+   - 具体的なシーン別のメリット・他製品との比較
+
+4. **気になる点・デメリット**（300字以上・必須）
+   - 正直なデメリット・向いていない人・競合製品との比較
+
+5. **どんな人に向いているか**（200字以上）
+   - ターゲット別おすすめ度・購入判断の基準
+
+6. **購入方法・最安値の探し方**（200字以上）
+   - Amazon・楽天・ヨドバシ等での価格比較のコツ
+
+7. **まとめ**（200字以上）
+   - 結論・総合評価・読者への購入アドバイス
+
+8. **FAQ**（3問以上・各100字以上）
    - 読者のリアルな疑問に丁寧に回答""",
 }
 
@@ -413,6 +450,7 @@ _GENRE_IMAGE_QUERIES = {
     "investment": "finance investment growth chart",
     "travel": "travel landscape scenic beautiful",
     "gourmet": "delicious food beautiful plating",
+    "gadget": "technology gadget smartphone modern",
 }
 
 
@@ -791,7 +829,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--genre",
-        choices=["business", "investment", "travel", "gourmet"],
+        choices=["business", "investment", "travel", "gourmet", "gadget"],
         default="business",
     )
     args = parser.parse_args()
