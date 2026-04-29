@@ -1,0 +1,117 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="このブログについて | Novlify" description="Novlifyの運営者Noriのプロフィールと、このブログへの想いをご紹介します。">
+  <article class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+
+    <!-- ヘッダー -->
+    <div class="px-8 py-10 text-white" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+      <p class="text-sm font-semibold opacity-80 mb-1">About</p>
+      <h1 class="text-2xl font-black mb-2">このブログについて</h1>
+      <p class="text-sm opacity-90">Novlify の運営者 Nori のプロフィール</p>
+    </div>
+
+    <div class="px-8 py-8 space-y-8 text-slate-600 leading-relaxed">
+
+      <!-- プロフィール -->
+      <section class="flex flex-col sm:flex-row gap-6 items-start">
+        <div class="flex-shrink-0">
+          <div class="w-24 h-24 rounded-full flex items-center justify-center text-4xl"
+               style="background: linear-gradient(135deg, #fef3c7, #fde68a);">
+            🙂
+          </div>
+        </div>
+        <div>
+          <h2 class="text-xl font-black text-slate-800 mb-1">Nori（のり）</h2>
+          <p class="text-sm text-amber-600 font-semibold mb-3">Novlify 運営者</p>
+          <p class="text-sm">
+            長崎県北部在住。理系の専門職として働きながら、空き時間に副業・投資・旅行・グルメ・ガジェットを探求しています。
+            「まじめに調べたことを、わかりやすく伝える」をモットーに、このブログを書いています。
+          </p>
+        </div>
+      </section>
+
+      <hr class="border-slate-100" />
+
+      <!-- ブログについて -->
+      <section>
+        <h2 class="text-base font-bold text-slate-800 mb-3 pb-2 border-b-2 border-amber-100">
+          ブログを始めたきっかけ
+        </h2>
+        <p class="text-sm">
+          本業の仕事をしながら「何か自分のペースで稼げることはないか」と副業・投資を調べ始めたのがきっかけです。
+          ネットにある情報は玉石混交で、「どれが本当に使えるのか」がわかりにくい。
+          だったら自分で試して、正直に書いてみようと思いました。
+        </p>
+        <p class="text-sm mt-3">
+          誇張なし・本音あり。良いことも悪いことも正直に書く。それが <strong>Novlify</strong> のスタンスです。
+        </p>
+      </section>
+
+      <!-- 扱うテーマ -->
+      <section>
+        <h2 class="text-base font-bold text-slate-800 mb-3 pb-2 border-b-2 border-amber-100">
+          扱っているテーマ
+        </h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+          <div class="flex items-start gap-3 p-3 bg-slate-50 rounded-xl">
+            <span class="text-2xl">💼</span>
+            <div>
+              <p class="font-bold text-slate-700">副業・ビジネス</p>
+              <p class="text-slate-500 text-xs mt-0.5">フリーランス、クラウドソーシング、スキルアップ</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-3 bg-slate-50 rounded-xl">
+            <span class="text-2xl">📈</span>
+            <div>
+              <p class="font-bold text-slate-700">投資・資産運用</p>
+              <p class="text-slate-500 text-xs mt-0.5">新NISA、インデックス投資、FX入門</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-3 bg-slate-50 rounded-xl">
+            <span class="text-2xl">✈️</span>
+            <div>
+              <p class="font-bold text-slate-700">旅行・観光</p>
+              <p class="text-slate-500 text-xs mt-0.5">九州を中心とした国内旅行、格安プランの探し方</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-3 bg-slate-50 rounded-xl">
+            <span class="text-2xl">🍜</span>
+            <div>
+              <p class="font-bold text-slate-700">グルメ・食</p>
+              <p class="text-slate-500 text-xs mt-0.5">地元グルメ、お取り寄せ、ふるさと納税</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-3 bg-slate-50 rounded-xl">
+            <span class="text-2xl">🎧</span>
+            <div>
+              <p class="font-bold text-slate-700">ガジェット・テック</p>
+              <p class="text-slate-500 text-xs mt-0.5">スマホ周辺機器、便利グッズ、コスパ重視レビュー</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 免責 -->
+      <section class="p-4 bg-amber-50 rounded-xl text-xs text-slate-500">
+        <p class="font-bold text-slate-600 mb-1">⚠️ 記事に関するお断り</p>
+        <p>本ブログの記事は情報提供を目的としており、投資・医療・法律などの専門的なアドバイスではありません。
+        投資判断は必ずご自身の責任で行ってください。記事の内容は執筆時点の情報であり、最新情報は各公式サイトをご確認ください。</p>
+      </section>
+
+      <!-- お問い合わせ -->
+      <section>
+        <h2 class="text-base font-bold text-slate-800 mb-2 pb-2 border-b-2 border-amber-100">
+          お問い合わせ
+        </h2>
+        <p class="text-sm">
+          ご質問・ご意見・取材・コラボのご依頼は
+          <a href="/contact" class="text-amber-600 hover:text-amber-700 underline font-semibold">お問い合わせフォーム</a>
+          からお気軽にどうぞ。
+        </p>
+      </section>
+
+    </div>
+  </article>
+</Layout>

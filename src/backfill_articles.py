@@ -19,6 +19,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 from generate import (
     build_affiliate_section,
+    build_editor_note,
+    generate_editor_note,
+    has_editor_note,
+    extract_title,
     fetch_rakuten_products,
     gh,
     push_file,
@@ -120,6 +124,76 @@ def backfill_affiliate(md_files: list, gh_token: str,
     print(f"\nアフィリエイトリンク追加: {updated}件更新")
 
 
+# ── 編集者コメント追加（Claude API） ────────────────────────
+
+def strip_editor_note(content: str) -> str:
+    """既存の編集者コメントセクションを除去する"""
+    marker = "\n\n---\n\n> 📝 **Noriのひとこと**"
+    idx = content.find(marker)
+    if idx != -1:
+        # 次の --- か末尾まで除去
+        rest = content[idx + len(marker):]
+        next_sep = rest.find("\n\n---\n\n")
+        if next_sep != -1:
+            return content[:idx] + rest[next_sep:]
+        else:
+            return content[:idx]
+    return content
+
+
+def backfill_editor_note(md_files: list, gh_token: str,
+                         anthropic_key: str, dry_run: bool, force: bool = False):
+    import anthropic
+    client = anthropic.Anthropic(api_key=anthropic_key)
+    updated = 0
+
+    for md_path in md_files:
+        content = md_path.read_text(encoding="utf-8")
+        if has_editor_note(content):
+            if not force:
+                print(f"  スキップ（既存）: {md_path.name}")
+                continue
+            print(f"  強制更新（既存コメントを置換）: {md_path.name}")
+            content = strip_editor_note(content)
+
+        title = extract_title(content)
+        # ジャンル判定
+        genre = detect_genre(md_path.name)
+
+        print(f"  処理中: {md_path.name} ({genre}) ...")
+
+        if dry_run:
+            print(f"  [DRY RUN] 編集者コメント追加予定: {md_path.name}")
+            continue
+
+        note_text = generate_editor_note(client, title, genre)
+        if not note_text:
+            print(f"  ⚠️ コメント生成失敗: {md_path.name}")
+            continue
+
+        # アフィリエイトセクションの直前に挿入
+        affiliate_marker = "\n\n---\n\n## おすすめ商品・サービス"
+        note_block = build_editor_note(note_text)
+
+        if affiliate_marker in content:
+            idx = content.find(affiliate_marker)
+            new_content = content[:idx] + note_block + content[idx:]
+        else:
+            new_content = content.rstrip() + note_block
+
+        repo_path = f"src/content/blog/{md_path.name}"
+        try:
+            push_file(gh_token, repo_path, new_content,
+                      f"feat: 編集者コメントをバックフィル ({md_path.name})")
+            print(f"  ✅ 更新: {md_path.name}")
+            updated += 1
+            time.sleep(1.5)
+        except Exception as e:
+            print(f"  ❌ エラー: {md_path.name}: {e}")
+
+    print(f"\n編集者コメント追加: {updated}件更新")
+
+
 # ── 会話シーン追加（Claude API） ─────────────────────────────
 
 CONVERSATION_PROMPT = """\
@@ -197,12 +271,13 @@ def main():
     parser = argparse.ArgumentParser(description="既存記事バックフィル")
     parser.add_argument("--affiliate", action="store_true", help="アフィリエイトリンクを追加")
     parser.add_argument("--conversation", action="store_true", help="会話シーンを追加（Claude API）")
+    parser.add_argument("--editor-note", action="store_true", help="Noriのひとこと編集者コメントを追加（Claude API）")
     parser.add_argument("--dry-run", action="store_true", help="実際には更新しない")
     parser.add_argument("--force", action="store_true", help="既存セクションがあっても強制上書き")
     parser.add_argument("--genre", help="特定ジャンルのみ処理 (business/investment/travel/gourmet)")
     args = parser.parse_args()
 
-    if not args.affiliate and not args.conversation:
+    if not args.affiliate and not args.conversation and not args.editor_note:
         parser.print_help()
         sys.exit(1)
 
@@ -233,6 +308,14 @@ def main():
             sys.exit(1)
         print("\n=== 会話シーン追加 ===")
         backfill_conversation(auto_files, gh_token, anthropic_key, args.dry_run)
+
+    if args.editor_note:
+        anthropic_key = os.environ.get("ANTHROPIC_API_KEY", "")
+        if not anthropic_key and not args.dry_run:
+            print("ERROR: ANTHROPIC_API_KEY が未設定です", file=sys.stderr)
+            sys.exit(1)
+        print("\n=== 編集者コメント（Noriのひとこと）追加 ===")
+        backfill_editor_note(auto_files, gh_token, anthropic_key, args.dry_run, args.force)
 
 
 if __name__ == "__main__":

@@ -3,14 +3,23 @@ name: Backfill Affiliate
 on:
   workflow_dispatch:
     inputs:
-      force:
-        description: '既存のアフィリエイトセクションを強制上書きする'
-        required: false
-        default: 'true'
+      mode:
+        description: '処理モード'
+        required: true
+        default: 'affiliate'
         type: choice
         options:
-          - 'true'
+          - 'affiliate'        # アフィリエイトリンクのみ
+          - 'editor-note'      # Noriのひとこと編集者コメントのみ
+          - 'affiliate+editor' # 両方
+      force:
+        description: '既存セクションを強制上書きする'
+        required: false
+        default: 'false'
+        type: choice
+        options:
           - 'false'
+          - 'true'
       genre:
         description: '対象ジャンル（空欄=全件）'
         required: false
@@ -25,17 +34,32 @@ jobs:
         with:
           python-version: "3.11"
       - run: pip install anthropic
-      - name: Run affiliate backfill
+      - name: Run backfill
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           RAKUTEN_APP_ID: ${{ secrets.RAKUTEN_APP_ID }}
           RAKUTEN_AFFILIATE_ID: ${{ secrets.RAKUTEN_AFFILIATE_ID }}
         run: |
-          ARGS="--affiliate"
+          ARGS=""
+          MODE="${{ github.event.inputs.mode }}"
+
+          # モードに応じてフラグ追加
+          if [[ "$MODE" == "affiliate" || "$MODE" == "affiliate+editor" ]]; then
+            ARGS="$ARGS --affiliate"
+          fi
+          if [[ "$MODE" == "editor-note" || "$MODE" == "affiliate+editor" ]]; then
+            ARGS="$ARGS --editor-note"
+          fi
+
+          # force オプション
           if [ "${{ github.event.inputs.force }}" = "true" ]; then
             ARGS="$ARGS --force"
           fi
+
+          # genre オプション
           if [ -n "${{ github.event.inputs.genre }}" ]; then
             ARGS="$ARGS --genre ${{ github.event.inputs.genre }}"
           fi
+
           python src/backfill_articles.py $ARGS

@@ -722,6 +722,69 @@ def extract_tags(content: str) -> list:
     return [t.strip().strip("\"'") for t in m.group(1).split(',')]
 
 
+# ── 編集者コメント ────────────────────────────────────────────
+
+_EDITOR_NOTE_PROMPT = """\
+次のブログ記事を書いた「Nori（のり）」のひとこと感想を生成してください。
+
+【条件】
+- 50〜100文字の1〜2文
+- 一人称は「私」
+- 記事テーマに関連した具体的な気づきや体験談を1つ含める（九州・長崎在住の理系会社員という背景でOK）
+- 親しみやすい「です・ます」調
+- 宣伝・まとめではなく、素直な感想や共感
+- 出力は感想文の本文のみ（記号・見出し不要）
+
+【記事タイトル】
+{title}
+
+【ジャンル】
+{genre_label}
+"""
+
+_GENRE_LABELS = {
+    "business":   "副業・ビジネス",
+    "investment": "投資・資産運用",
+    "travel":     "旅行・観光",
+    "gourmet":    "グルメ・食",
+    "gadget":     "ガジェット・テック",
+}
+
+
+def build_editor_note(note_text: str) -> str:
+    """Noriのひとことセクションのmarkdownを生成"""
+    return (
+        "\n\n---\n\n"
+        "> 📝 **Noriのひとこと**  \n"
+        f"> {note_text}  \n"
+        ">  \n"
+        "> — Nori（Novlify 編集者）\n"
+    )
+
+
+def generate_editor_note(client, title: str, genre: str) -> str:
+    """Claude APIでNoriのひとこと感想を生成する"""
+    genre_label = _GENRE_LABELS.get(genre, genre)
+    prompt = _EDITOR_NOTE_PROMPT.format(title=title, genre_label=genre_label)
+    try:
+        resp = client.messages.create(
+            model=MODEL,
+            max_tokens=256,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        note_text = resp.content[0].text.strip()
+        logger.info("編集者コメント生成完了: %s...", note_text[:30])
+        return note_text
+    except Exception as e:
+        logger.warning("編集者コメント生成失敗（スキップ）: %s", e)
+        return ""
+
+
+def has_editor_note(content: str) -> bool:
+    """記事に編集者コメントが既に含まれているか確認"""
+    return "Noriのひとこと" in content
+
+
 # ── メイン ────────────────────────────────────────────────────
 
 def main():
@@ -776,6 +839,11 @@ def main():
         print("ERROR: ファクトチェック失敗 - 投稿中止", file=sys.stderr)
         sys.exit(1)
     article = fc_result["verified_content"]
+
+    # ── 編集者コメント（Noriのひとこと）を追加 ───────────────
+    editor_note_text = generate_editor_note(client, extract_title(article), genre)
+    if editor_note_text:
+        article = article.rstrip() + build_editor_note(editor_note_text)
 
     # ── アフィリエイトリンクセクションを追加 ─────────────────
     rakuten_app_id    = os.environ.get("RAKUTEN_APP_ID", "")
