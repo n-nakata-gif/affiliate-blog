@@ -3,5 +3,16 @@
   "compatibility_date": "2024-12-01",
   "assets": {
     "directory": "./dist"
-  }
+  },
+  "routes": [
+    {
+      "pattern": "nexigen-blog.com/*",
+      "zone_name": "nexigen-blog.com"
+    },
+    {
+      "pattern": "www.nexigen-blog.com/*",
+      "zone_name": "nexigen-blog.com"
+    }
+  ],
+  "preview_urls": false
 }
