@@ -107,7 +107,7 @@ def backfill_affiliate(md_files: list, gh_token: str,
         else:
             products = []
 
-        section = build_affiliate_section(genre, keyword, products)
+        section = build_affiliate_section(genre, keyword, products, rakuten_aff_id=rakuten_aff_id)
         new_content = content.rstrip() + "\n" + section
 
         if dry_run:
