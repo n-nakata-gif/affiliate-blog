@@ -24,6 +24,7 @@ from generate import (
     has_editor_note,
     extract_title,
     fetch_rakuten_products,
+    generate_rakuten_products,
     fetch_pixabay_image_urls,
     insert_images_into_article,
     _GENRE_IMAGE_QUERIES,
@@ -76,7 +77,10 @@ def has_conversation(content: str) -> bool:
 
 def backfill_affiliate(md_files: list, gh_token: str,
                        rakuten_app_id: str, rakuten_aff_id: str,
-                       dry_run: bool, force: bool = False):
+                       dry_run: bool, force: bool = False,
+                       anthropic_key: str = ""):
+    import anthropic as anthropic_mod
+    client = anthropic_mod.Anthropic(api_key=anthropic_key) if anthropic_key else None
     updated = 0
     for md_path in md_files:
         content = md_path.read_text(encoding="utf-8")
@@ -89,8 +93,9 @@ def backfill_affiliate(md_files: list, gh_token: str,
 
         genre = detect_genre(md_path.name)
         keyword = extract_keyword_from_md(content)
+        title = extract_title(content)
 
-        # ジャンル別の短い検索キーワード（長いと楽天API 400エラー）
+        # 楽天商品取得（API設定があれば・失敗してもスキップ）
         _RAKUTEN_GENRE_KW = {
             "business":   "副業 ビジネス",
             "investment": "投資 資産運用",
@@ -99,15 +104,25 @@ def backfill_affiliate(md_files: list, gh_token: str,
             "gourmet":    "グルメ ギフト",
         }
         rakuten_kw = _RAKUTEN_GENRE_KW.get(genre, keyword[:15])
-
-        # 楽天商品取得（API設定があれば）
         if rakuten_app_id and rakuten_aff_id:
             products = fetch_rakuten_products(rakuten_kw, rakuten_app_id, rakuten_aff_id, n=3)
             time.sleep(0.5)
         else:
             products = []
 
-        section = build_affiliate_section(genre, keyword, products, rakuten_aff_id=rakuten_aff_id)
+        # Claude APIで楽天商品候補を生成（ANTHROPIC_API_KEY + RAKUTEN_AFFILIATE_ID があれば）
+        rakuten_claude_products = []
+        if client and rakuten_aff_id:
+            rakuten_claude_products = generate_rakuten_products(
+                client, title, keyword, genre, rakuten_aff_id
+            )
+            time.sleep(1)
+
+        section = build_affiliate_section(
+            genre, keyword, products,
+            rakuten_aff_id=rakuten_aff_id,
+            rakuten_products=rakuten_claude_products
+        )
         new_content = content.rstrip() + "\n" + section
 
         if dry_run:
@@ -361,7 +376,8 @@ def main():
         print("\n=== アフィリエイトリンク追加 ===")
         rakuten_app_id = os.environ.get("RAKUTEN_APP_ID", "")
         rakuten_aff_id = os.environ.get("RAKUTEN_AFFILIATE_ID", "")
-        backfill_affiliate(auto_files, gh_token, rakuten_app_id, rakuten_aff_id, args.dry_run, args.force)
+        anthropic_key = os.environ.get("ANTHROPIC_API_KEY", "")
+        backfill_affiliate(auto_files, gh_token, rakuten_app_id, rakuten_aff_id, args.dry_run, args.force, anthropic_key)
 
     if args.conversation:
         anthropic_key = os.environ.get("ANTHROPIC_API_KEY", "")
