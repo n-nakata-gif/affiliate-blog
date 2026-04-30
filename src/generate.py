@@ -582,6 +582,52 @@ _GADGET_LINKS = [
 ]
 
 
+def generate_amazon_gadget_products(client: anthropic.Anthropic, article_title: str, keyword: str) -> list:
+    """Claude APIでガジェット記事に関連するAmazon商品候補を生成し、アフィリエイトリンクを返す"""
+    prompt = f"""次のガジェット・テック記事に関連する、Amazonで購入できる具体的な商品を3〜4点提案してください。
+
+記事タイトル: {article_title}
+キーワード: {keyword}
+
+条件:
+- 実際にAmazonで販売されている可能性が高い具体的な商品名（ブランド名+商品名 or カテゴリ）
+- 記事の内容に直接関連する商品を選ぶ
+- 各商品: name（商品名）とdesc（30文字以内の一言説明）をJSON配列で出力
+
+出力形式（JSONのみ、余分なテキスト不要）:
+[
+  {{"name": "商品名", "desc": "一言説明"}},
+  {{"name": "商品名", "desc": "一言説明"}}
+]"""
+
+    try:
+        resp = client.messages.create(
+            model=MODEL,
+            max_tokens=512,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        text = resp.content[0].text.strip()
+        json_match = re.search(r'\[[\s\S]*?\]', text)
+        if not json_match:
+            logger.warning("Amazon商品候補: JSON未検出")
+            return []
+        products = json.loads(json_match.group(0))
+        results = []
+        for p in products[:4]:
+            if isinstance(p, dict) and p.get("name"):
+                kw_encoded = urllib.parse.quote(str(p["name"]))
+                results.append({
+                    "name": str(p["name"]),
+                    "url": f"https://www.amazon.co.jp/s?k={kw_encoded}&tag=nexigen22-22",
+                    "desc": str(p.get("desc", "")),
+                })
+        logger.info("Amazon商品候補生成: %d件", len(results))
+        return results
+    except Exception as e:
+        logger.warning("Amazon商品候補生成失敗（スキップ）: %s", e)
+        return []
+
+
 def fetch_rakuten_products(keyword: str, app_id: str, affiliate_id: str, n: int = 3) -> list:
     """楽天市場商品検索 API でキーワード検索し上位 n 件を返す"""
     # デバッグ: app_idの形式確認（先頭8文字・末尾4文字・長さのみ表示）
@@ -623,9 +669,28 @@ def fetch_rakuten_products(keyword: str, app_id: str, affiliate_id: str, n: int 
         return []
 
 
-def build_affiliate_section(genre: str, keyword: str, products: list) -> str:
+def build_affiliate_section(genre: str, keyword: str, products: list, amazon_products: list = None) -> str:
     """記事末尾に追加するアフィリエイトリンクセクションのMarkdownを生成"""
     lines = ["\n\n---\n\n## おすすめ商品・サービス\n"]
+
+    # Amazon個別商品リンク（ガジェットジャンル用）
+    if amazon_products:
+        lines.append("### Amazonで探す\n")
+        lines.append(
+            '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin:1rem 0;">\n'
+        )
+        for p in amazon_products:
+            lines.append(
+                f'<a href="{p["url"]}" target="_blank" rel="noopener sponsored" '
+                f'style="display:block;border:2px solid #FF9900;border-radius:8px;padding:14px;'
+                f'text-decoration:none;color:inherit;transition:box-shadow 0.2s;" '
+                f'onmouseenter="this.style.boxShadow=\'0 4px 12px rgba(255,153,0,0.3)\'" '
+                f'onmouseleave="this.style.boxShadow=\'\'">'
+                f'<strong style="color:#FF9900;">🛒 {p["name"]}</strong><br>'
+                f'<span style="font-size:0.85em;color:#555;">{p["desc"]}</span>'
+                f'</a>\n'
+            )
+        lines.append("</div>\n")
 
     # 楽天商品（全ジャンル共通）
     if products:
@@ -912,7 +977,13 @@ def main():
     else:
         logger.info("RAKUTEN_APP_ID/AFFILIATE_ID 未設定のため楽天商品取得スキップ")
         rakuten_products = []
-    affiliate_section = build_affiliate_section(genre, title_hint, rakuten_products)
+
+    # ガジェット記事: Claude APIでAmazon個別商品リンクを生成
+    amazon_products = []
+    if genre == "gadget":
+        amazon_products = generate_amazon_gadget_products(client, extract_title(article), title_hint)
+
+    affiliate_section = build_affiliate_section(genre, title_hint, rakuten_products, amazon_products)
     article = article.rstrip() + "\n" + affiliate_section
 
     repo_path      = f"src/content/blog/{genre}_{date_str}.md"
