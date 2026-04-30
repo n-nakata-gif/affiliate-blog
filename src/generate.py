@@ -545,7 +545,7 @@ def insert_images_into_article(article: str, images: list) -> str:
 # ※ リンクURLはA8.net/もしもアフィリエイトの発行IDに差し替えてください
 _TRAVEL_LINKS = [
     {"name": "じゃらんnet", "url": "https://www.jalan.net", "desc": "全国の宿・ホテルをお得に予約"},
-    {"name": "楽天トラベル", "url": "https://travel.rakuten.co.jp", "desc": "楽天ポイントで宿・航空券をお得に"},
+    {"name": "楽天トラベル", "url": "https://travel.rakuten.co.jp", "desc": "楽天ポイントで宿・航空券をお得に", "rakuten": True},
     {"name": "一休.com", "url": "https://www.ikyu.com", "desc": "高級旅館・ホテルの特別プラン"},
     {"name": "Booking.com", "url": "https://www.booking.com", "desc": "世界中の宿を最安値で比較"},
     {"name": "skyticket", "url": "https://skyticket.jp", "desc": "格安航空券・新幹線・ホテル比較"},
@@ -554,7 +554,7 @@ _TRAVEL_LINKS = [
 _GOURMET_LINKS = [
     {"name": "ホットペッパーグルメ", "url": "https://www.hotpepper.jp", "desc": "お得なクーポンでレストラン予約"},
     {"name": "一休.comレストラン", "url": "https://restaurant.ikyu.com", "desc": "高級レストランの特別プラン"},
-    {"name": "ふるさと納税（楽天）", "url": "https://www.furusato-tax.jp", "desc": "お取り寄せグルメをふるさと納税で"},
+    {"name": "楽天市場（食品・グルメ）", "url": "https://search.rakuten.co.jp/search/mall/%E9%A3%9F%E5%93%81+%E3%82%B0%E3%83%AB%E3%83%A1/", "desc": "楽天ポイントでお得に食品・グルメを購入", "rakuten": True},
     {"name": "Oisix（オイシックス）", "url": "https://www.oisix.com", "desc": "有機野菜・安心食材のお試しセット"},
 ]
 
@@ -564,11 +564,12 @@ _BUSINESS_LINKS = [
     {"name": "ストアカ", "url": "https://www.street-academy.com", "desc": "ビジネス・副業スキルを学ぶ"},
     {"name": "Udemy", "url": "https://www.udemy.com/ja/", "desc": "オンライン講座でスキルアップ"},
     {"name": "Amazon（副業・ビジネス書）", "url": "https://www.amazon.co.jp/s?k=%E5%89%AF%E6%A5%AD+%E3%83%93%E3%82%B8%E3%83%8D%E3%82%B9&tag=nexigen22-22", "desc": "副業・ビジネス関連書籍をAmazonで"},
+    {"name": "楽天市場（ビジネス書）", "url": "https://search.rakuten.co.jp/search/mall/%E3%83%93%E3%82%B8%E3%83%8D%E3%82%B9%E6%9C%AC+%E5%89%AF%E6%A5%AD/", "desc": "楽天ポイントでビジネス書をお得に", "rakuten": True},
 ]
 
 _INVESTMENT_LINKS = [
     {"name": "SBI証券", "url": "https://www.sbisec.co.jp", "desc": "新NISA・つみたて投資ならSBI証券"},
-    {"name": "楽天証券", "url": "https://www.rakuten-sec.co.jp", "desc": "楽天ポイントで投資デビュー"},
+    {"name": "楽天証券", "url": "https://www.rakuten-sec.co.jp", "desc": "楽天ポイントで投資デビュー", "rakuten": True},
     {"name": "マネーフォワード ME", "url": "https://moneyforward.com", "desc": "資産・家計を一括管理"},
     {"name": "ウェルスナビ", "url": "https://www.wealthnavi.com", "desc": "おまかせロボアドバイザー投資"},
     {"name": "Amazon（投資・資産運用書）", "url": "https://www.amazon.co.jp/s?k=%E6%8A%95%E8%B3%87+%E8%B3%87%E7%94%A3%E9%81%8B%E7%94%A8&tag=nexigen22-22", "desc": "投資・お金の本をAmazonで"},
@@ -577,9 +578,17 @@ _INVESTMENT_LINKS = [
 _GADGET_LINKS = [
     {"name": "Amazon", "url": "https://www.amazon.co.jp/?tag=nexigen22-22", "desc": "最新ガジェットをお得に購入"},
     {"name": "ヨドバシカメラ", "url": "https://www.yodobashi.com", "desc": "家電・ガジェットをポイント還元で"},
-    {"name": "楽天市場", "url": "https://www.rakuten.co.jp", "desc": "楽天ポイントでお得にショッピング"},
+    {"name": "楽天市場（家電・ガジェット）", "url": "https://search.rakuten.co.jp/search/mall/%E3%82%AC%E3%82%B8%E3%82%A7%E3%83%83%E3%83%88+%E5%AE%B6%E9%9B%BB/", "desc": "楽天ポイントでお得にガジェット購入", "rakuten": True},
     {"name": "価格.com", "url": "https://kakaku.com", "desc": "最安値・スペック比較で賢く購入"},
 ]
+
+
+def make_rakuten_affiliate_url(url: str, affiliate_id: str) -> str:
+    """楽天URLにアフィリエイトトラッキングURLを付与する"""
+    if not affiliate_id or not url or url.startswith("#"):
+        return url
+    encoded_url = urllib.parse.quote(url, safe="")
+    return f"https://hb.afl.rakuten.co.jp/hgc/{affiliate_id}/?pc={encoded_url}&m={encoded_url}"
 
 
 def generate_amazon_gadget_products(client: anthropic.Anthropic, article_title: str, keyword: str) -> list:
@@ -669,7 +678,7 @@ def fetch_rakuten_products(keyword: str, app_id: str, affiliate_id: str, n: int 
         return []
 
 
-def build_affiliate_section(genre: str, keyword: str, products: list, amazon_products: list = None) -> str:
+def build_affiliate_section(genre: str, keyword: str, products: list, amazon_products: list = None, rakuten_aff_id: str = "") -> str:
     """記事末尾に追加するアフィリエイトリンクセクションのMarkdownを生成"""
     lines = ["\n\n---\n\n## おすすめ商品・サービス\n"]
 
@@ -730,8 +739,11 @@ def build_affiliate_section(genre: str, keyword: str, products: list, amazon_pro
             '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin:1rem 0;">\n'
         )
         for link in genre_links:
+            url = link["url"]
+            if link.get("rakuten") and rakuten_aff_id:
+                url = make_rakuten_affiliate_url(url, rakuten_aff_id)
             lines.append(
-                f'<a href="{link["url"]}" target="_blank" rel="noopener sponsored" '
+                f'<a href="{url}" target="_blank" rel="noopener sponsored" '
                 f'style="display:block;border:1px solid #e5e7eb;border-radius:8px;padding:14px;'
                 f'text-decoration:none;color:inherit;transition:box-shadow 0.2s;" '
                 f'onmouseenter="this.style.boxShadow=\'0 4px 12px rgba(0,0,0,0.1)\'" '
@@ -983,7 +995,7 @@ def main():
     if genre == "gadget":
         amazon_products = generate_amazon_gadget_products(client, extract_title(article), title_hint)
 
-    affiliate_section = build_affiliate_section(genre, title_hint, rakuten_products, amazon_products)
+    affiliate_section = build_affiliate_section(genre, title_hint, rakuten_products, amazon_products, rakuten_aff_id)
     article = article.rstrip() + "\n" + affiliate_section
 
     repo_path      = f"src/content/blog/{genre}_{date_str}.md"
