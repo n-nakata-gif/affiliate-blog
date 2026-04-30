@@ -591,6 +591,59 @@ def make_rakuten_affiliate_url(url: str, affiliate_id: str) -> str:
     return f"https://hb.afl.rakuten.co.jp/hgc/{affiliate_id}/?pc={encoded_url}&m={encoded_url}"
 
 
+def generate_rakuten_products(client: anthropic.Anthropic, article_title: str, keyword: str, genre: str, affiliate_id: str) -> list:
+    """Claude APIでジャンル関連の楽天商品候補を生成し、アフィリエイトリンクを返す（API不要）"""
+    if not affiliate_id:
+        return []
+    _GENRE_LABEL = {
+        "gadget": "ガジェット・家電", "travel": "旅行グッズ・旅行用品",
+        "gourmet": "食品・グルメ・調理器具", "business": "ビジネス書・副業ツール",
+        "investment": "投資・資産運用の書籍・ツール",
+    }
+    genre_label = _GENRE_LABEL.get(genre, "関連商品")
+    prompt = f"""次のブログ記事に関連する、楽天市場で購入できる具体的な商品を3〜4点提案してください。
+
+記事タイトル: {article_title}
+キーワード: {keyword}
+ジャンル: {genre_label}
+
+条件:
+- 実際に楽天市場で販売されている可能性が高い具体的な商品名
+- 記事の内容に直接関連する商品を選ぶ
+- 各商品: name（商品名・30文字以内）とdesc（20文字以内の説明）をJSON配列で出力
+
+出力形式（JSONのみ、余分なテキスト不要）:
+[
+  {{"name": "商品名", "desc": "一言説明"}},
+  {{"name": "商品名", "desc": "一言説明"}}
+]"""
+    try:
+        resp = client.messages.create(
+            model=MODEL, max_tokens=512,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        text = resp.content[0].text.strip()
+        json_match = re.search(r'\[[\s\S]*?\]', text)
+        if not json_match:
+            return []
+        products = json.loads(json_match.group(0))
+        results = []
+        for p in products[:4]:
+            if isinstance(p, dict) and p.get("name"):
+                kw_encoded = urllib.parse.quote(str(p["name"]))
+                search_url = f"https://search.rakuten.co.jp/search/mall/{kw_encoded}/"
+                results.append({
+                    "name": str(p["name"]),
+                    "url": make_rakuten_affiliate_url(search_url, affiliate_id),
+                    "desc": str(p.get("desc", "")),
+                })
+        logger.info("楽天商品候補生成: %d件 (genre=%s)", len(results), genre)
+        return results
+    except Exception as e:
+        logger.warning("楽天商品候補生成失敗（スキップ）: %s", e)
+        return []
+
+
 def generate_amazon_gadget_products(client: anthropic.Anthropic, article_title: str, keyword: str) -> list:
     """Claude APIでガジェット記事に関連するAmazon商品候補を生成し、アフィリエイトリンクを返す"""
     prompt = f"""次のガジェット・テック記事に関連する、Amazonで購入できる具体的な商品を3〜4点提案してください。
@@ -678,9 +731,28 @@ def fetch_rakuten_products(keyword: str, app_id: str, affiliate_id: str, n: int 
         return []
 
 
-def build_affiliate_section(genre: str, keyword: str, products: list, amazon_products: list = None, rakuten_aff_id: str = "") -> str:
+def build_affiliate_section(genre: str, keyword: str, products: list, amazon_products: list = None, rakuten_aff_id: str = "", rakuten_products: list = None) -> str:
     """記事末尾に追加するアフィリエイトリンクセクションのMarkdownを生成"""
     lines = ["\n\n---\n\n## おすすめ商品・サービス\n"]
+
+    # 楽天市場 Claude生成商品リンク（全ジャンル共通）
+    if rakuten_products:
+        lines.append("### 楽天市場で探す\n")
+        lines.append(
+            '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin:1rem 0;">\n'
+        )
+        for p in rakuten_products:
+            lines.append(
+                f'<a href="{p["url"]}" target="_blank" rel="noopener sponsored" '
+                f'style="display:block;border:2px solid #bf0000;border-radius:8px;padding:14px;'
+                f'text-decoration:none;color:inherit;transition:box-shadow 0.2s;" '
+                f'onmouseenter="this.style.boxShadow=\'0 4px 12px rgba(191,0,0,0.2)\'" '
+                f'onmouseleave="this.style.boxShadow=\'\'">'
+                f'<strong style="color:#bf0000;">🛍️ {p["name"]}</strong><br>'
+                f'<span style="font-size:0.85em;color:#555;">{p["desc"]}</span>'
+                f'</a>\n'
+            )
+        lines.append("</div>\n")
 
     # Amazon個別商品リンク（ガジェットジャンル用）
     if amazon_products:
@@ -995,7 +1067,16 @@ def main():
     if genre == "gadget":
         amazon_products = generate_amazon_gadget_products(client, extract_title(article), title_hint)
 
-    affiliate_section = build_affiliate_section(genre, title_hint, rakuten_products, amazon_products, rakuten_aff_id)
+    # 全ジャンル: Claude APIで楽天商品候補を生成（RAKUTEN_AFFILIATE_IDがあれば）
+    rakuten_claude_products = []
+    if rakuten_aff_id:
+        rakuten_claude_products = generate_rakuten_products(
+            client, extract_title(article), title_hint, genre, rakuten_aff_id
+        )
+
+    affiliate_section = build_affiliate_section(
+        genre, title_hint, rakuten_products, amazon_products, rakuten_aff_id, rakuten_claude_products
+    )
     article = article.rstrip() + "\n" + affiliate_section
 
     repo_path      = f"src/content/blog/{genre}_{date_str}.md"
