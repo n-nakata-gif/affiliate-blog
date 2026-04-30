@@ -640,7 +640,7 @@ def generate_amazon_gadget_products(client: anthropic.Anthropic, article_title: 
 def fetch_rakuten_products(keyword: str, app_id: str, affiliate_id: str, n: int = 3) -> list:
     """楽天市場商品検索 API でキーワード検索し上位 n 件を返す"""
     # デバッグ: app_idの形式確認（先頭8文字・末尾4文字・長さのみ表示）
-    app_id = app_id.strip().replace("-", "")  # ハイフンを除去（UUID対応）
+    app_id = app_id.strip()  # UUID形式のままハイフン維持
     logger.info("楽天API app_id: 長さ=%d, 先頭=%s..., 末尾=...%s",
                 len(app_id), app_id[:8], app_id[-4:])
     # キーワードを20文字以内に短縮（長いと400エラーになる）
