@@ -16,7 +16,7 @@ import anthropic
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
-BLOG_URL = "https://nexigen-blog.com"
+BLOG_URL = "https://novlify.jp"
 REPO = "n-nakata-gif/affiliate-blog"
 BRANCH = "main"
 MODEL = "claude-opus-4-7"

@@ -7,6 +7,14 @@
   },
   "routes": [
     {
+      "pattern": "novlify.jp/*",
+      "zone_name": "novlify.jp"
+    },
+    {
+      "pattern": "www.novlify.jp/*",
+      "zone_name": "novlify.jp"
+    },
+    {
       "pattern": "nexigen-blog.com/*",
       "zone_name": "nexigen-blog.com"
     },
