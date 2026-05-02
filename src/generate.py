@@ -985,6 +985,170 @@ def has_editor_note(content: str) -> bool:
     return "Noriのひとこと" in content
 
 
+# ── 楽天ROOM 投稿ドラフト生成 ─────────────────────────────────
+
+_ROOM_GENRE_LABELS = {
+    "gadget":     "ガジェット",
+    "travel":     "旅行",
+    "gourmet":    "グルメ",
+    "business":   "副業・ビジネス",
+    "investment": "投資",
+}
+
+_ROOM_GENRE_HASHTAGS = {
+    "gadget":     ["#楽天ROOM", "#楽天市場", "#ガジェット", "#家電", "#テック"],
+    "travel":     ["#楽天ROOM", "#楽天市場", "#旅行", "#旅行グッズ", "#国内旅行"],
+    "gourmet":    ["#楽天ROOM", "#楽天市場", "#グルメ", "#食品", "#おすすめ食品"],
+    "business":   ["#楽天ROOM", "#楽天市場", "#副業", "#ビジネス書", "#スキルアップ"],
+    "investment": ["#楽天ROOM", "#楽天市場", "#投資", "#資産運用", "#お金の勉強"],
+}
+
+
+def generate_room_posts_content(
+    client: anthropic.Anthropic,
+    article_title: str,
+    article_url: str,
+    keyword: str,
+    genre: str,
+    rakuten_aff_id: str,
+    n: int = 3,
+) -> list:
+    """Claude APIで楽天ROOM投稿ドラフトを生成する（公式APIなし・手動投稿補助用）"""
+    if not rakuten_aff_id:
+        return []
+
+    genre_label = _ROOM_GENRE_LABELS.get(genre, genre)
+    default_tags = " ".join(_ROOM_GENRE_HASHTAGS.get(genre, ["#楽天ROOM", "#楽天市場"]))
+
+    prompt = f"""次のブログ記事に合わせた「楽天ROOM」への投稿ドラフトを{n}件生成してください。
+
+記事タイトル: {article_title}
+ブログURL: {article_url}
+キーワード: {keyword}
+ジャンル: {genre_label}
+
+楽天ROOMとは「楽天市場の商品をSNS感覚で紹介するサービス」です。
+投稿するには「楽天市場の商品URL + コメント」が必要です。
+
+各投稿ドラフトに含める情報:
+1. product_keyword: 楽天市場で検索する商品のキーワード（15文字以内・具体的な商品名）
+2. comment: 投稿コメント（60〜120文字。親しみやすいSNS口調。末尾に「詳しくはブログで→ {article_url}」を含める）
+3. hashtags: ハッシュタグ4〜5個（{default_tags} を含め、記事に合うものを追加）
+
+条件:
+- {n}件すべて異なる商品・角度でアプローチ
+- 宣伝くさくなく、自然なおすすめ文にする
+- コメントは体験・メリット・おすすめポイントを1つ盛り込む
+
+出力形式（JSONのみ、余分なテキスト不要）:
+[
+  {{
+    "product_keyword": "商品キーワード",
+    "comment": "コメント本文（末尾にブログURL）",
+    "hashtags": ["#楽天ROOM", "#楽天市場", "#{genre_label}"]
+  }}
+]"""
+
+    try:
+        resp = client.messages.create(
+            model=MODEL,
+            max_tokens=1024,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        text = resp.content[0].text.strip()
+        json_match = re.search(r'\[[\s\S]*?\]', text)
+        if not json_match:
+            logger.warning("楽天ROOM: JSON未検出")
+            return []
+        posts = json.loads(json_match.group(0))
+        results = []
+        for p in posts[:n]:
+            if not isinstance(p, dict) or not p.get("comment"):
+                continue
+            kw = p.get("product_keyword", keyword)[:20]
+            kw_encoded = urllib.parse.quote(str(kw))
+            rakuten_url = make_rakuten_affiliate_url(
+                f"https://search.rakuten.co.jp/search/mall/{kw_encoded}/",
+                rakuten_aff_id,
+            )
+            results.append({
+                "product_keyword": kw,
+                "rakuten_search_url": rakuten_url,
+                "comment": p.get("comment", ""),
+                "hashtags": p.get("hashtags", _ROOM_GENRE_HASHTAGS.get(genre, [])),
+            })
+        logger.info("楽天ROOM投稿ドラフト生成: %d件 (genre=%s)", len(results), genre)
+        return results
+    except Exception as e:
+        logger.warning("楽天ROOM投稿ドラフト生成失敗（スキップ）: %s", e)
+        return []
+
+
+def build_room_draft_markdown(
+    posts: list,
+    article_title: str,
+    article_url: str,
+    genre: str,
+    date_str: str,
+) -> str:
+    """楽天ROOM投稿ドラフトのMarkdownを生成（コピペ用）"""
+    genre_label = _ROOM_GENRE_LABELS.get(genre, genre)
+    pub_date = f"{date_str[:4]}-{date_str[4:6]}-{date_str[6:]}"
+
+    lines = [
+        f"# 楽天ROOM 投稿ドラフト（{pub_date} / {genre_label}）",
+        "",
+        f"**元記事**: [{article_title}]({article_url})",
+        f"**生成日**: {pub_date}",
+        "",
+        "---",
+        "",
+        "## 📱 投稿手順（約3分/件）",
+        "",
+        "1. スマホで **楽天ROOMアプリ** を開く",
+        "2. 右下の「＋」→「コレクションを追加」をタップ",
+        "3. 下の「楽天市場 商品URL」をコピーして検索欄に貼る",
+        "4. 気に入った商品を選んで「追加」",
+        "5. 「コメント」をコピペして貼り付ける",
+        "6. 「ハッシュタグ」をコピペして貼り付ける",
+        "7. 「投稿する」をタップ ✅",
+        "",
+        "---",
+        "",
+    ]
+
+    for i, post in enumerate(posts, 1):
+        hashtags_str = " ".join(post.get("hashtags", []))
+        lines += [
+            f"## 投稿 {i} — {post['product_keyword']}",
+            "",
+            "### 🛍️ 楽天市場 商品URL（コピーしてROOMに貼付）",
+            "```",
+            post["rakuten_search_url"],
+            "```",
+            "",
+            "### 💬 コメント（コピーしてROOMに貼付）",
+            "```",
+            post["comment"],
+            "```",
+            "",
+            "### #️⃣ ハッシュタグ（コメント末尾に追加）",
+            "```",
+            hashtags_str,
+            "```",
+            "",
+            "---",
+            "",
+        ]
+
+    lines += [
+        "> 🤖 このファイルは記事生成時に自動生成されました。",
+        f"> 楽天ROOMへの投稿はアプリから手動で行ってください。",
+    ]
+
+    return "\n".join(lines)
+
+
 # ── メイン ────────────────────────────────────────────────────
 
 def main():
@@ -1125,6 +1289,34 @@ def main():
     except Exception as e:
         print(f"Pinterest投稿スキップ: {e}")
 
+    # ── 楽天ROOM 投稿ドラフト生成 ────────────────────────────
+    if rakuten_aff_id:
+        room_posts = generate_room_posts_content(
+            client,
+            article_title=extract_title(article),
+            article_url=article_url,
+            keyword=title_hint,
+            genre=genre,
+            rakuten_aff_id=rakuten_aff_id,
+            n=3,
+        )
+        if room_posts:
+            room_md = build_room_draft_markdown(
+                room_posts,
+                article_title=extract_title(article),
+                article_url=article_url,
+                genre=genre,
+                date_str=date_str,
+            )
+            room_path = f"data/room_drafts/{genre}_{date_str}.md"
+            try:
+                push_file(gh_token, room_path, room_md, f"auto: room drafts {genre} {date_str}")
+                logger.info("楽天ROOM投稿ドラフト保存: %s", room_path)
+                print(f"楽天ROOMドラフト: https://github.com/{REPO}/blob/main/{room_path}")
+            except Exception as e:
+                logger.warning("楽天ROOMドラフト保存失敗（スキップ）: %s", e)
+    else:
+        logger.info("RAKUTEN_AFFILIATE_ID 未設定のため楽天ROOMドラフト生成スキップ")
 
 
 if __name__ == "__main__":
