@@ -161,7 +161,8 @@ def backfill_images(md_files: list, gh_token: str, pixabay_key: str,
 
         genre = detect_genre(md_path.name)
         title = extract_title(content)
-        img_query = f"{title[:20]} {_GENRE_IMAGE_QUERIES.get(genre, genre)}"
+        # Unsplashは英語タグで検索するためジャンル別英語クエリのみ使用
+        img_query = _GENRE_IMAGE_QUERIES.get(genre, "nature landscape")
 
         print(f"  処理中: {md_path.name} ({genre}) ...")
 

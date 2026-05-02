@@ -1022,7 +1022,8 @@ def main():
     hero_image_url = ""
     if pixabay_key:
         title_hint = _get(topic, "title", "topic", "keyword")
-        img_query = f"{title_hint} {_GENRE_IMAGE_QUERIES.get(genre, genre)}"
+        # Unsplashは英語タグで検索するためジャンル別英語クエリのみ使用
+        img_query = _GENRE_IMAGE_QUERIES.get(genre, "nature landscape")
         images = fetch_pixabay_image_urls(img_query, pixabay_key, n=3)
         article = insert_images_into_article(article, images)
         if images:
