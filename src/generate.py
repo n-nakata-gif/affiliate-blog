@@ -446,43 +446,51 @@ def ensure_min_chars(client: anthropic.Anthropic, article: str, prompt: str) -> 
 # ── Pixabay 画像取得 ──────────────────────────────────────────
 
 _GENRE_IMAGE_QUERIES = {
-    "business": "professional business workspace success",
-    "investment": "finance investment growth chart",
-    "travel": "travel landscape scenic beautiful",
-    "gourmet": "delicious food beautiful plating",
-    "gadget": "technology gadget smartphone modern",
+    "business": "business workspace office professional",
+    "investment": "finance money investment growth",
+    "travel": "travel landscape nature scenic",
+    "gourmet": "food delicious restaurant cooking",
+    "gadget": "technology gadget electronics modern",
 }
 
 
 def fetch_pixabay_image_urls(query: str, api_key: str, n: int = 3) -> list:
-    """Pixabay API から n 枚の画像情報（url, alt）を取得して返す"""
+    """Unsplash API から n 枚の画像情報（url, alt）を取得して返す
+    ※ 関数名はPixabayのままだが内部はUnsplashを使用（後方互換性のため）
+    Unsplash の画像URLは永続URLのため期限切れなし。
+    """
     params = {
-        "key": api_key,
-        "q": query,
-        "image_type": "photo",
-        "orientation": "horizontal",
-        "safesearch": "true",
+        "query": query,
         "per_page": max(n, 3),
-        "order": "popular",
-        "lang": "ja",
+        "orientation": "landscape",
+        "content_filter": "high",
     }
-    endpoint = "https://pixabay.com/api/?" + urllib.parse.urlencode(params)
+    endpoint = "https://api.unsplash.com/search/photos?" + urllib.parse.urlencode(params)
     try:
-        with urllib.request.urlopen(endpoint, timeout=15) as resp:
+        req = urllib.request.Request(
+            endpoint,
+            headers={
+                "Authorization": f"Client-ID {api_key}",
+                "Accept-Version": "v1",
+            }
+        )
+        with urllib.request.urlopen(req, timeout=15) as resp:
             data = json.loads(resp.read())
         results = []
-        for hit in data.get("hits", [])[:n]:
-            url = hit.get("webformatURL", "")
+        for photo in data.get("results", [])[:n]:
+            # Unsplashの永続URL（サイズ指定付き・期限なし）
+            url = photo.get("urls", {}).get("regular", "")
+            alt = photo.get("alt_description") or photo.get("description") or query
             if url:
                 results.append({
                     "url": url,
-                    "alt": hit.get("tags", query).split(",")[0].strip(),
-                    "page": hit.get("pageURL", ""),
+                    "alt": alt[:50],
+                    "page": photo.get("links", {}).get("html", ""),
                 })
-        logger.info("Pixabay: %d件取得 (query=%s)", len(results), query[:30])
+        logger.info("Unsplash: %d件取得 (query=%s)", len(results), query[:30])
         return results
     except Exception as e:
-        logger.warning("Pixabay画像取得失敗 (query=%s): %s", query, e)
+        logger.warning("Unsplash画像取得失敗 (query=%s): %s", query, e)
         return []
 
 
@@ -1010,7 +1018,7 @@ def main():
     article = ensure_min_chars(client, article, prompt)
 
     # ── Pixabay 画像を記事に挿入 ─────────────────────────────
-    pixabay_key = os.environ.get("PIXABAY_API_KEY")
+    pixabay_key = os.environ.get("UNSPLASH_API_KEY") or os.environ.get("PIXABAY_API_KEY")
     hero_image_url = ""
     if pixabay_key:
         title_hint = _get(topic, "title", "topic", "keyword")

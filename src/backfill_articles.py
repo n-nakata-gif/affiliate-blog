@@ -396,7 +396,7 @@ def main():
         backfill_editor_note(auto_files, gh_token, anthropic_key, args.dry_run, args.force)
 
     if args.images:
-        pixabay_key = os.environ.get("PIXABAY_API_KEY", "")
+        pixabay_key = os.environ.get("UNSPLASH_API_KEY", "") or os.environ.get("PIXABAY_API_KEY", "")
         if not pixabay_key and not args.dry_run:
             print("ERROR: PIXABAY_API_KEY が未設定です", file=sys.stderr)
             sys.exit(1)
