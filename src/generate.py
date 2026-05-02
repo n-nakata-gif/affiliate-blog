@@ -597,15 +597,19 @@ _GADGET_LINKS = [
 ]
 
 
-def make_rakuten_affiliate_url(url: str, affiliate_id: str) -> str:
-    """楽天URLにアフィリエイトトラッキングURLを付与する"""
+def make_rakuten_affiliate_url(url: str, affiliate_id: str, a8mat: str = "") -> str:
+    """楽天URLにアフィリエイトトラッキングURLを付与する（A8.net経由）"""
     if not affiliate_id or not url or url.startswith("#"):
         return url
     encoded_url = urllib.parse.quote(url, safe="")
-    return f"https://hb.afl.rakuten.co.jp/hgc/{affiliate_id}/?pc={encoded_url}&m={encoded_url}"
+    rakuten_url = f"http://hb.afl.rakuten.co.jp/hgc/{affiliate_id}/?pc={encoded_url}&m={encoded_url}"
+    if a8mat:
+        encoded_rakuten_url = urllib.parse.quote(rakuten_url, safe="")
+        return f"https://rpx.a8.net/svt/ejp?a8mat={urllib.parse.quote(a8mat, safe='')}&rakuten=y&a8ejpredirect={encoded_rakuten_url}"
+    return rakuten_url
 
 
-def generate_rakuten_products(client: anthropic.Anthropic, article_title: str, keyword: str, genre: str, affiliate_id: str) -> list:
+def generate_rakuten_products(client: anthropic.Anthropic, article_title: str, keyword: str, genre: str, affiliate_id: str, a8mat: str = "") -> list:
     """Claude APIでジャンル関連の楽天商品候補を生成し、アフィリエイトリンクを返す（API不要）"""
     if not affiliate_id:
         return []
@@ -648,7 +652,7 @@ def generate_rakuten_products(client: anthropic.Anthropic, article_title: str, k
                 search_url = f"https://search.rakuten.co.jp/search/mall/{kw_encoded}/"
                 results.append({
                     "name": str(p["name"]),
-                    "url": make_rakuten_affiliate_url(search_url, affiliate_id),
+                    "url": make_rakuten_affiliate_url(search_url, affiliate_id, a8mat),
                     "desc": str(p.get("desc", "")),
                 })
         logger.info("楽天商品候補生成: %d件 (genre=%s)", len(results), genre)
@@ -745,7 +749,7 @@ def fetch_rakuten_products(keyword: str, app_id: str, affiliate_id: str, n: int 
         return []
 
 
-def build_affiliate_section(genre: str, keyword: str, products: list, amazon_products: list = None, rakuten_aff_id: str = "", rakuten_products: list = None) -> str:
+def build_affiliate_section(genre: str, keyword: str, products: list, amazon_products: list = None, rakuten_aff_id: str = "", rakuten_products: list = None, a8mat: str = "") -> str:
     """記事末尾に追加するアフィリエイトリンクセクションのMarkdownを生成"""
     lines = ["\n\n---\n\n## おすすめ商品・サービス\n"]
 
@@ -827,7 +831,7 @@ def build_affiliate_section(genre: str, keyword: str, products: list, amazon_pro
         for link in genre_links:
             url = link["url"]
             if link.get("rakuten") and rakuten_aff_id:
-                url = make_rakuten_affiliate_url(url, rakuten_aff_id)
+                url = make_rakuten_affiliate_url(url, rakuten_aff_id, a8mat)
             lines.append(
                 f'<a href="{url}" target="_blank" rel="noopener sponsored" '
                 f'style="display:block;border:1px solid #e5e7eb;border-radius:8px;padding:14px;'
@@ -1239,6 +1243,7 @@ def main():
     # ── アフィリエイトリンクセクションを追加 ─────────────────
     rakuten_app_id    = os.environ.get("RAKUTEN_APP_ID", "")
     rakuten_aff_id    = os.environ.get("RAKUTEN_AFFILIATE_ID", "")
+    a8_rakuten_mat    = os.environ.get("A8_RAKUTEN_MAT", "")
     title_hint = _get(topic, "title", "topic", "keyword")
     # ジャンル別の短い検索キーワード（楽天APIは長いキーワードで400エラーになるため）
     _RAKUTEN_GENRE_KW = {
@@ -1264,11 +1269,11 @@ def main():
     rakuten_claude_products = []
     if rakuten_aff_id:
         rakuten_claude_products = generate_rakuten_products(
-            client, extract_title(article), title_hint, genre, rakuten_aff_id
+            client, extract_title(article), title_hint, genre, rakuten_aff_id, a8_rakuten_mat
         )
 
     affiliate_section = build_affiliate_section(
-        genre, title_hint, rakuten_products, amazon_products, rakuten_aff_id, rakuten_claude_products
+        genre, title_hint, rakuten_products, amazon_products, rakuten_aff_id, rakuten_claude_products, a8_rakuten_mat
     )
     article = article.rstrip() + "\n" + affiliate_section
 
