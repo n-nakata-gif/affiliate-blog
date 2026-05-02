@@ -1,6 +1,6 @@
 """
-壊れたPixabay画像URLをUnsplash画像に置き換えるバックフィルスクリプト
-記事ごとに異なるページ・クエリを使って画像を取得する
+画像URLをUnsplash画像に置き換えるバックフィルスクリプト
+Pixabay・既存Unsplash問わず全記事を記事ごとに異なる画像に更新する
 """
 from __future__ import annotations
 import json, os, re, sys, urllib.parse, urllib.request
@@ -47,8 +47,8 @@ GENRE_QUERIES = {
     ],
 }
 
-PIXABAY_PATTERN = re.compile(r'https://pixabay\.com/get/[^\s"\']+')
-UNSPLASH_PATTERN = re.compile(r'https://images\.unsplash\.com/[^\s"\']+')
+# Pixabay・Unsplash両方のURLにマッチ
+IMAGE_PATTERN = re.compile(r'https://(?:pixabay\.com/get|images\.unsplash\.com)/[^\s"\']+')
 
 
 def fetch_unsplash_images(query: str, api_key: str, n: int = 3, page: int = 1) -> list:
@@ -84,7 +84,9 @@ def detect_genre(filename: str) -> str:
 
 def fix_article(path: Path, api_key: str, article_index: int) -> bool:
     content = path.read_text(encoding="utf-8")
-    if "pixabay.com/get" not in content:
+
+    # 画像URLが存在する記事のみ処理
+    if not IMAGE_PATTERN.search(content):
         return False
 
     genre = detect_genre(path.stem)
@@ -111,7 +113,7 @@ def fix_article(path: Path, api_key: str, article_index: int) -> bool:
         img_index[0] += 1
         return images[i]["url"]
 
-    new_content = PIXABAY_PATTERN.sub(replace_url, content)
+    new_content = IMAGE_PATTERN.sub(replace_url, content)
 
     if new_content != content:
         path.write_text(new_content, encoding="utf-8")
@@ -131,9 +133,6 @@ def main():
     fixed = 0
     article_index = 0
     for path in md_files:
-        content = path.read_text(encoding="utf-8")
-        if "pixabay.com/get" not in content:
-            continue
         print(f"処理中: {path.name}")
         if fix_article(path, api_key, article_index):
             fixed += 1
