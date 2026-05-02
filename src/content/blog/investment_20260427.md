@@ -96,6 +96,9 @@ TOPIXや先進国株、新興国株などのインデックスもあります。
 
 <figure style="margin:1.5rem 0;text-align:center;"><img src="https://pixabay.com/get/g10f376a6c6e857b25a2f730cafd04446c072053cb8c1e869de747a9c17b5be7089101ca01d91adc7ec36aa8529a7b3c2b9635834e61ddd7056dd5217a0bdd728_640.jpg" alt="人に取り組む" style="width:100%;max-width:800px;height:auto;border-radius:8px;" loading="lazy"></figure>
 
+
+<figure style="margin:1.5rem 0;text-align:center;"><img src="https://images.unsplash.com/photo-1633158829875-e5316a358c6f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w5MzQxODZ8MHwxfHNlYXJjaHwyfHxmaW5hbmNlJTIwbW9uZXklMjBpbnZlc3RtZW50JTIwZ3Jvd3RofGVufDF8MHx8fDE3Nzc2OTc5NjJ8MA&ixlib=rb-4.1.0&q=80&w=1080" alt="a glass jar filled with coins and a plant" style="width:100%;max-width:800px;height:auto;border-radius:8px;" loading="lazy"></figure>
+
 ## 続けるための実践ポイント
 
 ### 「長期・分散・積立」を徹底する
@@ -112,6 +115,9 @@ TOPIXや先進国株、新興国株などのインデックスもあります。
 
 
 <figure style="margin:1.5rem 0;text-align:center;"><img src="https://pixabay.com/get/g88259fcf9b74032b36444f9e9abfc4e59bafd189442c05bc5fda0ebb15da890a67b2e9c8c096a18aa464d6392bb4e830ca5c553d19062b8871ad1a0bb6488da6_640.jpg" alt="メモボックス" style="width:100%;max-width:800px;height:auto;border-radius:8px;" loading="lazy"></figure>
+
+
+<figure style="margin:1.5rem 0;text-align:center;"><img src="https://images.unsplash.com/photo-1738479021471-d5bfcc169e10?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w5MzQxODZ8MHwxfHNlYXJjaHwzfHxmaW5hbmNlJTIwbW9uZXklMjBpbnZlc3RtZW50JTIwZ3Jvd3RofGVufDF8MHx8fDE3Nzc2OTc5NjJ8MA&ixlib=rb-4.1.0&q=80&w=1080" alt="A pile of money sitting on top of a table" style="width:100%;max-width:800px;height:auto;border-radius:8px;" loading="lazy"></figure>
 
 ## まとめ:小さな一歩から始めてみよう
 
