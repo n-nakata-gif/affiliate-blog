@@ -1,0 +1,31 @@
+name: Backfill Images (Pixabay → Unsplash)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 壊れたPixabay画像をUnsplash画像に置き換え
+        env:
+          UNSPLASH_API_KEY: ${{ secrets.UNSPLASH_API_KEY }}
+        run: |
+          cd src
+          python backfill_images.py
+
+      - name: 変更をコミット・プッシュ
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add src/content/blog/
+          git diff --staged --quiet || git commit -m "fix: Pixabay画像URLをUnsplashに一括置き換え"
+          git push
