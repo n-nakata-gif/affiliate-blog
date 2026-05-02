@@ -20,6 +20,7 @@ BLOG_URL = "https://novlify.jp"
 REPO = "n-nakata-gif/affiliate-blog"
 BRANCH = "main"
 MODEL = "claude-opus-4-7"
+RAKUTEN_ROOM_URL = "https://room.rakuten.co.jp/room_5034e46bc3/"
 MIN_CHARS = 3000
 TOPICS_PATH = "data/topics.json"
 
@@ -839,6 +840,19 @@ def build_affiliate_section(genre: str, keyword: str, products: list, amazon_pro
             )
         lines.append("</div>\n")
 
+    # 楽天ROOMへの誘導ボタン
+    lines.append(
+        f'\n<div style="text-align:center;margin:2rem 0 1rem;">'
+        f'<a href="{RAKUTEN_ROOM_URL}" target="_blank" rel="noopener" '
+        f'style="display:inline-block;background:#bf0000;color:#fff;padding:12px 28px;'
+        f'border-radius:8px;text-decoration:none;font-weight:bold;font-size:1rem;'
+        f'box-shadow:0 2px 8px rgba(191,0,0,0.25);">'
+        f'🛍️ 楽天ROOMでも紹介中！</a>'
+        f'<p style="font-size:0.85em;color:#888;margin-top:8px;">'
+        f'フォローするとお得な商品情報が届きます</p>'
+        f'</div>\n'
+    )
+
     lines.append(
         '\n<p style="font-size:0.8em;color:#999;">'
         "※本記事にはアフィリエイト広告が含まれます。</p>\n"
@@ -1106,12 +1120,13 @@ def build_room_draft_markdown(
         "## 📱 投稿手順（約3分/件）",
         "",
         "1. スマホで **楽天ROOMアプリ** を開く",
-        "2. 右下の「＋」→「コレクションを追加」をタップ",
-        "3. 下の「楽天市場 商品URL」をコピーして検索欄に貼る",
-        "4. 気に入った商品を選んで「追加」",
-        "5. 「コメント」をコピペして貼り付ける",
-        "6. 「ハッシュタグ」をコピペして貼り付ける",
-        "7. 「投稿する」をタップ ✅",
+        "2. 右下の「＋」ボタン →「商品を追加」をタップ",
+        "3. 下の「🔍 検索キーワード」で商品を検索",
+        "4. 気に入った商品をタップして「コレクションに追加」",
+        "5. 「💬 コメント」と「#️⃣ ハッシュタグ」をコピペ",
+        "6. 「投稿する」をタップ ✅",
+        "",
+        f"👉 あなたのROOMページ: {RAKUTEN_ROOM_URL}",
         "",
         "---",
         "",
@@ -1122,9 +1137,9 @@ def build_room_draft_markdown(
         lines += [
             f"## 投稿 {i} — {post['product_keyword']}",
             "",
-            "### 🛍️ 楽天市場 商品URL（コピーしてROOMに貼付）",
+            "### 🔍 検索キーワード（ROOMアプリの商品検索に入力）",
             "```",
-            post["rakuten_search_url"],
+            post["product_keyword"],
             "```",
             "",
             "### 💬 コメント（コピーしてROOMに貼付）",
@@ -1132,7 +1147,7 @@ def build_room_draft_markdown(
             post["comment"],
             "```",
             "",
-            "### #️⃣ ハッシュタグ（コメント末尾に追加）",
+            "### #️⃣ ハッシュタグ（コメントの後に追加）",
             "```",
             hashtags_str,
             "```",
