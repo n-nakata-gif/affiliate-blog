@@ -630,6 +630,8 @@ _BUSINESS_LINKS = [
     {"name": "ランサーズ", "url": "https://www.lancers.jp", "desc": "スキルを活かした副業マッチング"},
     {"name": "ストアカ", "url": "https://www.street-academy.com", "desc": "ビジネス・副業スキルを学ぶ"},
     {"name": "Udemy", "url": "https://www.udemy.com/ja/", "desc": "オンライン講座でスキルアップ"},
+    {"name": "マネーフォワード クラウド会計", "url": "https://px.a8.net/svt/ejp?a8mat=4B3HQJ+5YCTU+4JGQ+614CY", "desc": "会計事務所オススメNo.1の会計ソフト"},
+    {"name": "マネーフォワード クラウド確定申告", "url": "https://px.a8.net/svt/ejp?a8mat=4B3HQJ+4620I+4JGQ+BXB8Z", "desc": "確定申告を自動化・ラクに完了"},
     {"name": "Amazon（副業・ビジネス書）", "url": "https://www.amazon.co.jp/s?k=%E5%89%AF%E6%A5%AD+%E3%83%93%E3%82%B8%E3%83%8D%E3%82%B9&tag=nexigen22-22", "desc": "副業・ビジネス関連書籍をAmazonで"},
     {"name": "楽天市場（ビジネス書）", "url": "https://search.rakuten.co.jp/search/mall/%E3%83%93%E3%82%B8%E3%83%8D%E3%82%B9%E6%9C%AC+%E5%89%AF%E6%A5%AD/", "desc": "楽天ポイントでビジネス書をお得に", "rakuten": True},
 ]
