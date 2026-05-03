@@ -613,7 +613,8 @@ def insert_images_into_article(article: str, images: list) -> str:
 _TRAVEL_LINKS = [
     {"name": "じゃらんnet", "url": "https://px.a8.net/svt/ejp?a8mat=4B3HQI+DYHVCI+14CS+6C9LD", "desc": "全国の宿・ホテルをお得に予約"},
     {"name": "楽天トラベル", "url": "https://travel.rakuten.co.jp", "desc": "楽天ポイントで宿・航空券をお得に", "rakuten": True},
-    {"name": "一休.com", "url": "https://www.ikyu.com", "desc": "高級旅館・ホテルの特別プラン"},
+    {"name": "一休.com", "url": "https://px.a8.net/svt/ejp?a8mat=4B3HQJ+A2L06Q+1OK+6LHDU", "desc": "高級旅館・ホテルのタイムセールプラン"},
+    {"name": "agoda", "url": "https://px.a8.net/svt/ejp?a8mat=4B3HQJ+A36FSI+4X1W+5YRHE", "desc": "国内・海外ホテルを最大85%OFFで予約"},
     {"name": "Booking.com", "url": "https://www.booking.com", "desc": "世界中の宿を最安値で比較"},
     {"name": "skyticket", "url": "https://skyticket.jp", "desc": "格安航空券・新幹線・ホテル比較"},
 ]
