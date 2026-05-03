@@ -4,11 +4,11 @@ from datetime import datetime, timezone, timedelta
 JST = timezone(timedelta(hours=9))
 
 _X_HASHTAGS = {
-    "business":   "#副業 #ビジネス #在宅ワーク #フリーランス #Novlify",
-    "gadget":     "#ガジェット #テック #家電 #レビュー #Novlify",
-    "investment": "#投資 #資産運用 #NISA #お金の話 #Novlify",
-    "travel":     "#旅行 #国内旅行 #観光 #旅 #Novlify",
-    "gourmet":    "#グルメ #食 #レシピ #料理 #Novlify",
+    "business":   "#PR #副業 #ビジネス #在宅ワーク #フリーランス #Novlify",
+    "gadget":     "#PR #ガジェット #テック #家電 #レビュー #Novlify",
+    "investment": "#PR #投資 #資産運用 #NISA #お金の話 #Novlify",
+    "travel":     "#PR #旅行 #国内旅行 #観光 #旅 #Novlify",
+    "gourmet":    "#PR #グルメ #食 #レシピ #料理 #Novlify",
 }
 
 _X_ESSENCE_PROMPT = """\
