@@ -637,6 +637,8 @@ _BUSINESS_LINKS = [
 _INVESTMENT_LINKS = [
     {"name": "SBI証券", "url": "https://www.sbisec.co.jp", "desc": "新NISA・つみたて投資ならSBI証券"},
     {"name": "楽天証券", "url": "https://www.rakuten-sec.co.jp", "desc": "楽天ポイントで投資デビュー", "rakuten": True},
+    {"name": "みんなのFX", "url": "https://min-fx.jp/", "desc": "業界最狭水準スプレッドのFXトレード"},
+    {"name": "GMOクリック証券", "url": "https://www.gmo-click.com/service/fx/", "desc": "取引量No.1のFXプラットフォーム"},
     {"name": "マネーフォワード ME", "url": "https://moneyforward.com", "desc": "資産・家計を一括管理"},
     {"name": "ウェルスナビ", "url": "https://www.wealthnavi.com", "desc": "おまかせロボアドバイザー投資"},
     {"name": "Amazon（投資・資産運用書）", "url": "https://www.amazon.co.jp/s?k=%E6%8A%95%E8%B3%87+%E8%B3%87%E7%94%A3%E9%81%8B%E7%94%A8&tag=nexigen22-22", "desc": "投資・お金の本をAmazonで"},
