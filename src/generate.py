@@ -611,7 +611,7 @@ def insert_images_into_article(article: str, images: list) -> str:
 # 旅行・グルメ固定アフィリエイトリンク
 # ※ リンクURLはA8.net/もしもアフィリエイトの発行IDに差し替えてください
 _TRAVEL_LINKS = [
-    {"name": "じゃらんnet", "url": "https://www.jalan.net", "desc": "全国の宿・ホテルをお得に予約"},
+    {"name": "じゃらんnet", "url": "https://px.a8.net/svt/ejp?a8mat=4B3HQI+DYHVCI+14CS+6C9LD", "desc": "全国の宿・ホテルをお得に予約"},
     {"name": "楽天トラベル", "url": "https://travel.rakuten.co.jp", "desc": "楽天ポイントで宿・航空券をお得に", "rakuten": True},
     {"name": "一休.com", "url": "https://www.ikyu.com", "desc": "高級旅館・ホテルの特別プラン"},
     {"name": "Booking.com", "url": "https://www.booking.com", "desc": "世界中の宿を最安値で比較"},
