@@ -33,7 +33,7 @@ _COMMON_PRINCIPLES = """\
 - 薬機法・景品表示法・金融商品取引法・著作権を遵守する
 - ファクトチェック済みの事実のみ記載する
 - 一人の読者に語りかけるように書く
-- 記事末尾に「※本記事はPRを含みます」と必ず記載する
+- PR表記は記事冒頭（h1直後）と末尾の両方に必ず記載する（冒頭はシステムが自動挿入）
 - 情報の鮮度を示すため「○○年○○月時点の情報です」を本文中に明記する
 - 架空の体験談・第三者を装った表現は使わない
 - 他社・他商品を不当に貶める表現は使わない
@@ -514,6 +514,44 @@ def fetch_pixabay_image_urls(query: str, api_key: str, n: int = 3) -> list:
         return []
 
 
+def insert_pr_notice(article: str, date_str: str) -> str:
+    """h1直後にPR表記バナーを自動挿入する（冒頭に既にある場合はスキップ）"""
+    fm_match = re.match(r'^---\n[\s\S]*?\n---\n', article)
+    if fm_match:
+        frontmatter = article[:fm_match.end()]
+        body = article[fm_match.end():]
+    else:
+        frontmatter = ""
+        body = article
+
+    if 'PR・広告を含みます' in body[:400] or '本記事はPRを含みます' in body[:400]:
+        return article
+
+    dt = datetime.strptime(date_str, "%Y%m%d")
+    year_month = f"{dt.year}年{dt.month}月"
+    pr_block = (
+        '\n<div style="background:#fff8e1;border-left:4px solid #f59e0b;'
+        'padding:10px 16px;margin:1rem 0;border-radius:0 6px 6px 0;font-size:0.9em;color:#555;">'
+        '📢 <strong style="color:#333;">本記事はPR・広告を含みます。</strong>'
+        f'（{year_month}時点の情報です）'
+        '</div>\n'
+    )
+
+    lines = body.split('\n')
+    h1_idx = next((i for i, l in enumerate(lines) if l.startswith('# ')), -1)
+    if h1_idx >= 0:
+        lines.insert(h1_idx + 1, pr_block)
+    else:
+        # h1がない場合は最初のh2の前に挿入
+        h2_idx = next((i for i, l in enumerate(lines) if l.startswith('## ')), -1)
+        if h2_idx >= 0:
+            lines.insert(h2_idx, pr_block)
+        else:
+            lines.insert(0, pr_block)
+
+    return frontmatter + '\n'.join(lines)
+
+
 def insert_images_into_article(article: str, images: list) -> str:
     """記事の3箇所（h1直後・中間・まとめ前）に画像を挿入する"""
     if not images:
@@ -846,8 +884,11 @@ def build_affiliate_section(genre: str, keyword: str, products: list, amazon_pro
             url = link["url"]
             if link.get("rakuten") and rakuten_aff_id:
                 url = make_rakuten_affiliate_url(url, rakuten_aff_id, a8mat)
+            # rel="sponsored" は実際にアフィリエイト提携済みのリンクのみに付与
+            is_affiliate = link.get("rakuten") or "tag=nexigen22-22" in url
+            rel = "noopener sponsored" if is_affiliate else "noopener"
             lines.append(
-                f'<a href="{url}" target="_blank" rel="noopener sponsored" '
+                f'<a href="{url}" target="_blank" rel="{rel}" '
                 f'style="display:block;border:1px solid #e5e7eb;border-radius:8px;padding:14px;'
                 f'text-decoration:none;color:inherit;transition:box-shadow 0.2s;" '
                 f'onmouseenter="this.style.boxShadow=\'0 4px 12px rgba(0,0,0,0.1)\'" '
@@ -1233,6 +1274,9 @@ def main():
         logger.info("画像挿入完了: %d枚", len(images))
     else:
         logger.info("PIXABAY_API_KEY 未設定のため画像挿入スキップ")
+
+    # ── PR表記バナーをh1直後に自動挿入 ──────────────────────
+    article = insert_pr_notice(article, date_str)
 
     # ── heroImage を frontmatter に追加 ──────────────────────
     if hero_image_url:

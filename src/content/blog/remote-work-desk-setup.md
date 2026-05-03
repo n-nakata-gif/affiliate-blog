@@ -7,6 +7,9 @@ tags: ["在宅ワーク", "デスク", "ガジェット"]
 
 テレワークが当たり前になった今、**自宅の作業環境**を整えることが仕事の質に直結します。今回は在宅ワークをより快適にする厳選アイテムを10個ご紹介します。
 
+
+<div style="background:#fff8e1;border-left:4px solid #f59e0b;padding:10px 16px;margin:1rem 0;border-radius:0 6px 6px 0;font-size:0.9em;color:#555;">📢 <strong style="color:#333;">本記事はPR・広告を含みます。</strong>（2024年11月時点の情報です）</div>
+
 ## なぜデスク環境が重要なのか？
 
 - 腰・肩への負担が減る → 疲労軽減

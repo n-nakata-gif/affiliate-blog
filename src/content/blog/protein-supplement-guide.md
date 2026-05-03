@@ -7,6 +7,9 @@ tags: ["プロテイン", "筋トレ", "健康"]
 
 「プロテインを飲み始めたいけど種類が多すぎて選べない」という方のために、初心者でも失敗しない選び方とおすすめ商品を解説します。
 
+
+<div style="background:#fff8e1;border-left:4px solid #f59e0b;padding:10px 16px;margin:1rem 0;border-radius:0 6px 6px 0;font-size:0.9em;color:#555;">📢 <strong style="color:#333;">本記事はPR・広告を含みます。</strong>（2024年12月時点の情報です）</div>
+
 ## プロテインの種類を知ろう
 
 ### ホエイプロテイン（最もポピュラー）

@@ -9,6 +9,9 @@ tags: ["コーヒー", "キッチン家電", "レビュー"]
 
 本記事では、初心者から上級者まで使えるおすすめグラインダーを5つ厳選してご紹介します。
 
+
+<div style="background:#fff8e1;border-left:4px solid #f59e0b;padding:10px 16px;margin:1rem 0;border-radius:0 6px 6px 0;font-size:0.9em;color:#555;">📢 <strong style="color:#333;">本記事はPR・広告を含みます。</strong>（2024年11月時点の情報です）</div>
+
 ## グラインダーの選び方
 
 ### 1. 刃の種類で選ぶ
