@@ -4,7 +4,7 @@ import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
-  site: 'https://nexigen-blog.com',
+  site: 'https://novlify.jp',
   integrations: [sitemap()],
   vite: {
     plugins: [tailwindcss()]

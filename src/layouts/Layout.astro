@@ -40,6 +40,46 @@ const ogImage = image || 'https://cdn.pixabay.com/photo/2016/11/29/08/41/apple-1
       ></script>
     )}
     <slot name="head" />
+
+    <!-- JSON-LD 構造化データ (WebSite + BreadcrumbList) -->
+    <script type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://novlify.jp/#website",
+          "url": "https://novlify.jp/",
+          "name": "Novlify",
+          "description": "副業・投資・旅行・グルメの本音情報をお届けするブログ",
+          "inLanguage": "ja",
+          "publisher": {
+            "@type": "Person",
+            "name": "Nori",
+            "url": "https://novlify.jp/about"
+          },
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "https://novlify.jp/?q={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "Organization",
+          "@id": "https://novlify.jp/#organization",
+          "name": "Novlify",
+          "url": "https://novlify.jp/",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://novlify.jp/favicon.svg"
+          },
+          "sameAs": []
+        }
+      ]
+    })} />
+
     <style>
       *, *::before, *::after { box-sizing: border-box; }
       html { scroll-behavior: smooth; }
