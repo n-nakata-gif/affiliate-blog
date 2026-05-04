@@ -6,6 +6,7 @@ on:
       - 'src/content/blog/**'
   schedule:
     - cron: "0 1 * * 1"   # 毎週月曜 10:00 JST
+  workflow_dispatch:        # 手動実行も可
 
 jobs:
   check-count:
