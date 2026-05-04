@@ -39,6 +39,7 @@ from generate import (
     build_internal_links_section,
     has_internal_links,
     strip_internal_links_section,
+    enrich_products_with_images,
     BLOG_URL,
 )
 
@@ -123,6 +124,11 @@ def backfill_affiliate(md_files: list, gh_token: str,
             rakuten_claude_products = generate_rakuten_products(
                 client, title, keyword, genre, rakuten_aff_id
             )
+            # 楽天APIで実商品画像・URLを補完
+            if rakuten_app_id and rakuten_claude_products:
+                rakuten_claude_products = enrich_products_with_images(
+                    rakuten_claude_products, rakuten_app_id, rakuten_aff_id
+                )
             time.sleep(1)
 
         section = build_affiliate_section(

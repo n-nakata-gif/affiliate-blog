@@ -840,6 +840,28 @@ def fetch_rakuten_products(keyword: str, app_id: str, affiliate_id: str, n: int 
         return []
 
 
+def enrich_products_with_images(products: list, app_id: str, affiliate_id: str) -> list:
+    """Claude生成商品リストに楽天APIで画像URL・実商品URLを付加する"""
+    if not app_id or not products:
+        return products
+    enriched = []
+    for p in products:
+        try:
+            results = fetch_rakuten_products(p["name"], app_id, affiliate_id, n=1)
+            p_copy = dict(p)
+            if results:
+                r = results[0]
+                if r.get("image"):
+                    p_copy["image"] = r["image"]
+                # 実際の商品URLがあれば置き換える（アフィリエイトID付き）
+                if r.get("url") and r["url"] != "#":
+                    p_copy["url"] = r["url"]
+            enriched.append(p_copy)
+        except Exception:
+            enriched.append(p)
+    return enriched
+
+
 def build_affiliate_section(genre: str, keyword: str, products: list, amazon_products: list = None, rakuten_aff_id: str = "", rakuten_products: list = None, a8mat: str = "") -> str:
     """記事末尾に追加するアフィリエイトリンクセクションのMarkdownを生成"""
     lines = ["\n\n---\n\n## おすすめ商品・サービス\n"]
@@ -848,17 +870,27 @@ def build_affiliate_section(genre: str, keyword: str, products: list, amazon_pro
     if rakuten_products:
         lines.append("### 楽天市場で探す\n")
         lines.append(
-            '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin:1rem 0;">\n'
+            '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin:1rem 0;">\n'
         )
         for p in rakuten_products:
+            img_html = (
+                f'<img src="{p["image"]}" alt="{p["name"]}" '
+                f'style="width:100%;height:130px;object-fit:contain;border-radius:4px;'
+                f'margin-bottom:8px;background:#f9f9f9;">'
+                if p.get("image") else
+                '<div style="width:100%;height:80px;background:#fff1f1;border-radius:4px;'
+                'margin-bottom:8px;display:flex;align-items:center;justify-content:center;'
+                'font-size:2rem;">🛍️</div>'
+            )
             lines.append(
                 f'<a href="{p["url"]}" target="_blank" rel="noopener sponsored" '
-                f'style="display:block;border:2px solid #bf0000;border-radius:8px;padding:14px;'
+                f'style="display:block;border:2px solid #bf0000;border-radius:8px;padding:12px;'
                 f'text-decoration:none;color:inherit;transition:box-shadow 0.2s;" '
                 f'onmouseenter="this.style.boxShadow=\'0 4px 12px rgba(191,0,0,0.2)\'" '
                 f'onmouseleave="this.style.boxShadow=\'\'">'
-                f'<strong style="color:#bf0000;">🛍️ {p["name"]}</strong><br>'
-                f'<span style="font-size:0.85em;color:#555;">{p["desc"]}</span>'
+                f'{img_html}'
+                f'<strong style="color:#bf0000;font-size:0.9em;">{p["name"]}</strong><br>'
+                f'<span style="font-size:0.8em;color:#555;">{p["desc"]}</span>'
                 f'</a>\n'
             )
         lines.append("</div>\n")
@@ -1437,6 +1469,12 @@ def main():
         rakuten_claude_products = generate_rakuten_products(
             client, extract_title(article), title_hint, genre, rakuten_aff_id, a8_rakuten_mat
         )
+        # 楽天APIで実商品画像・URLを補完（RAKUTEN_APP_IDがあれば）
+        if rakuten_app_id and rakuten_claude_products:
+            rakuten_claude_products = enrich_products_with_images(
+                rakuten_claude_products, rakuten_app_id, rakuten_aff_id
+            )
+            logger.info("楽天商品画像補完完了: %d件", len(rakuten_claude_products))
 
     # ── 内部リンクセクションを追加（アフィリエイトの直前）────────
     current_slug = f"{genre}_{date_str}"
