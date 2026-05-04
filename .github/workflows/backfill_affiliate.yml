@@ -15,6 +15,7 @@ on:
           - 'affiliate+editor' # アフィリエイト＋コメント
           - 'rewrite'          # 最新ガイドラインで本文リライト
           - 'pinterest'        # Pinterest再投稿（縦長画像＋Claude説明文）
+          - 'internal-links'  # 同ジャンル関連記事への内部リンク追加
           - 'all'              # すべて
       force:
         description: '既存セクションを強制上書きする'
@@ -65,6 +66,9 @@ jobs:
           fi
           if [[ "$MODE" == "pinterest" ]]; then
             ARGS="$ARGS --pinterest"
+          fi
+          if [[ "$MODE" == "internal-links" || "$MODE" == "all" ]]; then
+            ARGS="$ARGS --internal-links"
           fi
 
           # force オプション

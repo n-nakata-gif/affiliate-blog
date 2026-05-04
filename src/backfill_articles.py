@@ -35,6 +35,10 @@ from generate import (
     MODEL,
     extract_description,
     extract_first_image,
+    find_related_articles,
+    build_internal_links_section,
+    has_internal_links,
+    strip_internal_links_section,
     BLOG_URL,
 )
 
@@ -437,6 +441,64 @@ def backfill_conversation(md_files: list, gh_token: str,
     print(f"\n会話シーン追加: {updated}件更新")
 
 
+# ── 内部リンクバックフィル ────────────────────────────────────
+
+def backfill_internal_links(md_files: list, gh_token: str,
+                             dry_run: bool, force: bool = False):
+    """既存記事に「あわせて読みたい」内部リンクセクションを追加"""
+    updated = 0
+    for md_path in md_files:
+        try:
+            content = md_path.read_text(encoding="utf-8")
+            slug = md_path.stem
+
+            if not force and has_internal_links(content):
+                print(f"  スキップ（内部リンクあり）: {md_path.name}")
+                continue
+
+            genre = detect_genre(md_path.name)
+            related = find_related_articles(genre, slug, n=3)
+            if not related:
+                print(f"  スキップ（関連記事なし）: {md_path.name}")
+                continue
+
+            # 既存セクションを除去してから再追加（force時）
+            if force:
+                content = strip_internal_links_section(content)
+
+            # アフィリエイトセクションの直前に挿入
+            aff_marker = "\n\n---\n\n## おすすめ商品・サービス"
+            links_section = build_internal_links_section(related)
+            if aff_marker in content:
+                new_content = content.replace(
+                    aff_marker,
+                    links_section + aff_marker,
+                    1,
+                )
+            else:
+                new_content = content.rstrip() + links_section
+
+            if new_content == content:
+                print(f"  変更なし: {md_path.name}")
+                continue
+
+            titles = [t for _, t in related]
+            print(f"  ✅ {md_path.name}: {len(related)}件リンク追加")
+            for t in titles:
+                print(f"       - {t[:40]}")
+
+            if not dry_run:
+                push_file(gh_token, str(md_path), new_content,
+                          f"auto: add internal links to {slug}")
+                time.sleep(2)
+            updated += 1
+
+        except Exception as e:
+            print(f"  ❌ エラー: {md_path.name}: {e}")
+
+    print(f"\n内部リンク追加: {updated}件更新")
+
+
 # ── メイン ───────────────────────────────────────────────────
 
 def main():
@@ -447,12 +509,13 @@ def main():
     parser.add_argument("--images", action="store_true", help="Pixabay画像を追加（PIXABAY_API_KEY必須）")
     parser.add_argument("--rewrite", action="store_true", help="最新ガイドラインで記事本文をリライト（Claude API）")
     parser.add_argument("--pinterest", action="store_true", help="Pinterest に縦長画像＋Claude説明文で投稿（gadget/gourmet/travel のみ）")
+    parser.add_argument("--internal-links", action="store_true", help="同ジャンルの関連記事へ内部リンクを追加")
     parser.add_argument("--dry-run", action="store_true", help="実際には更新しない")
     parser.add_argument("--force", action="store_true", help="既存セクションがあっても強制上書き")
     parser.add_argument("--genre", help="特定ジャンルのみ処理 (business/investment/travel/gourmet/gadget)")
     args = parser.parse_args()
 
-    if not args.affiliate and not args.conversation and not args.editor_note and not args.images and not args.rewrite and not args.pinterest:
+    if not args.affiliate and not args.conversation and not args.editor_note and not args.images and not args.rewrite and not args.pinterest and not args.internal_links:
         parser.print_help()
         sys.exit(1)
 
@@ -508,6 +571,10 @@ def main():
             sys.exit(1)
         print("\n=== ガイドライン反映リライト ===")
         backfill_rewrite(auto_files, gh_token, anthropic_key, args.dry_run, args.force)
+
+    if args.internal_links:
+        print("\n=== 内部リンク追加 ===")
+        backfill_internal_links(auto_files, gh_token, args.dry_run, args.force)
 
     if args.pinterest:
         print("\n=== Pinterest バックフィル投稿（縦長画像＋Claude説明文）===")

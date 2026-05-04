@@ -1029,6 +1029,75 @@ def extract_tags(content: str) -> list:
     return [t.strip().strip("\"'") for t in m.group(1).split(',')]
 
 
+# ── 内部リンク ────────────────────────────────────────────────
+
+# ジャンル別のファイル名パターン（generate.pyと同定義）
+_INTERNAL_LINK_GENRE_PATTERNS = {
+    "travel":     ["travel"],
+    "gourmet":    ["gourmet"],
+    "investment": ["investment"],
+    "business":   ["business"],
+    "gadget":     ["gadget", "product"],
+}
+
+INTERNAL_LINK_MARKER = "## あわせて読みたい"
+
+
+def has_internal_links(content: str) -> bool:
+    return INTERNAL_LINK_MARKER in content
+
+
+def find_related_articles(genre: str, current_slug: str, n: int = 3) -> list:
+    """同ジャンルの記事から関連記事を返す（新しい順）。(slug, title) のリスト。"""
+    blog_dir = Path("src/content/blog")
+    patterns = _INTERNAL_LINK_GENRE_PATTERNS.get(genre, [genre])
+    related = []
+    for md_file in sorted(blog_dir.glob("*.md"), reverse=True):
+        slug = md_file.stem
+        if slug == current_slug:
+            continue
+        # 自動生成記事のみ（_20XXXXXX.md 形式）
+        if not re.search(r'_20\d{6}\.md$', md_file.name):
+            continue
+        name_lower = md_file.name.lower()
+        if not any(p in name_lower for p in patterns):
+            continue
+        try:
+            title = extract_title(md_file.read_text(encoding="utf-8"))
+            if title:
+                related.append((slug, title))
+        except Exception:
+            continue
+        if len(related) >= n:
+            break
+    return related
+
+
+def build_internal_links_section(related: list) -> str:
+    """内部リンクセクションのMarkdownを生成"""
+    if not related:
+        return ""
+    lines = ["\n\n## あわせて読みたい\n"]
+    for slug, title in related:
+        url = f"{BLOG_URL}/blog/{slug}/"
+        lines.append(f"- [{title}]({url})")
+    return "\n".join(lines)
+
+
+def strip_internal_links_section(content: str) -> str:
+    """既存の内部リンクセクションを除去（force更新用）"""
+    marker = "\n\n## あわせて読みたい"
+    idx = content.find(marker)
+    if idx == -1:
+        return content
+    # アフィリエイトセクションの手前まで除去
+    aff_marker = "\n\n---\n\n## おすすめ商品・サービス"
+    aff_idx = content.find(aff_marker, idx)
+    if aff_idx != -1:
+        return content[:idx] + content[aff_idx:]
+    return content[:idx]
+
+
 # ── 編集者コメント ────────────────────────────────────────────
 
 _EDITOR_NOTE_PROMPT = """\
@@ -1363,6 +1432,15 @@ def main():
         rakuten_claude_products = generate_rakuten_products(
             client, extract_title(article), title_hint, genre, rakuten_aff_id, a8_rakuten_mat
         )
+
+    # ── 内部リンクセクションを追加（アフィリエイトの直前）────────
+    current_slug = f"{genre}_{date_str}"
+    related_articles = find_related_articles(genre, current_slug, n=3)
+    if related_articles:
+        article = article.rstrip() + build_internal_links_section(related_articles)
+        logger.info("内部リンク追加: %d件", len(related_articles))
+    else:
+        logger.info("内部リンク: 同ジャンルの過去記事なし（スキップ）")
 
     affiliate_section = build_affiliate_section(
         genre, title_hint, rakuten_products, amazon_products, rakuten_aff_id, rakuten_claude_products, a8_rakuten_mat
