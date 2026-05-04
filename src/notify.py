@@ -3,12 +3,23 @@ from datetime import datetime, timezone, timedelta
 
 JST = timezone(timedelta(hours=9))
 
+# ハッシュタグは2〜3個に絞る（多すぎるとスパム判定・エンゲージメント低下）
+# #PR はアフィリエイト記事の景品表示法対策で必須
 _X_HASHTAGS = {
-    "business":   "#PR #副業 #ビジネス #在宅ワーク #フリーランス #Novlify",
-    "gadget":     "#PR #ガジェット #テック #家電 #レビュー #Novlify",
-    "investment": "#PR #投資 #資産運用 #NISA #お金の話 #Novlify",
-    "travel":     "#PR #旅行 #国内旅行 #観光 #旅 #Novlify",
-    "gourmet":    "#PR #グルメ #食 #レシピ #料理 #Novlify",
+    "business":   "#副業 #PR #Novlify",
+    "gadget":     "#ガジェット #PR #Novlify",
+    "investment": "#資産運用 #PR #Novlify",
+    "travel":     "#旅行 #PR #Novlify",
+    "gourmet":    "#グルメ #PR #Novlify",
+}
+
+# ジャンル別エンゲージメント促進フレーズ（リプライ・保存・クリックを促す）
+_X_ENGAGEMENT = {
+    "business":   "副業・仕事探しの参考にどうぞ🙌",
+    "gadget":     "購入前にぜひチェックしてみてください🔍",
+    "investment": "投資の参考になれば嬉しいです📊",
+    "travel":     "旅の計画に役立てていただければ✈️",
+    "gourmet":    "気になったらぜひチェックを🍽️",
 }
 
 _X_ESSENCE_PROMPT = """\
@@ -77,6 +88,7 @@ def post_to_x(article_type: str, title: str, blog_url: str,
         return
 
     hashtags = _X_HASHTAGS.get(article_type, "#Novlify")
+    engagement = _X_ENGAGEMENT.get(article_type, "ぜひチェックしてみてください👀")
 
     # 記事のエッセンスを生成（約100文字）
     essence = ""
@@ -89,11 +101,11 @@ def post_to_x(article_type: str, title: str, blog_url: str,
 
     # 文字数調整（URL は t.co で23字固定）
     url_chars = 23
-    max_essence = 280 - url_chars - len(hashtags) - 3  # 改行2 + 余白1
+    max_essence = 280 - url_chars - len(hashtags) - len(engagement) - 4  # 改行3 + 余白1
     if len(essence) > max_essence:
         essence = essence[: max_essence - 1] + "…"
 
-    tweet = f"{essence}\n{blog_url}\n{hashtags}"
+    tweet = f"{essence}\n{engagement}\n{blog_url}\n{hashtags}"
     print(f"[X] ツイート文字数: {len(tweet)}")
     print(f"[X] ツイート内容:\n{tweet}")
 
