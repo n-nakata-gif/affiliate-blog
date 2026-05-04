@@ -1,0 +1,143 @@
+name: Article Count Monitor
+
+on:
+  push:
+    paths:
+      - 'src/content/blog/**'
+  schedule:
+    - cron: "0 1 * * 1"   # 毎週月曜 10:00 JST
+
+jobs:
+  check-count:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Count articles per category
+        id: count
+        run: |
+          python3 - <<'PYEOF'
+          import os, re
+          from pathlib import Path
+          from collections import defaultdict
+
+          blog_dir = Path("src/content/blog")
+          counts = defaultdict(int)
+
+          genre_patterns = {
+              "travel":     ["travel"],
+              "gourmet":    ["gourmet"],
+              "investment": ["investment"],
+              "business":   ["business"],
+              "gadget":     ["gadget", "product"],
+          }
+
+          for md_file in sorted(blog_dir.glob("*.md")):
+              name = md_file.name.lower()
+              # 自動生成記事のみ（_20XXXXXX.md 形式）
+              if not re.search(r'_20\d{6}\.md$', name):
+                  continue
+              for genre, patterns in genre_patterns.items():
+                  if any(p in name for p in patterns):
+                      counts[genre] += 1
+                      break
+
+          print("=== カテゴリ別記事数 ===")
+          alert_50, alert_40 = [], []
+
+          for genre in ["business", "gadget", "gourmet", "investment", "travel"]:
+              c = counts.get(genre, 0)
+              print(f"  {genre}: {c}記事")
+              if c >= 50:
+                  alert_50.append(f"{genre}({c}記事)")
+              elif c >= 40:
+                  alert_40.append(f"{genre}({c}記事)")
+
+          out = os.environ.get("GITHUB_OUTPUT", "/dev/null")
+          with open(out, "a") as f:
+              f.write(f"alert_50={','.join(alert_50)}\n")
+              f.write(f"alert_40={','.join(alert_40)}\n")
+          PYEOF
+
+      # ── 50記事到達: ブログ分離タイミング通知 ──────────────────────
+      - name: Issue作成（50記事到達）
+        if: steps.count.outputs.alert_50 != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const genres = '${{ steps.count.outputs.alert_50 }}';
+
+            // 重複チェック
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'blog-separation',
+              state: 'open'
+            });
+            if (existing.data.length > 0) {
+              console.log('分離通知issueは既に存在します。スキップ。');
+              return;
+            }
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🎉 【分離タイミング】カテゴリが50記事に到達しました！',
+              body: [
+                '## カテゴリ別ブログ分離のタイミングです！',
+                '',
+                `**50記事に到達したカテゴリ:** ${genres}`,
+                '',
+                '### 次のステップ（Claude Codeに依頼すること）',
+                '1. 新しいCloudflareプロジェクトの作成',
+                '2. 対象カテゴリの記事を移行',
+                '3. Google Search Console・Analytics登録',
+                '4. AdSense審査申請（手動）',
+                '5. もしも・A8・Amazonアソシエイトの新URL登録',
+                '6. generate.py・ガイドラインの移植',
+                '',
+                `> Claude Codeに「${genres}のブログ分離を始めたい」と伝えてください。`,
+              ].join('\n'),
+              labels: ['blog-separation', 'milestone'],
+            });
+
+      # ── 40記事到達: 事前警告 ──────────────────────────────────────
+      - name: Issue作成（40記事 事前警告）
+        if: steps.count.outputs.alert_40 != '' && steps.count.outputs.alert_50 == ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const genres = '${{ steps.count.outputs.alert_40 }}';
+
+            // 重複チェック
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'pre-separation-warning',
+              state: 'open'
+            });
+            if (existing.data.length > 0) {
+              console.log('事前警告issueは既に存在します。スキップ。');
+              return;
+            }
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '⚠️ 【事前警告】カテゴリが40記事に到達 - 分離準備を始めましょう',
+              body: [
+                '## ブログ分離の準備タイミングです',
+                '',
+                `**40記事に到達したカテゴリ:** ${genres}`,
+                '',
+                'あと10記事でブログ分離のタイミングです。事前に準備を始めておきましょう。',
+                '',
+                '### 今から考えておくこと',
+                '- 分離後の新サイトのドメイン名・コンセプト',
+                '- どのアフィリエイトプログラムを新サイトで使うか',
+                '- Cloudflare新プロジェクトの設計',
+              ].join('\n'),
+              labels: ['pre-separation-warning'],
+            });
