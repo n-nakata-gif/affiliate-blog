@@ -13,6 +13,7 @@ on:
           - 'affiliate'        # アフィリエイトリンクのみ
           - 'editor-note'      # Noriのひとこと編集者コメントのみ
           - 'affiliate+editor' # アフィリエイト＋コメント
+          - 'rewrite'          # 最新ガイドラインで本文リライト
           - 'all'              # すべて
       force:
         description: '既存セクションを強制上書きする'
@@ -56,6 +57,9 @@ jobs:
           fi
           if [[ "$MODE" == "editor-note" || "$MODE" == "affiliate+editor" || "$MODE" == "all" ]]; then
             ARGS="$ARGS --editor-note"
+          fi
+          if [[ "$MODE" == "rewrite" || "$MODE" == "all" ]]; then
+            ARGS="$ARGS --rewrite"
           fi
 
           # force オプション

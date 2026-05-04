@@ -273,6 +273,98 @@ def backfill_editor_note(md_files: list, gh_token: str,
 
 # ── 会話シーン追加（Claude API） ─────────────────────────────
 
+REWRITE_PROMPT = """\
+以下のブログ記事を、最新の品質ガイドラインに従ってリライトしてください。
+
+【品質ガイドライン】
+{principles}
+
+【リライトのルール（厳守）】
+- frontmatter（---で囲まれた冒頭部分）は一切変更しない
+- 「---\n\n## おすすめ商品・サービス」以降のセクションは変更しない
+- 「> 📝 **Noriのひとこと**」セクションは変更しない
+- 記事本文（frontmatter終了〜アフィリエイトセクション開始）のみをリライトする
+- h1タイトル（# ○○）は変更しない
+- PR表記（> 📣 この記事はPR・広告を含みます。）は必ず冒頭付近に残す
+- 本文に「{year}年{month}月時点の情報です」を自然な形で1箇所明記する
+- 記事の冒頭（h1直後）で読者の悩みに共感する文章を入れる
+- 商品・サービスはスペックよりも「使うことでどう変わるか（明るい未来）」を先に伝える
+- 一文は短く（目安20〜40文字）、文字装飾は重要箇所のみに絞る
+- 記事全体の文字数は1000〜3000文字を目安にする
+- 完全な記事全文を出力すること（省略は絶対禁止）
+
+--- 元の記事 ---
+{article}
+"""
+
+
+def backfill_rewrite(md_files: list, gh_token: str,
+                     anthropic_key: str, dry_run: bool, force: bool = False):
+    """Claude APIで全記事を最新ガイドラインに従ってリライト"""
+    import anthropic
+    from datetime import datetime
+    from generate import _COMMON_PRINCIPLES
+
+    client = anthropic.Anthropic(api_key=anthropic_key)
+    updated = 0
+    now = datetime.now()
+    year, month = now.year, now.month
+
+    for md_path in md_files:
+        content = md_path.read_text(encoding="utf-8")
+
+        # rewrite済みマーカー確認（frontmatterのrewritten: trueフラグ）
+        if not force and re.search(r'^rewritten:\s*true', content, re.MULTILINE):
+            print(f"  スキップ（リライト済み）: {md_path.name}")
+            continue
+
+        print(f"  処理中: {md_path.name} ...")
+
+        if dry_run:
+            print(f"  [DRY RUN] リライト予定: {md_path.name}")
+            continue
+
+        prompt = REWRITE_PROMPT.format(
+            principles=_COMMON_PRINCIPLES,
+            year=year,
+            month=month,
+            article=content,
+        )
+
+        try:
+            resp = client.messages.create(
+                model=MODEL,
+                max_tokens=8192,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            new_content = resp.content[0].text.strip()
+
+            # frontmatterが維持されているか確認
+            if not new_content.startswith("---"):
+                print(f"  ⚠️ 出力不正（frontmatterなし）: {md_path.name}")
+                continue
+
+            # rewritten: true フラグをfrontmatterに追加
+            new_content = re.sub(
+                r'^(---\n)([\s\S]*?)(---\n)',
+                lambda m: m.group(1) + m.group(2) + "rewritten: true\n" + m.group(3),
+                new_content, count=1
+            )
+
+            repo_path = f"src/content/blog/{md_path.name}"
+            push_file(gh_token, repo_path, new_content,
+                      f"refactor: ガイドライン反映リライト ({md_path.name})")
+            print(f"  ✅ 更新: {md_path.name}")
+            updated += 1
+            time.sleep(3)
+
+        except Exception as e:
+            print(f"  ❌ エラー: {md_path.name}: {e}")
+            time.sleep(5)
+
+    print(f"\nリライト完了: {updated}件更新")
+
+
 CONVERSATION_PROMPT = """\
 以下のブログ記事に、**架空の2人の人物（読者目線のAさんと詳しいBさん）が会話するシーン**を
 1〜2箇所追加してください。
@@ -350,12 +442,13 @@ def main():
     parser.add_argument("--conversation", action="store_true", help="会話シーンを追加（Claude API）")
     parser.add_argument("--editor-note", action="store_true", help="Noriのひとこと編集者コメントを追加（Claude API）")
     parser.add_argument("--images", action="store_true", help="Pixabay画像を追加（PIXABAY_API_KEY必須）")
+    parser.add_argument("--rewrite", action="store_true", help="最新ガイドラインで記事本文をリライト（Claude API）")
     parser.add_argument("--dry-run", action="store_true", help="実際には更新しない")
     parser.add_argument("--force", action="store_true", help="既存セクションがあっても強制上書き")
     parser.add_argument("--genre", help="特定ジャンルのみ処理 (business/investment/travel/gourmet/gadget)")
     args = parser.parse_args()
 
-    if not args.affiliate and not args.conversation and not args.editor_note and not args.images:
+    if not args.affiliate and not args.conversation and not args.editor_note and not args.images and not args.rewrite:
         parser.print_help()
         sys.exit(1)
 
@@ -403,6 +496,14 @@ def main():
             sys.exit(1)
         print("\n=== Pixabay画像バックフィル ===")
         backfill_images(auto_files, gh_token, pixabay_key, args.dry_run, args.force)
+
+    if args.rewrite:
+        anthropic_key = os.environ.get("ANTHROPIC_API_KEY", "")
+        if not anthropic_key and not args.dry_run:
+            print("ERROR: ANTHROPIC_API_KEY が未設定です", file=sys.stderr)
+            sys.exit(1)
+        print("\n=== ガイドライン反映リライト ===")
+        backfill_rewrite(auto_files, gh_token, anthropic_key, args.dry_run, args.force)
 
 
 if __name__ == "__main__":
