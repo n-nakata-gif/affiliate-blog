@@ -1,0 +1,66 @@
+name: Pinterest Schedule Post
+
+on:
+  schedule:
+    - cron: "0 11 * * *"   # 毎日 20:00 JST（11:00 UTC）
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: '投稿モード'
+        required: true
+        default: 'today'
+        type: choice
+        options:
+          - 'today'    # 本日付の記事のみ
+          - 'all'      # 未投稿の全記事（バックフィル用）
+      force:
+        description: '投稿済み記事を再投稿する'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+      dry_run:
+        description: 'ドライラン（実際には投稿しない）'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+
+jobs:
+  pinterest-post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install anthropic requests
+
+      - name: Run Pinterest Schedule Post
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          PINTEREST_ACCESS_TOKEN: ${{ secrets.PINTEREST_ACCESS_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          UNSPLASH_API_KEY: ${{ secrets.UNSPLASH_API_KEY }}
+          RAKUTEN_APP_ID: ${{ secrets.RAKUTEN_APP_ID }}
+          RAKUTEN_AFFILIATE_ID: ${{ secrets.RAKUTEN_AFFILIATE_ID }}
+        run: |
+          MODE="${{ github.event.inputs.mode || 'today' }}"
+          ARGS="--mode $MODE"
+
+          if [ "${{ github.event.inputs.force }}" = "true" ]; then
+            ARGS="$ARGS --force"
+          fi
+
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            ARGS="$ARGS --dry-run"
+          fi
+
+          python src/pinterest_schedule.py $ARGS

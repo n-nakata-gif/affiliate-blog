@@ -33,6 +33,9 @@ from generate import (
     REPO,
     BRANCH,
     MODEL,
+    extract_description,
+    extract_first_image,
+    BLOG_URL,
 )
 
 BLOG_DIR = Path("src/content/blog")
@@ -443,12 +446,13 @@ def main():
     parser.add_argument("--editor-note", action="store_true", help="Noriのひとこと編集者コメントを追加（Claude API）")
     parser.add_argument("--images", action="store_true", help="Pixabay画像を追加（PIXABAY_API_KEY必須）")
     parser.add_argument("--rewrite", action="store_true", help="最新ガイドラインで記事本文をリライト（Claude API）")
+    parser.add_argument("--pinterest", action="store_true", help="Pinterest に縦長画像＋Claude説明文で投稿（gadget/gourmet/travel のみ）")
     parser.add_argument("--dry-run", action="store_true", help="実際には更新しない")
     parser.add_argument("--force", action="store_true", help="既存セクションがあっても強制上書き")
     parser.add_argument("--genre", help="特定ジャンルのみ処理 (business/investment/travel/gourmet/gadget)")
     args = parser.parse_args()
 
-    if not args.affiliate and not args.conversation and not args.editor_note and not args.images and not args.rewrite:
+    if not args.affiliate and not args.conversation and not args.editor_note and not args.images and not args.rewrite and not args.pinterest:
         parser.print_help()
         sys.exit(1)
 
@@ -504,6 +508,70 @@ def main():
             sys.exit(1)
         print("\n=== ガイドライン反映リライト ===")
         backfill_rewrite(auto_files, gh_token, anthropic_key, args.dry_run, args.force)
+
+    if args.pinterest:
+        print("\n=== Pinterest バックフィル投稿（縦長画像＋Claude説明文）===")
+        from pinterest_schedule import run_schedule, load_posted_log, save_posted_log
+        from pinterest_post import post_to_pinterest, PINTEREST_GENRES
+
+        anthropic_key = os.environ.get("ANTHROPIC_API_KEY", "")
+        unsplash_key = os.environ.get("UNSPLASH_API_KEY", "")
+        posted = load_posted_log()
+        updated = 0
+
+        # Pinterest対象ジャンルのみ絞り込み
+        pinterest_files = [
+            f for f in auto_files
+            if detect_genre(f.name) in PINTEREST_GENRES
+        ]
+        print(f"Pinterest対象: {len(pinterest_files)}件（gadget/gourmet/travel）")
+
+        for md_path in pinterest_files:
+            genre = detect_genre(md_path.name)
+            slug = md_path.stem
+
+            if not args.force and slug in posted:
+                print(f"  スキップ（投稿済み）: {slug}")
+                continue
+
+            try:
+                article_body = md_path.read_text(encoding="utf-8")
+                title = extract_title(article_body)
+                description = extract_description(article_body)
+                link = f"{BLOG_URL}/blog/{slug}/"
+                image_url = extract_first_image(article_body)
+
+                print(f"\n  ▶ {slug} ({genre})")
+                if args.dry_run:
+                    print(f"    [DRY RUN] title={title[:40]}")
+                    posted.add(slug)
+                    updated += 1
+                    continue
+
+                success = post_to_pinterest(
+                    title=title,
+                    description=description,
+                    link=link,
+                    image_url=image_url,
+                    genre=genre,
+                    article_body=article_body,
+                    anthropic_key=anthropic_key,
+                    unsplash_key=unsplash_key,
+                )
+                if success:
+                    posted.add(slug)
+                    updated += 1
+                else:
+                    print(f"    投稿失敗: {slug}")
+
+                time.sleep(3)  # API レート制限対策
+
+            except Exception as e:
+                print(f"  エラー: {md_path.name}: {e}")
+
+        if updated > 0 and not args.dry_run:
+            save_posted_log(posted, gh_token)
+        print(f"\nPinterest投稿: {updated}件完了")
 
 
 if __name__ == "__main__":

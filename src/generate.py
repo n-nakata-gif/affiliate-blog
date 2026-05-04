@@ -1388,18 +1388,8 @@ def main():
         blog_url=article_url,
         article_body=article,
     )
-    # ── Pinterest 自動投稿 ───────────────────────────────────
-    try:
-        from pinterest_post import post_to_pinterest
-        post_to_pinterest(
-            title=extract_title(article),
-            description=extract_description(article),
-            link=f"{BLOG_URL}/blog/{genre}_{date_str}/",
-            image_url=extract_first_image(article),
-            genre=genre,
-        )
-    except Exception as e:
-        print(f"Pinterest投稿スキップ: {e}")
+    # Pinterest は毎日 20:00 JST に pinterest_schedule.py が一括投稿するため
+    # ここでは即時投稿しない（generate.py の役割はコンテンツ生成のみ）
 
     # ── 楽天ROOM 投稿ドラフト生成 ────────────────────────────
     if rakuten_aff_id:
