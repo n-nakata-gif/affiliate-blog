@@ -3,8 +3,9 @@ export interface Props {
   title: string;
   description?: string;
   image?: string;
+  noindex?: boolean;
 }
-const { title, description = 'Novlify - 副業・投資・旅行・グルメの本音情報', image } = Astro.props;
+const { title, description = 'Novlify - 副業・投資・旅行・グルメの本音情報', image, noindex = false } = Astro.props;
 const adsenseId = import.meta.env.PUBLIC_ADSENSE_ID;
 const ogImage = image || 'https://cdn.pixabay.com/photo/2016/11/29/08/41/apple-1868496_1280.jpg';
 ---
@@ -16,6 +17,7 @@ const ogImage = image || 'https://cdn.pixabay.com/photo/2016/11/29/08/41/apple-1
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
     <meta name="google-site-verification" content="8tviLQ32ZkQ10FSGE-EyTjTaJrhARNtfuMRDuaBYMYA" />
+    {noindex && <meta name="robots" content="noindex, follow" />}
     <link rel="canonical" href={Astro.url.href} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
