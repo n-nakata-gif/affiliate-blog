@@ -645,46 +645,48 @@ def insert_images_into_article(article: str, images: list) -> str:
 
 # 旅行・グルメ固定アフィリエイトリンク
 # ※ リンクURLはA8.net/もしもアフィリエイトの発行IDに差し替えてください
+_GF = "https://www.google.com/s2/favicons?domain={}&sz=64"  # Google Favicon helper
+
 _TRAVEL_LINKS = [
-    {"name": "じゃらんnet", "url": "https://px.a8.net/svt/ejp?a8mat=4B3HQI+DYHVCI+14CS+6C9LD", "desc": "全国の宿・ホテルをお得に予約"},
-    {"name": "楽天トラベル", "url": "https://travel.rakuten.co.jp", "desc": "楽天ポイントで宿・航空券をお得に", "rakuten": True},
-    {"name": "一休.com", "url": "https://px.a8.net/svt/ejp?a8mat=4B3HQJ+A2L06Q+1OK+6LHDU", "desc": "高級旅館・ホテルのタイムセールプラン"},
-    {"name": "agoda", "url": "https://px.a8.net/svt/ejp?a8mat=4B3HQJ+A36FSI+4X1W+5YRHE", "desc": "国内・海外ホテルを最大85%OFFで予約"},
-    {"name": "Booking.com", "url": "https://www.booking.com", "desc": "世界中の宿を最安値で比較"},
-    {"name": "skyticket", "url": "https://skyticket.jp", "desc": "格安航空券・新幹線・ホテル比較"},
+    {"name": "じゃらんnet",   "url": "https://px.a8.net/svt/ejp?a8mat=4B3HQI+DYHVCI+14CS+6C9LD", "desc": "全国の宿・ホテルをお得に予約",          "logo": _GF.format("jalan.net")},
+    {"name": "楽天トラベル",  "url": "https://travel.rakuten.co.jp", "desc": "楽天ポイントで宿・航空券をお得に",          "rakuten": True, "logo": _GF.format("travel.rakuten.co.jp")},
+    {"name": "一休.com",      "url": "https://px.a8.net/svt/ejp?a8mat=4B3HQJ+A2L06Q+1OK+6LHDU", "desc": "高級旅館・ホテルのタイムセールプラン", "logo": _GF.format("ikyu.com")},
+    {"name": "agoda",         "url": "https://px.a8.net/svt/ejp?a8mat=4B3HQJ+A36FSI+4X1W+5YRHE", "desc": "国内・海外ホテルを最大85%OFFで予約",  "logo": _GF.format("agoda.com")},
+    {"name": "Booking.com",   "url": "https://www.booking.com", "desc": "世界中の宿を最安値で比較",                    "logo": _GF.format("booking.com")},
+    {"name": "skyticket",     "url": "https://skyticket.jp",    "desc": "格安航空券・新幹線・ホテル比較",               "logo": _GF.format("skyticket.jp")},
 ]
 
 _GOURMET_LINKS = [
-    {"name": "ホットペッパーグルメ", "url": "https://www.hotpepper.jp", "desc": "お得なクーポンでレストラン予約"},
-    {"name": "一休.comレストラン", "url": "https://restaurant.ikyu.com", "desc": "高級レストランの特別プラン"},
-    {"name": "楽天市場（食品・グルメ）", "url": "https://search.rakuten.co.jp/search/mall/%E9%A3%9F%E5%93%81+%E3%82%B0%E3%83%AB%E3%83%A1/", "desc": "楽天ポイントでお得に食品・グルメを購入", "rakuten": True},
-    {"name": "Oisix（オイシックス）", "url": "https://www.oisix.com", "desc": "有機野菜・安心食材のお試しセット"},
+    {"name": "ホットペッパーグルメ",    "url": "https://www.hotpepper.jp",           "desc": "お得なクーポンでレストラン予約",           "logo": _GF.format("hotpepper.jp")},
+    {"name": "一休.comレストラン",      "url": "https://restaurant.ikyu.com",        "desc": "高級レストランの特別プラン",               "logo": _GF.format("restaurant.ikyu.com")},
+    {"name": "楽天市場（食品・グルメ）", "url": "https://search.rakuten.co.jp/search/mall/%E9%A3%9F%E5%93%81+%E3%82%B0%E3%83%AB%E3%83%A1/", "desc": "楽天ポイントでお得に食品・グルメを購入", "rakuten": True, "logo": _GF.format("rakuten.co.jp")},
+    {"name": "Oisix（オイシックス）",   "url": "https://www.oisix.com",              "desc": "有機野菜・安心食材のお試しセット",         "logo": _GF.format("oisix.com")},
 ]
 
 _BUSINESS_LINKS = [
-    {"name": "クラウドワークス", "url": "https://crowdworks.jp", "desc": "副業・フリーランス案件を探す"},
-    {"name": "ランサーズ", "url": "https://www.lancers.jp", "desc": "スキルを活かした副業マッチング"},
-    {"name": "ストアカ", "url": "https://www.street-academy.com", "desc": "ビジネス・副業スキルを学ぶ"},
-    {"name": "Udemy", "url": "https://www.udemy.com/ja/", "desc": "オンライン講座でスキルアップ"},
-    {"name": "マネーフォワード クラウド会計", "url": "https://px.a8.net/svt/ejp?a8mat=4B3HQJ+5YCTU+4JGQ+614CY", "desc": "会計事務所オススメNo.1の会計ソフト"},
-    {"name": "マネーフォワード クラウド確定申告", "url": "https://px.a8.net/svt/ejp?a8mat=4B3HQJ+4620I+4JGQ+BXB8Z", "desc": "確定申告を自動化・ラクに完了"},
-    {"name": "Amazon（副業・ビジネス書）", "url": "https://www.amazon.co.jp/s?k=%E5%89%AF%E6%A5%AD+%E3%83%93%E3%82%B8%E3%83%8D%E3%82%B9&tag=nexigen22-22", "desc": "副業・ビジネス関連書籍をAmazonで"},
-    {"name": "楽天市場（ビジネス書）", "url": "https://search.rakuten.co.jp/search/mall/%E3%83%93%E3%82%B8%E3%83%8D%E3%82%B9%E6%9C%AC+%E5%89%AF%E6%A5%AD/", "desc": "楽天ポイントでビジネス書をお得に", "rakuten": True},
+    {"name": "Amazon（副業・ビジネス書）",       "url": "https://www.amazon.co.jp/s?k=%E5%89%AF%E6%A5%AD+%E3%83%93%E3%82%B8%E3%83%8D%E3%82%B9&tag=nexigen22-22", "desc": "副業・ビジネス関連書籍をAmazonで",  "logo": _GF.format("amazon.co.jp")},
+    {"name": "楽天市場（ビジネス書）",           "url": "https://search.rakuten.co.jp/search/mall/%E3%83%93%E3%82%B8%E3%83%8D%E3%82%B9%E6%9C%AC+%E5%89%AF%E6%A5%AD/", "desc": "楽天ポイントでビジネス書をお得に", "rakuten": True, "logo": _GF.format("rakuten.co.jp")},
+    {"name": "クラウドワークス",                "url": "https://crowdworks.jp",           "desc": "副業・フリーランス案件を探す",            "logo": _GF.format("crowdworks.jp")},
+    {"name": "ランサーズ",                      "url": "https://www.lancers.jp",          "desc": "スキルを活かした副業マッチング",          "logo": _GF.format("lancers.jp")},
+    {"name": "ストアカ",                        "url": "https://www.street-academy.com",  "desc": "ビジネス・副業スキルを学ぶ",              "logo": _GF.format("street-academy.com")},
+    {"name": "Udemy",                           "url": "https://www.udemy.com/ja/",       "desc": "オンライン講座でスキルアップ",             "logo": _GF.format("udemy.com")},
+    {"name": "マネーフォワード クラウド会計",   "url": "https://px.a8.net/svt/ejp?a8mat=4B3HQJ+5YCTU+4JGQ+614CY", "desc": "会計事務所オススメNo.1の会計ソフト",  "logo": _GF.format("moneyforward.com")},
+    {"name": "マネーフォワード クラウド確定申告", "url": "https://px.a8.net/svt/ejp?a8mat=4B3HQJ+4620I+4JGQ+BXB8Z", "desc": "確定申告を自動化・ラクに完了",        "logo": _GF.format("moneyforward.com")},
 ]
 
 _INVESTMENT_LINKS = [
-    {"name": "SBI証券", "url": "https://www.sbisec.co.jp", "desc": "新NISA・つみたて投資ならSBI証券"},
-    {"name": "楽天証券", "url": "https://www.rakuten-sec.co.jp", "desc": "楽天ポイントで投資デビュー", "rakuten": True},
-    {"name": "マネーフォワード ME", "url": "https://moneyforward.com", "desc": "資産・家計を一括管理"},
-    {"name": "ウェルスナビ", "url": "https://www.wealthnavi.com", "desc": "おまかせロボアドバイザー投資"},
-    {"name": "Amazon（投資・資産運用書）", "url": "https://www.amazon.co.jp/s?k=%E6%8A%95%E8%B3%87+%E8%B3%87%E7%94%A3%E9%81%8B%E7%94%A8&tag=nexigen22-22", "desc": "投資・お金の本をAmazonで"},
+    {"name": "Amazon（投資・資産運用書）", "url": "https://www.amazon.co.jp/s?k=%E6%8A%95%E8%B3%87+%E8%B3%87%E7%94%A3%E9%81%8B%E7%94%A8&tag=nexigen22-22", "desc": "投資・お金の本をAmazonで",    "logo": _GF.format("amazon.co.jp")},
+    {"name": "SBI証券",                   "url": "https://www.sbisec.co.jp",       "desc": "新NISA・つみたて投資ならSBI証券",           "logo": _GF.format("sbisec.co.jp")},
+    {"name": "楽天証券",                  "url": "https://www.rakuten-sec.co.jp",  "desc": "楽天ポイントで投資デビュー",  "rakuten": True, "logo": _GF.format("rakuten-sec.co.jp")},
+    {"name": "マネーフォワード ME",       "url": "https://moneyforward.com",       "desc": "資産・家計を一括管理",                       "logo": _GF.format("moneyforward.com")},
+    {"name": "ウェルスナビ",              "url": "https://www.wealthnavi.com",     "desc": "おまかせロボアドバイザー投資",               "logo": _GF.format("wealthnavi.com")},
 ]
 
 _GADGET_LINKS = [
-    {"name": "Amazon", "url": "https://www.amazon.co.jp/?tag=nexigen22-22", "desc": "最新ガジェットをお得に購入"},
-    {"name": "ヨドバシカメラ", "url": "https://www.yodobashi.com", "desc": "家電・ガジェットをポイント還元で"},
-    {"name": "楽天市場（家電・ガジェット）", "url": "https://search.rakuten.co.jp/search/mall/%E3%82%AC%E3%82%B8%E3%82%A7%E3%83%83%E3%83%88+%E5%AE%B6%E9%9B%BB/", "desc": "楽天ポイントでお得にガジェット購入", "rakuten": True},
-    {"name": "価格.com", "url": "https://kakaku.com", "desc": "最安値・スペック比較で賢く購入"},
+    {"name": "Amazon",                      "url": "https://www.amazon.co.jp/?tag=nexigen22-22", "desc": "最新ガジェットをお得に購入",              "logo": _GF.format("amazon.co.jp")},
+    {"name": "ヨドバシカメラ",              "url": "https://www.yodobashi.com",  "desc": "家電・ガジェットをポイント還元で",             "logo": _GF.format("yodobashi.com")},
+    {"name": "楽天市場（家電・ガジェット）", "url": "https://search.rakuten.co.jp/search/mall/%E3%82%AC%E3%82%B8%E3%82%A7%E3%83%83%E3%83%88+%E5%AE%B6%E9%9B%BB/", "desc": "楽天ポイントでお得にガジェット購入", "rakuten": True, "logo": _GF.format("rakuten.co.jp")},
+    {"name": "価格.com",                    "url": "https://kakaku.com",         "desc": "最安値・スペック比較で賢く購入",               "logo": _GF.format("kakaku.com")},
 ]
 
 
@@ -958,14 +960,23 @@ def build_affiliate_section(genre: str, keyword: str, products: list, amazon_pro
             # rel="sponsored" は実際にアフィリエイト提携済みのリンクのみに付与
             is_affiliate = link.get("rakuten") or "tag=nexigen22-22" in url
             rel = "noopener sponsored" if is_affiliate else "noopener"
+            logo = link.get("logo", "")
+            logo_html = (
+                f'<img src="{logo}" width="28" height="28" alt="" loading="lazy" '
+                f'style="object-fit:contain;border-radius:4px;flex-shrink:0;" '
+                f'onerror="this.style.display=\'none\'">'
+            ) if logo else ""
             lines.append(
                 f'<a href="{url}" target="_blank" rel="{rel}" '
                 f'style="display:block;border:1px solid #e5e7eb;border-radius:8px;padding:14px;'
                 f'text-decoration:none;color:inherit;transition:box-shadow 0.2s;" '
                 f'onmouseenter="this.style.boxShadow=\'0 4px 12px rgba(0,0,0,0.1)\'" '
                 f'onmouseleave="this.style.boxShadow=\'\'">'
-                f'<strong style="color:#bf0000;">{link["name"]}</strong><br>'
-                f'<span style="font-size:0.85em;color:#555;">{link["desc"]}</span>'
+                f'<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">'
+                f'{logo_html}'
+                f'<strong style="color:#bf0000;font-size:0.95em;">{link["name"]}</strong>'
+                f'</div>'
+                f'<span style="font-size:0.82em;color:#666;line-height:1.4;">{link["desc"]}</span>'
                 f'</a>\n'
             )
         lines.append("</div>\n")
