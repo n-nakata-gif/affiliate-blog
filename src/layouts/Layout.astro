@@ -126,7 +126,7 @@ const ogImage = image || 'https://cdn.pixabay.com/photo/2016/11/29/08/41/apple-1
         letter-spacing: 0.05em;
       }
       .site-logo span { color: #f59e0b; }
-      .site-nav { display: flex; gap: 24px; }
+      .site-nav { display: flex; gap: 24px; align-items: center; }
       .site-nav a {
         text-decoration: none;
         font-size: 0.875rem;
@@ -135,6 +135,46 @@ const ogImage = image || 'https://cdn.pixabay.com/photo/2016/11/29/08/41/apple-1
         transition: color 0.2s;
       }
       .site-nav a:hover { color: #f59e0b; }
+
+      /* カテゴリドロップダウン */
+      .site-nav__dropdown { position: relative; }
+      .site-nav__dropdown-trigger {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #555;
+        cursor: pointer;
+        transition: color 0.2s;
+        user-select: none;
+        white-space: nowrap;
+      }
+      .site-nav__dropdown:hover .site-nav__dropdown-trigger { color: #f59e0b; }
+      .site-nav__dropdown-menu {
+        display: none;
+        position: absolute;
+        top: calc(100% + 10px);
+        left: 50%;
+        transform: translateX(-50%);
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        min-width: 200px;
+        padding: 8px 0;
+        z-index: 200;
+      }
+      .site-nav__dropdown:hover .site-nav__dropdown-menu { display: block; }
+      .site-nav__dropdown-menu a {
+        display: block;
+        padding: 9px 18px;
+        font-size: 0.85rem;
+        color: #333;
+        white-space: nowrap;
+        border-radius: 0;
+      }
+      .site-nav__dropdown-menu a:hover {
+        background: #fffbeb;
+        color: #d97706;
+      }
 
       /* メイン */
       .site-main {
@@ -194,10 +234,16 @@ const ogImage = image || 'https://cdn.pixabay.com/photo/2016/11/29/08/41/apple-1
 
       /* レスポンシブ */
       @media (max-width: 640px) {
-        .site-nav { gap: 14px; }
-        .site-nav a { font-size: 0.8rem; }
+        .site-nav { gap: 12px; }
+        .site-nav a { font-size: 0.78rem; }
+        .site-nav__dropdown-trigger { font-size: 0.78rem; }
         .site-main { padding: 20px 14px; }
         .site-footer__top { flex-direction: column; align-items: flex-start; }
+        .site-nav__dropdown-menu {
+          left: auto;
+          right: 0;
+          transform: none;
+        }
       }
     </style>
   </head>
@@ -208,8 +254,17 @@ const ogImage = image || 'https://cdn.pixabay.com/photo/2016/11/29/08/41/apple-1
         <a href="/" class="site-logo">Nov<span>lify</span></a>
         <nav class="site-nav">
           <a href="/">ホーム</a>
+          <div class="site-nav__dropdown">
+            <span class="site-nav__dropdown-trigger">カテゴリ ▾</span>
+            <div class="site-nav__dropdown-menu">
+              <a href="/category/business">💼 副業・ビジネス</a>
+              <a href="/category/investment">📈 投資・資産運用</a>
+              <a href="/category/travel">✈️ 旅行・観光</a>
+              <a href="/category/gourmet">🍜 グルメ・食</a>
+              <a href="/category/gadget">🎧 ガジェット・テック</a>
+            </div>
+          </div>
           <a href="/about">About</a>
-          <a href="/privacy-policy">プライバシー</a>
           <a href="/contact">お問い合わせ</a>
         </nav>
       </div>

@@ -1,0 +1,321 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+
+export async function getStaticPaths() {
+  const genres = [
+    {
+      slug: 'business',
+      label: '副業・ビジネス',
+      desc: '副業・フリーランス・スキルアップに関する本音情報',
+      emoji: '💼',
+      color: '#7c3aed',
+      keywords: ['business'],
+      tagKeywords: ['副業', 'ビジネス', 'フリーランス', '在宅'],
+    },
+    {
+      slug: 'investment',
+      label: '投資・資産運用',
+      desc: '新NISA・インデックス投資・ロボアドなど資産形成の情報',
+      emoji: '📈',
+      color: '#059669',
+      keywords: ['investment'],
+      tagKeywords: ['投資', 'NISA', '資産運用', '株'],
+    },
+    {
+      slug: 'travel',
+      label: '旅行・観光',
+      desc: '九州を中心とした国内旅行・格安プランの探し方',
+      emoji: '✈️',
+      color: '#0284c7',
+      keywords: ['travel'],
+      tagKeywords: ['旅行', '観光', '九州'],
+    },
+    {
+      slug: 'gourmet',
+      label: 'グルメ・食',
+      desc: '地元グルメ・お取り寄せ・ふるさと納税の実体験レポート',
+      emoji: '🍜',
+      color: '#d97706',
+      keywords: ['gourmet'],
+      tagKeywords: ['グルメ', '食', 'レシピ', 'お取り寄せ'],
+    },
+    {
+      slug: 'gadget',
+      label: 'ガジェット・テック',
+      desc: 'スマホ周辺機器・便利グッズのコスパ重視レビュー',
+      emoji: '🎧',
+      color: '#dc2626',
+      keywords: ['gadget'],
+      tagKeywords: ['ガジェット', 'テック', 'スマホ', 'PC'],
+    },
+  ];
+
+  const allPosts = await getCollection('blog');
+
+  return genres.map(genre => {
+    const posts = allPosts
+      .filter(post => {
+        // スラグのプレフィックスで判定（最優先）
+        if (genre.keywords.some(k => post.id.startsWith(k + '_') || post.id.startsWith(k + '/'))) {
+          return true;
+        }
+        // タグで判定（フォールバック）
+        const tagStr = (post.data.tags || []).map((t: string) => t.toLowerCase()).join(' ');
+        return genre.tagKeywords.some(k => tagStr.includes(k.toLowerCase()));
+      })
+      .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+    return {
+      params: { genre: genre.slug },
+      props: { genre, posts },
+    };
+  });
+}
+
+const { genre, posts } = Astro.props;
+
+const DEFAULT_IMAGES: Record<string, string> = {
+  business:   'https://cdn.pixabay.com/photo/2015/01/08/18/29/entrepreneur-593358_1280.jpg',
+  investment: 'https://cdn.pixabay.com/photo/2019/10/09/07/28/money-4536736_1280.jpg',
+  travel:     'https://cdn.pixabay.com/photo/2016/01/09/18/27/journey-1130732_1280.jpg',
+  gourmet:    'https://cdn.pixabay.com/photo/2017/12/09/08/18/pizza-3007395_1280.jpg',
+  gadget:     'https://cdn.pixabay.com/photo/2018/01/18/07/31/iphone-3088943_1280.jpg',
+};
+
+function getEyecatch(post: any): string {
+  if (post.data.heroImage) return post.data.heroImage;
+  if (post.body) {
+    const htmlM = post.body.match(/src="(https?:\/\/[^"]+)"/);
+    if (htmlM) return htmlM[1];
+    const mdM = post.body.match(/!\[[^\]]*\]\((https?:\/\/[^)]+)\)/);
+    if (mdM) return mdM[1];
+  }
+  return DEFAULT_IMAGES[genre.slug] || DEFAULT_IMAGES.business;
+}
+
+const categorySchema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: `${genre.label} | Novlify`,
+  description: genre.desc,
+  url: `https://novlify.jp/category/${genre.slug}`,
+  isPartOf: {
+    '@type': 'WebSite',
+    name: 'Novlify',
+    url: 'https://novlify.jp/',
+  },
+};
+---
+
+<Layout
+  title={`${genre.label} | Novlify`}
+  description={genre.desc}
+>
+  <Fragment slot="head">
+    <script type="application/ld+json" set:html={JSON.stringify(categorySchema)} />
+  </Fragment>
+
+  <!-- パンくず -->
+  <nav class="breadcrumb" aria-label="パンくずリスト">
+    <a href="/">ホーム</a>
+    <span>›</span>
+    <span>{genre.label}</span>
+  </nav>
+
+  <!-- カテゴリヘッダー -->
+  <div class="category-hero" style={`border-color: ${genre.color}20; background: linear-gradient(135deg, ${genre.color}08, ${genre.color}03)`}>
+    <div class="category-hero__icon">{genre.emoji}</div>
+    <h1 class="category-hero__title" style={`color: ${genre.color}`}>{genre.label}</h1>
+    <p class="category-hero__desc">{genre.desc}</p>
+    <span class="category-hero__count">{posts.length}件の記事</span>
+  </div>
+
+  <!-- 他カテゴリへのナビ -->
+  <div class="cat-nav">
+    {[
+      { slug: 'business',   label: '💼 副業' },
+      { slug: 'investment', label: '📈 投資' },
+      { slug: 'travel',     label: '✈️ 旅行' },
+      { slug: 'gourmet',    label: '🍜 グルメ' },
+      { slug: 'gadget',     label: '🎧 ガジェット' },
+    ].map(cat => (
+      <a
+        href={`/category/${cat.slug}`}
+        class={`cat-nav__item ${cat.slug === genre.slug ? 'cat-nav__item--active' : ''}`}
+      >
+        {cat.label}
+      </a>
+    ))}
+  </div>
+
+  {posts.length === 0 ? (
+    <div class="empty">
+      <p>このカテゴリの記事はまだありません。</p>
+      <a href="/" class="empty__link">トップページに戻る</a>
+    </div>
+  ) : (
+    <div class="post-grid">
+      {posts.map(post => {
+        const eyecatch = getEyecatch(post);
+        return (
+          <article class="post-card">
+            <a href={`/blog/${post.id}`} class="post-card__img-wrap">
+              <img src={eyecatch} alt={post.data.title} class="post-card__img" loading="lazy" />
+            </a>
+            <div class="post-card__body">
+              {post.data.tags && post.data.tags.length > 0 && (
+                <div class="post-card__tags">
+                  {post.data.tags.slice(0, 2).map((tag: string) => (
+                    <span class="post-card__tag">{tag}</span>
+                  ))}
+                </div>
+              )}
+              <a href={`/blog/${post.id}`} class="post-card__title-link">
+                <h2 class="post-card__title">{post.data.title}</h2>
+              </a>
+              <p class="post-card__desc">{post.data.description}</p>
+              <div class="post-card__footer">
+                <time class="post-card__date" datetime={post.data.pubDate.toISOString()}>
+                  {post.data.pubDate.toLocaleDateString('ja-JP', {year:'numeric',month:'long',day:'numeric'})}
+                </time>
+                <a href={`/blog/${post.id}`} class="post-card__btn">続きを読む →</a>
+              </div>
+            </div>
+          </article>
+        );
+      })}
+    </div>
+  )}
+</Layout>
+
+<style>
+  /* パンくず */
+  .breadcrumb {
+    font-size: 0.8rem;
+    color: #888;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .breadcrumb a { color: #f59e0b; text-decoration: none; }
+  .breadcrumb a:hover { text-decoration: underline; }
+
+  /* カテゴリヒーロー */
+  .category-hero {
+    border: 2px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 36px 28px;
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  .category-hero__icon { font-size: 3rem; margin-bottom: 10px; }
+  .category-hero__title {
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    font-weight: 900;
+    margin: 0 0 10px;
+  }
+  .category-hero__desc {
+    font-size: 0.9rem;
+    color: #666;
+    margin: 0 0 14px;
+    line-height: 1.6;
+  }
+  .category-hero__count {
+    display: inline-block;
+    background: #f3f4f6;
+    color: #555;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 4px 14px;
+    border-radius: 999px;
+  }
+
+  /* カテゴリナビ */
+  .cat-nav {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+  }
+  .cat-nav__item {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-decoration: none;
+    border: 2px solid #e5e7eb;
+    color: #555;
+    transition: all 0.2s;
+    background: #fff;
+  }
+  .cat-nav__item:hover { border-color: #f59e0b; color: #d97706; }
+  .cat-nav__item--active {
+    background: #f59e0b;
+    border-color: #f59e0b;
+    color: #fff;
+  }
+
+  /* 空状態 */
+  .empty { text-align: center; padding: 60px 20px; color: #888; }
+  .empty__link {
+    display: inline-block;
+    margin-top: 16px;
+    color: #f59e0b;
+    text-decoration: underline;
+    font-weight: bold;
+  }
+
+  /* 記事グリッド（index.astroと同じ） */
+  .post-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+  }
+  .post-card {
+    background: #fff;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+    border: 1px solid #f3f4f6;
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+  }
+  .post-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.11); }
+  .post-card__img-wrap { display: block; aspect-ratio: 16/9; overflow: hidden; }
+  .post-card__img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+  .post-card:hover .post-card__img { transform: scale(1.04); }
+  .post-card__body { padding: 16px; display: flex; flex-direction: column; flex: 1; }
+  .post-card__tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+  .post-card__tag {
+    background: #fffbeb; border: 1px solid #fde68a;
+    color: #92400e; font-size: 0.72rem; font-weight: 700;
+    padding: 2px 8px; border-radius: 999px;
+  }
+  .post-card__title-link { text-decoration: none; color: inherit; }
+  .post-card__title {
+    font-size: 0.95rem; font-weight: 700; color: #111;
+    line-height: 1.5; margin: 0 0 8px;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .post-card__title-link:hover .post-card__title { color: #d97706; }
+  .post-card__desc {
+    font-size: 0.82rem; color: #666; line-height: 1.6; margin: 0 0 12px; flex: 1;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .post-card__footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; }
+  .post-card__date { font-size: 0.78rem; color: #aaa; }
+  .post-card__btn {
+    font-size: 0.78rem; font-weight: 700; color: #d97706;
+    text-decoration: none; white-space: nowrap;
+  }
+  .post-card__btn:hover { text-decoration: underline; }
+
+  @media (max-width: 640px) {
+    .post-grid { grid-template-columns: 1fr; }
+    .category-hero { padding: 24px 18px; }
+  }
+</style>

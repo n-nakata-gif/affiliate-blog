@@ -64,11 +64,38 @@ const websiteSchema = {
     <h1 class="hero__title">Novlify</h1>
     <p class="hero__desc">副業・投資・旅行・グルメ・ガジェットの<strong>本音情報</strong>をお届けします</p>
     <div class="hero__tags">
-      <span>#副業</span><span>#投資</span><span>#旅行</span><span>#グルメ</span><span>#ガジェット</span>
+      <a href="/category/business">#副業</a>
+      <a href="/category/investment">#投資</a>
+      <a href="/category/travel">#旅行</a>
+      <a href="/category/gourmet">#グルメ</a>
+      <a href="/category/gadget">#ガジェット</a>
     </div>
   </div>
 
-  <!-- カテゴリバッジフィルター（表示のみ） -->
+  <!-- カテゴリ一覧 -->
+  <section class="cat-section">
+    <div class="section-header">
+      <h2 class="section-header__title">カテゴリから探す</h2>
+      <div class="section-header__line"></div>
+    </div>
+    <div class="cat-grid">
+      {[
+        { slug: 'business',   label: '副業・ビジネス',   emoji: '💼', desc: 'フリーランス・スキルアップ',  color: '#7c3aed' },
+        { slug: 'investment', label: '投資・資産運用',   emoji: '📈', desc: '新NISA・インデックス投資',    color: '#059669' },
+        { slug: 'travel',     label: '旅行・観光',       emoji: '✈️', desc: '九州発・国内格安旅行',        color: '#0284c7' },
+        { slug: 'gourmet',    label: 'グルメ・食',       emoji: '🍜', desc: 'お取り寄せ・地元グルメ',      color: '#d97706' },
+        { slug: 'gadget',     label: 'ガジェット・テック', emoji: '🎧', desc: 'コスパ重視レビュー',         color: '#dc2626' },
+      ].map(cat => (
+        <a href={`/category/${cat.slug}`} class="cat-card" style={`--cat-color: ${cat.color}`}>
+          <span class="cat-card__emoji">{cat.emoji}</span>
+          <strong class="cat-card__label">{cat.label}</strong>
+          <span class="cat-card__desc">{cat.desc}</span>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <!-- 最新記事 -->
   <div class="section-header">
     <h2 class="section-header__title">最新記事</h2>
     <div class="section-header__line"></div>
@@ -161,7 +188,7 @@ const websiteSchema = {
     flex-wrap: wrap;
     margin-top: 16px;
   }
-  .hero__tags span {
+  .hero__tags a {
     background: #fff;
     border: 1px solid #fcd34d;
     color: #92400e;
@@ -169,6 +196,52 @@ const websiteSchema = {
     font-weight: 700;
     padding: 4px 12px;
     border-radius: 999px;
+    text-decoration: none;
+    transition: background 0.2s, color 0.2s;
+  }
+  .hero__tags a:hover {
+    background: #f59e0b;
+    color: #fff;
+    border-color: #f59e0b;
+  }
+
+  /* カテゴリセクション */
+  .cat-section { margin-bottom: 40px; }
+  .cat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 14px;
+  }
+  .cat-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 6px;
+    padding: 20px 12px;
+    border-radius: 14px;
+    text-decoration: none;
+    background: #fff;
+    border: 2px solid color-mix(in srgb, var(--cat-color) 20%, transparent);
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+  .cat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+    border-color: var(--cat-color);
+  }
+  .cat-card__emoji { font-size: 2rem; }
+  .cat-card__label {
+    font-size: 0.88rem;
+    font-weight: 900;
+    color: var(--cat-color);
+    line-height: 1.3;
+  }
+  .cat-card__desc {
+    font-size: 0.75rem;
+    color: #888;
+    line-height: 1.4;
   }
 
   /* セクションヘッダー */

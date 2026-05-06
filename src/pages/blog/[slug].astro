@@ -130,6 +130,21 @@ const articleSchema = {
         </div>
       </div>
 
+      <!-- メール登録バナー -->
+      <div class="newsletter-box">
+        <div class="newsletter-box__inner">
+          <p class="newsletter-box__title">📬 Novlify メルマガ登録（無料）</p>
+          <p class="newsletter-box__desc">週1回・副業・投資・ガジェットの厳選情報をお届けします。<br>登録はメールを送るだけ、いつでも解除できます。</p>
+          <a
+            href={"mailto:info.novlify@gmail.com?subject=%E3%80%90Novlify%E3%83%A1%E3%83%AB%E3%83%9E%E3%82%AC%E7%99%BB%E9%8C%B2%E3%80%91&body=%E3%83%A1%E3%83%AB%E3%83%9E%E3%82%AC%E3%81%AB%E7%99%BB%E9%8C%B2%E3%81%97%E3%81%BE%E3%81%99%E3%80%82%E3%81%9D%E3%81%AE%E3%81%BE%E3%81%BE%E9%80%81%E4%BF%A1%E3%81%97%E3%81%A6%E3%81%8F%E3%81%A0%E3%81%95%E3%81%84%E3%80%82"}
+            class="newsletter-box__btn"
+          >
+            無料でメルマガ登録する →
+          </a>
+          <p class="newsletter-box__note">※件名・本文はそのままでOKです</p>
+        </div>
+      </div>
+
       <!-- 記事フッター -->
       <div class="article-footer">
         <a href="/" class="back-btn">← 記事一覧に戻る</a>
@@ -348,6 +363,49 @@ const articleSchema = {
   }
   .author-box__link:hover { text-decoration: underline; }
 
+  /* メルマガバナー */
+  .newsletter-box {
+    margin: 0 32px 28px;
+    background: linear-gradient(135deg, #eff6ff, #dbeafe);
+    border: 2px solid #93c5fd;
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .newsletter-box__inner {
+    padding: 24px;
+    text-align: center;
+  }
+  .newsletter-box__title {
+    font-size: 1rem;
+    font-weight: 900;
+    color: #1e40af;
+    margin: 0 0 8px;
+  }
+  .newsletter-box__desc {
+    font-size: 0.85rem;
+    color: #334155;
+    line-height: 1.7;
+    margin: 0 0 16px;
+  }
+  .newsletter-box__btn {
+    display: inline-block;
+    background: #2563eb;
+    color: #fff;
+    padding: 12px 28px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+    box-shadow: 0 2px 8px rgba(37,99,235,0.3);
+  }
+  .newsletter-box__btn:hover { background: #1d4ed8; }
+  .newsletter-box__note {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin: 10px 0 0;
+  }
+
   /* 記事フッター */
   .article-footer {
     padding: 20px 32px 28px;
@@ -372,6 +430,7 @@ const articleSchema = {
     .toc { margin: 0 0 24px; }
     .article-body { padding: 0 18px 24px; }
     .author-box { margin: 0 0 24px; }
+    .newsletter-box { margin: 0 0 24px; }
     .article-footer { padding: 16px 18px 24px; }
   }
 </style>

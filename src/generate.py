@@ -65,6 +65,7 @@ _COMMON_PRINCIPLES = """\
 - 記事の冒頭（前半）で読者の悩みへの共感を示し、「この記事は自分のために書かれている」と感じてもらってから情報を届ける
 - 商品・サービスの紹介はスペック（機能・成分・仕様）の羅列から始めず、「使うことで悩みがどう解決されるか（購入後の明るい未来）」を先に伝える
 - 複数の商品・サービスを紹介する場合は比較表を使って視覚化し、読者が迷わず選べるようにする（選定基準・比較ポイントを明示すること）
+- 比較表（Markdownテーブル）の最後の列には「詳細・公式サイト」列を追加し、各サービス・商品の公式サイトや購入ページへのMarkdownリンク `[詳細はこちら](URL)` を記載すること。URLが不明な場合は代表的な検索URLを入れる
 - 知名度の低いサービスを紹介する場合は、同ジャンルの比較・まとめ記事を先に作り、その内部リンク先として個別記事を設置する構成にする
 - **クレジットカード申込リンクは記事本文に絶対に含めない**（楽天カード・エポスカード・三井住友カード等のカード申込アフィリエイトリンク未提携のため）。クレジットカードを話題として言及することは可能だが、申込ページへのURLは記載しない"""
 
@@ -867,7 +868,7 @@ def enrich_products_with_images(products: list, app_id: str, affiliate_id: str) 
 
 def build_affiliate_section(genre: str, keyword: str, products: list, amazon_products: list = None, rakuten_aff_id: str = "", rakuten_products: list = None, a8mat: str = "") -> str:
     """記事末尾に追加するアフィリエイトリンクセクションのMarkdownを生成"""
-    lines = ["\n\n---\n\n## おすすめ商品・サービス\n"]
+    lines = ['\n\n<div id="affiliate-section"></div>\n\n---\n\n## おすすめ商品・サービス\n']
 
     # 楽天市場 Claude生成商品リンク（全ジャンル共通）
     if rakuten_products:
@@ -982,16 +983,20 @@ def build_affiliate_section(genre: str, keyword: str, products: list, amazon_pro
             )
         lines.append("</div>\n")
 
-    # 楽天ROOMへの誘導ボタン
+    # アフィリエイトセクション先頭にアンカーIDを追加済み（上部で設定）
+    # 直接遷移CTAボタン（2ボタン構成）
     lines.append(
         f'\n<div style="text-align:center;margin:2rem 0 1rem;">'
-        f'<a href="{RAKUTEN_ROOM_URL}" target="_blank" rel="noopener" '
-        f'style="display:inline-block;background:#bf0000;color:#fff;padding:12px 28px;'
+        f'<a href="#affiliate-section" '
+        f'style="display:inline-block;background:linear-gradient(135deg,#FF9900,#e68000);color:#fff;padding:12px 28px;'
         f'border-radius:8px;text-decoration:none;font-weight:bold;font-size:1rem;'
-        f'box-shadow:0 2px 8px rgba(191,0,0,0.25);">'
-        f'🛍️ 楽天ROOMでも紹介中！</a>'
-        f'<p style="font-size:0.85em;color:#888;margin-top:8px;">'
-        f'フォローするとお得な商品情報が届きます</p>'
+        f'box-shadow:0 2px 8px rgba(255,153,0,0.3);margin:4px;">'
+        f'🛒 この記事で紹介した商品を見る →</a>'
+        f'<a href="{RAKUTEN_ROOM_URL}" target="_blank" rel="noopener" '
+        f'style="display:inline-block;background:#bf0000;color:#fff;padding:12px 24px;'
+        f'border-radius:8px;text-decoration:none;font-weight:bold;font-size:0.9rem;'
+        f'box-shadow:0 2px 8px rgba(191,0,0,0.25);margin:4px;">'
+        f'📱 楽天ROOMでもチェック</a>'
         f'</div>\n'
     )
 
@@ -1000,6 +1005,91 @@ def build_affiliate_section(genre: str, keyword: str, products: list, amazon_pro
         "※本記事にはアフィリエイト広告が含まれます。</p>\n"
     )
     return "".join(lines)
+
+
+# ジャンル別の記事中盤Amazon検索URL
+_MIDPOINT_AMAZON_URLS = {
+    "gadget":     "https://www.amazon.co.jp/?tag=nexigen22-22",
+    "business":   "https://www.amazon.co.jp/s?k=%E5%89%AF%E6%A5%AD+%E3%83%93%E3%82%B8%E3%83%8D%E3%82%B9%E6%9C%AC&tag=nexigen22-22",
+    "investment": "https://www.amazon.co.jp/s?k=%E6%8A%95%E8%B3%87+%E8%B3%87%E7%94%A3%E9%81%8B%E7%94%A8&tag=nexigen22-22",
+    "travel":     "https://www.amazon.co.jp/s?k=%E6%97%85%E8%A1%8C+%E3%82%B0%E3%83%83%E3%82%BA&tag=nexigen22-22",
+    "gourmet":    "https://www.amazon.co.jp/s?k=%E3%82%B0%E3%83%AB%E3%83%A1+%E9%A3%9F%E5%93%81&tag=nexigen22-22",
+}
+
+# ジャンル別の記事中盤楽天検索URL（エンコード済み）
+_MIDPOINT_RAKUTEN_URLS = {
+    "gadget":     "https://search.rakuten.co.jp/search/mall/%E3%82%AC%E3%82%B8%E3%82%A7%E3%83%83%E3%83%88+%E5%AE%B6%E9%9B%BB/",
+    "business":   "https://search.rakuten.co.jp/search/mall/%E3%83%93%E3%82%B8%E3%83%8D%E3%82%B9%E6%9C%AC+%E5%89%AF%E6%A5%AD/",
+    "investment": "https://search.rakuten.co.jp/search/mall/%E6%8A%95%E8%B3%87+%E8%B3%87%E7%94%A3%E9%81%8B%E7%94%A8/",
+    "travel":     "https://search.rakuten.co.jp/search/mall/%E6%97%85%E8%A1%8C%E3%82%B0%E3%83%83%E3%82%BA/",
+    "gourmet":    "https://search.rakuten.co.jp/search/mall/%E9%A3%9F%E5%93%81+%E3%82%B0%E3%83%AB%E3%83%A1/",
+}
+
+# ジャンル別の記事中盤CTAラベル
+_MIDPOINT_LABELS = {
+    "gadget":     "この記事で紹介したガジェットをチェック",
+    "business":   "副業・スキルアップに役立つ本・サービスをチェック",
+    "investment": "投資・資産運用の参考書・ツールをチェック",
+    "travel":     "旅行グッズ・旅行サービスをチェック",
+    "gourmet":    "グルメ・食品をチェック",
+}
+
+
+def build_midpoint_cta(genre: str, rakuten_aff_id: str = "", a8mat: str = "") -> str:
+    """記事中盤（H2見出し後）に挿入するAmazon+楽天の両リンクCTAブロックを生成"""
+    amazon_url = _MIDPOINT_AMAZON_URLS.get(genre, "https://www.amazon.co.jp/?tag=nexigen22-22")
+    rakuten_raw_url = _MIDPOINT_RAKUTEN_URLS.get(genre, "https://www.rakuten.co.jp/")
+    label = _MIDPOINT_LABELS.get(genre, "この記事で紹介した商品をチェック")
+
+    # 楽天URLにアフィリエイトトラッキングを付与
+    rakuten_url = make_rakuten_affiliate_url(rakuten_raw_url, rakuten_aff_id, a8mat) if rakuten_aff_id else rakuten_raw_url
+
+    return (
+        f'\n<div style="background:linear-gradient(135deg,#fffbeb,#fff8f0);'
+        f'border:2px solid #FF9900;border-radius:12px;padding:18px 20px;'
+        f'margin:1.5rem 0;text-align:center;">\n'
+        f'<p style="font-size:0.88rem;font-weight:bold;color:#555;margin:0 0 12px;">📦 {label}</p>\n'
+        f'<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">\n'
+        f'<a href="{amazon_url}" target="_blank" rel="noopener sponsored" '
+        f'style="display:inline-flex;align-items:center;gap:6px;background:#FF9900;color:#fff;'
+        f'padding:11px 22px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:0.9rem;'
+        f'box-shadow:0 2px 8px rgba(255,153,0,0.3);">'
+        f'🛒 Amazonで見る</a>\n'
+        f'<a href="{rakuten_url}" target="_blank" rel="noopener sponsored" '
+        f'style="display:inline-flex;align-items:center;gap:6px;background:#bf0000;color:#fff;'
+        f'padding:11px 22px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:0.9rem;'
+        f'box-shadow:0 2px 8px rgba(191,0,0,0.3);">'
+        f'🛍️ 楽天市場で見る</a>\n'
+        f'</div>\n'
+        f'</div>\n'
+    )
+
+
+def insert_midpoint_cta(article: str, cta_block: str) -> str:
+    """記事本文の2番目のH2見出しの後にCTAブロックを挿入する"""
+    # frontmatterの終端を探す（--- で囲まれた部分）
+    fm_match = re.search(r'^---\n[\s\S]*?\n---\n', article)
+    if not fm_match:
+        return article
+    body_start = fm_match.end()
+    body = article[body_start:]
+
+    # H2見出しの位置を全て取得
+    h2_positions = [m.start() for m in re.finditer(r'\n## ', body)]
+
+    if len(h2_positions) < 2:
+        # H2が2つ未満なら挿入しない
+        return article
+
+    # 3番目のH2の直前（なければ末尾の20%地点）に挿入
+    if len(h2_positions) >= 3:
+        insert_pos = h2_positions[2]
+    else:
+        insert_pos = h2_positions[-1]
+
+    # CTAブロック挿入
+    body = body[:insert_pos] + '\n' + cta_block + body[insert_pos:]
+    return article[:body_start] + body
 
 
 # ── GitHub API ────────────────────────────────────────────────
@@ -1096,16 +1186,19 @@ def has_internal_links(content: str) -> bool:
     return INTERNAL_LINK_MARKER in content
 
 
-def find_related_articles(genre: str, current_slug: str, n: int = 3) -> list:
-    """同ジャンルの記事から関連記事を返す（新しい順）。(slug, title) のリスト。"""
+def find_related_articles(genre: str, current_slug: str, n: int = 5) -> list:
+    """同ジャンルの記事から関連記事を返す（新しい順）。(slug, title) のリスト。
+    同ジャンルで不足する場合は他ジャンルの記事も補完する。"""
     blog_dir = Path("src/content/blog")
     patterns = _INTERNAL_LINK_GENRE_PATTERNS.get(genre, [genre])
     related = []
+    seen_slugs = set()
+
+    # まず同ジャンルを探す
     for md_file in sorted(blog_dir.glob("*.md"), reverse=True):
         slug = md_file.stem
-        if slug == current_slug:
+        if slug == current_slug or slug in seen_slugs:
             continue
-        # 自動生成記事のみ（_20XXXXXX.md 形式）
         if not re.search(r'_20\d{6}\.md$', md_file.name):
             continue
         name_lower = md_file.name.lower()
@@ -1115,10 +1208,30 @@ def find_related_articles(genre: str, current_slug: str, n: int = 3) -> list:
             title = extract_title(md_file.read_text(encoding="utf-8"))
             if title:
                 related.append((slug, title))
+                seen_slugs.add(slug)
         except Exception:
             continue
         if len(related) >= n:
             break
+
+    # 同ジャンルで不足する場合は他ジャンルで補完
+    if len(related) < n:
+        for md_file in sorted(blog_dir.glob("*.md"), reverse=True):
+            slug = md_file.stem
+            if slug == current_slug or slug in seen_slugs:
+                continue
+            if not re.search(r'_20\d{6}\.md$', md_file.name):
+                continue
+            try:
+                title = extract_title(md_file.read_text(encoding="utf-8"))
+                if title:
+                    related.append((slug, title))
+                    seen_slugs.add(slug)
+            except Exception:
+                continue
+            if len(related) >= n:
+                break
+
     return related
 
 
@@ -1488,9 +1601,14 @@ def main():
             )
             logger.info("楽天商品画像補完完了: %d件", len(rakuten_claude_products))
 
+    # ── 記事中盤にAmazon+楽天CTAを挿入 ──────────────────────────
+    midpoint_cta = build_midpoint_cta(genre, rakuten_aff_id, a8_rakuten_mat)
+    article = insert_midpoint_cta(article, midpoint_cta)
+    logger.info("記事中盤CTAブロック挿入完了")
+
     # ── 内部リンクセクションを追加（アフィリエイトの直前）────────
     current_slug = f"{genre}_{date_str}"
-    related_articles = find_related_articles(genre, current_slug, n=3)
+    related_articles = find_related_articles(genre, current_slug, n=5)
     if related_articles:
         article = article.rstrip() + build_internal_links_section(related_articles)
         logger.info("内部リンク追加: %d件", len(related_articles))
