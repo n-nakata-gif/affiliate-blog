@@ -245,186 +245,216 @@ def shorten_url(url: str) -> str:
     return url.replace(BLOG_URL, "").rstrip("/") or url
 
 
+def _td(content: str, style: str = "") -> str:
+    s = f" style='{style}'" if style else ""
+    return f"<td{s}>{content}</td>"
+
+
 def build_report_html(
     date_str: str,
     current: list[dict],
     changes: dict,
     rewrite_triggers: list[dict],
 ) -> str:
-    """メールHTML本文を生成"""
+    """メールHTML本文を生成（Python 3.11 f-string入れ子なし版）"""
 
-    # ── ランキング変動セクション ──
+    # ── 順位急落テーブル ──
     drop_rows = ""
     for r in changes["dropped"][:10]:
+        base = "padding:6px 10px;border-bottom:1px solid #fee2e2;"
         drop_rows += (
-            f"<tr>"
-            f"<td style='padding:6px 10px;border-bottom:1px solid #fee2e2;'>"
-            f"<a href='{r['url']}' style='color:#dc2626;'>{shorten_url(r['url'])}</a></td>"
-            f"<td style='padding:6px 10px;border-bottom:1px solid #fee2e2;text-align:center;'>"
-            f"{r['prev_position']}位 → <strong style='color:#dc2626;'>{r['position']}位</strong> "
-            f"(▼{r['diff']})</td>"
-            f"<td style='padding:6px 10px;border-bottom:1px solid #fee2e2;text-align:center;'>"
-            f"{r['impressions']:,}回 / CTR {r['ctr']}%</td>"
-            f"</tr>"
+            "<tr>"
+            + _td(
+                "<a href='" + r["url"] + "' style='color:#dc2626;'>" + shorten_url(r["url"]) + "</a>",
+                base,
+            )
+            + _td(
+                str(r["prev_position"]) + "位 → <strong style='color:#dc2626;'>" + str(r["position"]) + "位</strong> (▼" + str(r["diff"]) + ")",
+                base + "text-align:center;",
+            )
+            + _td(
+                f"{r['impressions']:,}回 / CTR {r['ctr']}%",
+                base + "text-align:center;",
+            )
+            + "</tr>"
         )
-    drop_section = f"""
-    <h2 style="color:#dc2626;margin-top:28px;">📉 順位急落アラート（{len(changes['dropped'])}件）</h2>
-    {"<p style='color:#888;'>今週の急落はありませんでした。</p>" if not changes['dropped'] else f"""
-    <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
-      <thead>
-        <tr style="background:#fee2e2;">
-          <th style="padding:8px 10px;text-align:left;">記事URL</th>
-          <th style="padding:8px 10px;text-align:center;">順位変動</th>
-          <th style="padding:8px 10px;text-align:center;">表示/CTR</th>
-        </tr>
-      </thead>
-      <tbody>{drop_rows}</tbody>
-    </table>"""}
-    """ if changes["dropped"] else f"""
-    <h2 style="color:#dc2626;margin-top:28px;">📉 順位急落アラート</h2>
-    <p style="color:#888;">今週の急落はありませんでした ✅</p>
-    """
 
+    if changes["dropped"]:
+        drop_section = (
+            "<h2 style='color:#dc2626;margin-top:28px;'>📉 順位急落アラート（" + str(len(changes["dropped"])) + "件）</h2>"
+            "<table style='width:100%;border-collapse:collapse;font-size:0.85rem;'>"
+            "<thead><tr style='background:#fee2e2;'>"
+            "<th style='padding:8px 10px;text-align:left;'>記事URL</th>"
+            "<th style='padding:8px 10px;text-align:center;'>順位変動</th>"
+            "<th style='padding:8px 10px;text-align:center;'>表示/CTR</th>"
+            "</tr></thead>"
+            "<tbody>" + drop_rows + "</tbody></table>"
+        )
+    else:
+        drop_section = (
+            "<h2 style='color:#dc2626;margin-top:28px;'>📉 順位急落アラート</h2>"
+            "<p style='color:#888;'>今週の急落はありませんでした ✅</p>"
+        )
+
+    # ── 順位改善テーブル ──
     improve_rows = ""
     for r in changes["improved"][:5]:
+        base = "padding:6px 10px;border-bottom:1px solid #d1fae5;"
         improve_rows += (
-            f"<tr>"
-            f"<td style='padding:6px 10px;border-bottom:1px solid #d1fae5;'>"
-            f"<a href='{r['url']}' style='color:#059669;'>{shorten_url(r['url'])}</a></td>"
-            f"<td style='padding:6px 10px;border-bottom:1px solid #d1fae5;text-align:center;'>"
-            f"{r['prev_position']}位 → <strong style='color:#059669;'>{r['position']}位</strong> "
-            f"(▲{abs(r['diff'])})</td>"
-            f"</tr>"
+            "<tr>"
+            + _td(
+                "<a href='" + r["url"] + "' style='color:#059669;'>" + shorten_url(r["url"]) + "</a>",
+                base,
+            )
+            + _td(
+                str(r["prev_position"]) + "位 → <strong style='color:#059669;'>" + str(r["position"]) + "位</strong> (▲" + str(abs(r["diff"])) + ")",
+                base + "text-align:center;",
+            )
+            + "</tr>"
         )
 
-    # ── リライトトリガーセクション ──
+    if changes["improved"]:
+        improve_section = (
+            "<h2 style='color:#059669;margin-top:28px;'>📈 順位改善（" + str(len(changes["improved"])) + "件）</h2>"
+            "<table style='width:100%;border-collapse:collapse;font-size:0.85rem;'>"
+            "<thead><tr style='background:#d1fae5;'>"
+            "<th style='padding:8px 10px;text-align:left;'>記事URL</th>"
+            "<th style='padding:8px 10px;text-align:center;'>順位変動</th>"
+            "</tr></thead>"
+            "<tbody>" + improve_rows + "</tbody></table>"
+        )
+    else:
+        improve_section = (
+            "<h2 style='color:#059669;margin-top:28px;'>📈 順位改善（0件）</h2>"
+            "<p style='color:#888;'>今週の改善はありませんでした。</p>"
+        )
+
+    # ── リライトトリガーテーブル ──
+    BADGES = {
+        "high":   "<span style='background:#dc2626;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.78rem;'>🔴 高優先</span>",
+        "medium": "<span style='background:#f59e0b;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.78rem;'>🟡 中優先</span>",
+        "low":    "<span style='background:#6b7280;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.78rem;'>⚪ 低優先</span>",
+    }
     trigger_rows = ""
     for t in rewrite_triggers[:10]:
-        priority_badge = {
-            "high":   "<span style='background:#dc2626;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.78rem;'>🔴 高優先</span>",
-            "medium": "<span style='background:#f59e0b;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.78rem;'>🟡 中優先</span>",
-            "low":    "<span style='background:#6b7280;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.78rem;'>⚪ 低優先</span>",
-        }.get(t["priority"], "")
-
-        queries_str = "、".join([f"\"{q['query']}\"({q['impressions']}回)" for q in t["top_queries"]]) or "データなし"
-
+        badge = BADGES.get(t["priority"], "")
+        queries_str = "、".join(
+            '"' + q["query"] + '"(' + str(q["impressions"]) + "回)"
+            for q in t["top_queries"]
+        ) or "データなし"
+        reasons_html = "".join("• " + reason + "<br>" for reason in t["reasons"])
+        base = "padding:8px 10px;border-bottom:1px solid #e5e7eb;vertical-align:top;"
         trigger_rows += (
-            f"<tr>"
-            f"<td style='padding:8px 10px;border-bottom:1px solid #e5e7eb;vertical-align:top;'>"
-            f"{priority_badge}<br>"
-            f"<a href='{t['url']}' style='color:#374151;font-size:0.82rem;'>{shorten_url(t['url'])}</a></td>"
-            f"<td style='padding:8px 10px;border-bottom:1px solid #e5e7eb;text-align:center;vertical-align:top;'>"
-            f"{t['position']}位 / CTR {t['ctr']}%<br>"
-            f"<span style='font-size:0.8rem;color:#888;'>{t['impressions']:,}表示</span></td>"
-            f"<td style='padding:8px 10px;border-bottom:1px solid #e5e7eb;font-size:0.82rem;vertical-align:top;'>"
-            f"{''.join(f'• {r}<br>' for r in t['reasons'])}"
-            f"<span style='color:#6b7280;'>流入KW: {queries_str}</span></td>"
-            f"</tr>"
+            "<tr>"
+            + _td(
+                badge + "<br><a href='" + t["url"] + "' style='color:#374151;font-size:0.82rem;'>" + shorten_url(t["url"]) + "</a>",
+                base,
+            )
+            + _td(
+                str(t["position"]) + "位 / CTR " + str(t["ctr"]) + "%<br><span style='font-size:0.8rem;color:#888;'>" + f"{t['impressions']:,}" + "表示</span>",
+                base + "text-align:center;",
+            )
+            + _td(
+                reasons_html + "<span style='color:#6b7280;'>流入KW: " + queries_str + "</span>",
+                base + "font-size:0.82rem;",
+            )
+            + "</tr>"
         )
 
     high_count = sum(1 for t in rewrite_triggers if t["priority"] == "high")
     med_count  = sum(1 for t in rewrite_triggers if t["priority"] == "medium")
 
-    return f"""<html>
-<body style="font-family:'Noto Sans JP',sans-serif;max-width:700px;margin:0 auto;color:#333;">
+    if rewrite_triggers:
+        trigger_section = (
+            "<table style='width:100%;border-collapse:collapse;font-size:0.85rem;'>"
+            "<thead><tr style='background:#fef3c7;'>"
+            "<th style='padding:8px 10px;text-align:left;'>記事</th>"
+            "<th style='padding:8px 10px;text-align:center;'>指標</th>"
+            "<th style='padding:8px 10px;text-align:left;'>改善ポイント</th>"
+            "</tr></thead>"
+            "<tbody>" + trigger_rows + "</tbody></table>"
+        )
+    else:
+        trigger_section = "<p style='color:#888;'>今週のリライト候補はありませんでした。</p>"
 
-<div style="background:linear-gradient(135deg,#1a1a2e,#16213e);color:#fff;padding:28px 32px;border-radius:12px 12px 0 0;">
-  <h1 style="margin:0;font-size:1.4rem;">📊 Novlify 週次検索順位レポート</h1>
-  <p style="margin:6px 0 0;color:#a5b4fc;font-size:0.9rem;">{date_str}　全{len(current)}記事を分析</p>
-</div>
+    # ── TOP20 ランキングテーブル ──
+    top20_rows = ""
+    for r in sorted(current, key=lambda x: -x["impressions"])[:20]:
+        pos_color = "#059669" if r["position"] <= 10 else "#d97706" if r["position"] <= 20 else "#dc2626"
+        base = "padding:5px 10px;border-bottom:1px solid #f3f4f6;"
+        top20_rows += (
+            "<tr>"
+            + _td("<a href='" + r["url"] + "' style='color:#374151;'>" + shorten_url(r["url"]) + "</a>", base)
+            + _td("<strong style='color:" + pos_color + ";'>" + str(r["position"]) + "位</strong>", base + "text-align:center;")
+            + _td(f"{r['impressions']:,}", base + "text-align:center;")
+            + _td(str(r["ctr"]) + "%", base + "text-align:center;")
+            + _td(str(r["clicks"]), base + "text-align:center;")
+            + "</tr>"
+        )
 
-<div style="padding:24px 32px;background:#f8fafc;border:1px solid #e2e8f0;border-top:none;">
+    now_str = datetime.now(JST).strftime("%Y-%m-%d %H:%M JST")
+    n_articles = len(current)
+    n_dropped  = len(changes["dropped"])
+    n_improved = len(changes["improved"])
+    n_rewrite  = high_count + med_count
 
-  <!-- サマリー -->
-  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;">
-    <div style="background:#fff;border-radius:8px;padding:14px;text-align:center;border:1px solid #e5e7eb;">
-      <div style="font-size:1.6rem;font-weight:900;color:#1e40af;">{len(current)}</div>
-      <div style="font-size:0.78rem;color:#64748b;">計測記事数</div>
-    </div>
-    <div style="background:#fff;border-radius:8px;padding:14px;text-align:center;border:1px solid #e5e7eb;">
-      <div style="font-size:1.6rem;font-weight:900;color:#dc2626;">{len(changes['dropped'])}</div>
-      <div style="font-size:0.78rem;color:#64748b;">順位急落</div>
-    </div>
-    <div style="background:#fff;border-radius:8px;padding:14px;text-align:center;border:1px solid #e5e7eb;">
-      <div style="font-size:1.6rem;font-weight:900;color:#059669;">{len(changes['improved'])}</div>
-      <div style="font-size:0.78rem;color:#64748b;">順位改善</div>
-    </div>
-    <div style="background:#fff;border-radius:8px;padding:14px;text-align:center;border:1px solid #e5e7eb;">
-      <div style="font-size:1.6rem;font-weight:900;color:#d97706;">{high_count + med_count}</div>
-      <div style="font-size:0.78rem;color:#64748b;">リライト候補</div>
-    </div>
-  </div>
+    return (
+        "<html><body style=\"font-family:'Noto Sans JP',sans-serif;max-width:700px;margin:0 auto;color:#333;\">"
 
-  <!-- 順位急落 -->
-  {drop_section}
+        # ヘッダー
+        "<div style='background:linear-gradient(135deg,#1a1a2e,#16213e);color:#fff;padding:28px 32px;border-radius:12px 12px 0 0;'>"
+        "<h1 style='margin:0;font-size:1.4rem;'>📊 Novlify 週次検索順位レポート</h1>"
+        "<p style='margin:6px 0 0;color:#a5b4fc;font-size:0.9rem;'>" + date_str + "　全" + str(n_articles) + "記事を分析</p>"
+        "</div>"
 
-  <!-- 順位改善 -->
-  <h2 style="color:#059669;margin-top:28px;">📈 順位改善（{len(changes['improved'])}件）</h2>
-  {"<p style='color:#888;'>今週の改善はありませんでした。</p>" if not changes['improved'] else f"""
-  <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
-    <thead>
-      <tr style="background:#d1fae5;">
-        <th style="padding:8px 10px;text-align:left;">記事URL</th>
-        <th style="padding:8px 10px;text-align:center;">順位変動</th>
-      </tr>
-    </thead>
-    <tbody>{improve_rows}</tbody>
-  </table>"""}
+        "<div style='padding:24px 32px;background:#f8fafc;border:1px solid #e2e8f0;border-top:none;'>"
 
-  <!-- リライトトリガー -->
-  <h2 style="color:#d97706;margin-top:28px;">✍️ リライト候補（🔴高優先 {high_count}件 / 🟡中優先 {med_count}件）</h2>
-  <p style="font-size:0.85rem;color:#64748b;margin-top:-8px;">
-    CTR高×順位低、または表示多×クリック少の記事です。リライトで収益UPを狙えます。
-  </p>
-  {"<p style='color:#888;'>今週のリライト候補はありませんでした。</p>" if not rewrite_triggers else f"""
-  <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
-    <thead>
-      <tr style="background:#fef3c7;">
-        <th style="padding:8px 10px;text-align:left;">記事</th>
-        <th style="padding:8px 10px;text-align:center;">指標</th>
-        <th style="padding:8px 10px;text-align:left;">改善ポイント</th>
-      </tr>
-    </thead>
-    <tbody>{trigger_rows}</tbody>
-  </table>"""}
+        # サマリーカード
+        "<div style='display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;'>"
+        "<div style='background:#fff;border-radius:8px;padding:14px;text-align:center;border:1px solid #e5e7eb;'>"
+        "<div style='font-size:1.6rem;font-weight:900;color:#1e40af;'>" + str(n_articles) + "</div>"
+        "<div style='font-size:0.78rem;color:#64748b;'>計測記事数</div></div>"
+        "<div style='background:#fff;border-radius:8px;padding:14px;text-align:center;border:1px solid #e5e7eb;'>"
+        "<div style='font-size:1.6rem;font-weight:900;color:#dc2626;'>" + str(n_dropped) + "</div>"
+        "<div style='font-size:0.78rem;color:#64748b;'>順位急落</div></div>"
+        "<div style='background:#fff;border-radius:8px;padding:14px;text-align:center;border:1px solid #e5e7eb;'>"
+        "<div style='font-size:1.6rem;font-weight:900;color:#059669;'>" + str(n_improved) + "</div>"
+        "<div style='font-size:0.78rem;color:#64748b;'>順位改善</div></div>"
+        "<div style='background:#fff;border-radius:8px;padding:14px;text-align:center;border:1px solid #e5e7eb;'>"
+        "<div style='font-size:1.6rem;font-weight:900;color:#d97706;'>" + str(n_rewrite) + "</div>"
+        "<div style='font-size:0.78rem;color:#64748b;'>リライト候補</div></div>"
+        "</div>"
 
-  <!-- 全記事一覧TOP20 -->
-  <h2 style="margin-top:28px;">🏆 全記事 順位一覧（表示回数順 TOP 20）</h2>
-  <table style="width:100%;border-collapse:collapse;font-size:0.82rem;">
-    <thead>
-      <tr style="background:#e5e7eb;">
-        <th style="padding:6px 10px;text-align:left;">記事</th>
-        <th style="padding:6px 10px;text-align:center;">順位</th>
-        <th style="padding:6px 10px;text-align:center;">表示</th>
-        <th style="padding:6px 10px;text-align:center;">CTR</th>
-        <th style="padding:6px 10px;text-align:center;">クリック</th>
-      </tr>
-    </thead>
-    <tbody>
-      {"".join(
-        f"<tr>"
-        f"<td style='padding:5px 10px;border-bottom:1px solid #f3f4f6;'>"
-        f"<a href='{r['url']}' style='color:#374151;'>{shorten_url(r['url'])}</a></td>"
-        f"<td style='padding:5px 10px;border-bottom:1px solid #f3f4f6;text-align:center;"
-        f"color:{'#059669' if r['position'] <= 10 else '#d97706' if r['position'] <= 20 else '#dc2626'};font-weight:bold;'>"
-        f"{r['position']}位</td>"
-        f"<td style='padding:5px 10px;border-bottom:1px solid #f3f4f6;text-align:center;'>{r['impressions']:,}</td>"
-        f"<td style='padding:5px 10px;border-bottom:1px solid #f3f4f6;text-align:center;'>{r['ctr']}%</td>"
-        f"<td style='padding:5px 10px;border-bottom:1px solid #f3f4f6;text-align:center;'>{r['clicks']}</td>"
-        f"</tr>"
-        for r in sorted(current, key=lambda x: -x['impressions'])[:20]
-      )}
-    </tbody>
-  </table>
+        # 急落セクション
+        + drop_section
 
-</div>
+        # 改善セクション
+        + improve_section
 
-<div style="background:#1a1a2e;color:#64748b;padding:16px 32px;border-radius:0 0 12px 12px;font-size:0.78rem;text-align:center;">
-  <p style="margin:0;">Novlify 週次順位レポート | {datetime.now(JST).strftime('%Y-%m-%d %H:%M JST')} 自動生成</p>
-</div>
+        # リライトトリガーセクション
+        + "<h2 style='color:#d97706;margin-top:28px;'>✍️ リライト候補（🔴高優先 " + str(high_count) + "件 / 🟡中優先 " + str(med_count) + "件）</h2>"
+        "<p style='font-size:0.85rem;color:#64748b;margin-top:-8px;'>"
+        "CTR高×順位低、または表示多×クリック少の記事です。リライトで収益UPを狙えます。</p>"
+        + trigger_section
 
-</body>
-</html>"""
+        # TOP20テーブル
+        + "<h2 style='margin-top:28px;'>🏆 全記事 順位一覧（表示回数順 TOP 20）</h2>"
+        "<table style='width:100%;border-collapse:collapse;font-size:0.82rem;'>"
+        "<thead><tr style='background:#e5e7eb;'>"
+        "<th style='padding:6px 10px;text-align:left;'>記事</th>"
+        "<th style='padding:6px 10px;text-align:center;'>順位</th>"
+        "<th style='padding:6px 10px;text-align:center;'>表示</th>"
+        "<th style='padding:6px 10px;text-align:center;'>CTR</th>"
+        "<th style='padding:6px 10px;text-align:center;'>クリック</th>"
+        "</tr></thead>"
+        "<tbody>" + top20_rows + "</tbody></table>"
+
+        "</div>"
+        "<div style='background:#1a1a2e;color:#64748b;padding:16px 32px;border-radius:0 0 12px 12px;font-size:0.78rem;text-align:center;'>"
+        "<p style='margin:0;'>Novlify 週次順位レポート | " + now_str + " 自動生成</p>"
+        "</div>"
+        "</body></html>"
+    )
 
 
 def send_report_email(html: str, date_str: str) -> None:
