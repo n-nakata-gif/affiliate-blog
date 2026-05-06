@@ -51,3 +51,27 @@ jobs:
           name: keyword-suggestions
           path: data/keyword_suggestions.json
           if-no-files-found: ignore
+
+  ranking-monitor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run ranking monitor
+        env:
+          GSC_SITE_URL:          ${{ secrets.GSC_SITE_URL }}
+          GSC_OAUTH_CREDENTIALS: ${{ secrets.GSC_OAUTH_CREDENTIALS }}
+          GMAIL_USER:            ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD:    ${{ secrets.GMAIL_APP_PASSWORD }}
+        run: python src/ranking_monitor.py
+      - name: Save ranking history to repo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/ranking_history.json
+          git diff --staged --quiet || git commit -m "chore: update ranking history [skip ci]"
+          git push
