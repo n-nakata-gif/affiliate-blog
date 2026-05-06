@@ -6,7 +6,7 @@ GSC が設定されている場合は Search Console データを使って提案
 必要なSecrets:
   ANTHROPIC_API_KEY  （必須）
   GMAIL_USER / GMAIL_APP_PASSWORD
-  GSC_SITE_URL / GSC_SERVICE_ACCOUNT_JSON  （任意・設定時のみSC使用）
+  GSC_SITE_URL / GSC_OAUTH_CREDENTIALS  （任意・設定時のみSC使用）
 """
 
 from __future__ import annotations
@@ -25,17 +25,28 @@ GENRES = ["business", "gadget", "investment", "travel", "gourmet"]
 def fetch_search_console_data(site_url: str) -> dict | None:
     """Search Console データを取得。失敗時はNoneを返す。"""
     try:
-        from google.oauth2 import service_account
+        import google.oauth2.credentials
+        import google.auth.transport.requests
         from googleapiclient.discovery import build
 
-        sa_json = os.environ.get("GSC_SERVICE_ACCOUNT_JSON", "")
-        if not sa_json:
+        oauth_json = os.environ.get("GSC_OAUTH_CREDENTIALS", "")
+        if not oauth_json:
             return None
 
-        info = json.loads(sa_json)
-        creds = service_account.Credentials.from_service_account_info(
-            info, scopes=["https://www.googleapis.com/auth/webmasters.readonly"],
+        info = json.loads(oauth_json)
+        creds = google.oauth2.credentials.Credentials(
+            token=info.get("token"),
+            refresh_token=info["refresh_token"],
+            token_uri=info.get("token_uri", "https://oauth2.googleapis.com/token"),
+            client_id=info["client_id"],
+            client_secret=info["client_secret"],
+            scopes=info.get("scopes"),
         )
+
+        # トークンが期限切れの場合は自動リフレッシュ
+        if not creds.valid:
+            creds.refresh(google.auth.transport.requests.Request())
+
         service = build("searchconsole", "v1", credentials=creds)
 
         today = datetime.now(JST).date()

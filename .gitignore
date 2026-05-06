@@ -20,5 +20,9 @@ pnpm-debug.log*
 # macOS-specific files
 .DS_Store
 
+# OAuth2トークンファイル（機密情報）
+src/gsc_oauth_credentials.json
+*.json.key
+
 # jetbrains setting folder
 .idea/
