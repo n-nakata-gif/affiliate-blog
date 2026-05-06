@@ -2,54 +2,122 @@
 import Layout from '../layouts/Layout.astro';
 ---
 
-<Layout title="このブログについて | Novlify" description="Novlifyの運営者Noriのプロフィールと、このブログへの想いをご紹介します。">
+<Layout
+  title="運営者プロフィール | Novlify"
+  description="Novlify運営者Nori（環境計量士・理系専門職）のプロフィール。副業・投資・旅行・グルメを本音で発信するブログの運営方針をご紹介します。"
+>
+  <Fragment slot="head">
+    <script type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "@id": "https://novlify.jp/about#author",
+      "name": "Nori",
+      "url": "https://novlify.jp/about",
+      "description": "長崎県在住の環境計量士。理系専門職として働きながら副業・投資・旅行・グルメ・ガジェット情報を発信。",
+      "jobTitle": "環境計量士・ブロガー",
+      "knowsAbout": ["副業", "投資", "資産運用", "旅行", "グルメ", "ガジェット"],
+      "worksFor": {
+        "@type": "Organization",
+        "name": "Novlify",
+        "url": "https://novlify.jp/"
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "addressRegion": "長崎県",
+        "addressCountry": "JP"
+      }
+    })} />
+  </Fragment>
+
   <article class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
 
     <!-- ヘッダー -->
     <div class="px-8 py-10 text-white" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
       <p class="text-sm font-semibold opacity-80 mb-1">About</p>
-      <h1 class="text-2xl font-black mb-2">このブログについて</h1>
-      <p class="text-sm opacity-90">Novlify の運営者 Nori のプロフィール</p>
+      <h1 class="text-2xl font-black mb-2">運営者プロフィール</h1>
+      <p class="text-sm opacity-90">Novlify をご覧いただきありがとうございます</p>
     </div>
 
     <div class="px-8 py-8 space-y-8 text-slate-600 leading-relaxed">
 
-      <!-- プロフィール -->
+      <!-- プロフィールカード -->
       <section class="flex flex-col sm:flex-row gap-6 items-start">
         <div class="flex-shrink-0">
-          <div class="w-24 h-24 rounded-full flex items-center justify-center text-4xl"
+          <div class="w-24 h-24 rounded-full flex items-center justify-center text-3xl font-black text-amber-700 shadow-md"
                style="background: linear-gradient(135deg, #fef3c7, #fde68a);">
-            🙂
+            N
           </div>
         </div>
-        <div>
+        <div class="flex-1">
           <h2 class="text-xl font-black text-slate-800 mb-1">Nori（のり）</h2>
-          <p class="text-sm text-amber-600 font-semibold mb-3">Novlify 運営者</p>
+          <p class="text-sm text-amber-600 font-bold mb-3">Novlify 運営者 ／ 環境計量士</p>
           <p class="text-sm">
-            長崎県北部在住。理系の専門職として働きながら、空き時間に副業・投資・旅行・グルメ・ガジェットを探求しています。
-            「まじめに調べたことを、わかりやすく伝える」をモットーに、このブログを書いています。
+            長崎県在住。国家資格「環境計量士」を持つ理系専門職として、水質・騒音振動の計量証明業務に携わっています。
+            本業で培った「データに基づく客観的な分析力」を活かし、副業・投資・ガジェット情報を正直・丁寧に発信しています。
           </p>
         </div>
       </section>
 
+      <!-- 資格・専門性バッジ -->
+      <section class="flex flex-wrap gap-2">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100">
+          🏅 環境計量士（国家資格）
+        </span>
+        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-green-50 text-green-700 border border-green-100">
+          📊 データ分析・理系専門職
+        </span>
+        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-100">
+          💹 投資歴5年以上
+        </span>
+        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-purple-50 text-purple-700 border border-purple-100">
+          ✈️ 九州を中心に年数回旅行
+        </span>
+      </section>
+
       <hr class="border-slate-100" />
 
-      <!-- ブログについて -->
+      <!-- ブログを始めたきっかけ -->
       <section>
         <h2 class="text-base font-bold text-slate-800 mb-3 pb-2 border-b-2 border-amber-100">
           ブログを始めたきっかけ
         </h2>
         <p class="text-sm">
-          本業の仕事をしながら「何か自分のペースで稼げることはないか」と副業・投資を調べ始めたのがきっかけです。
-          ネットにある情報は玉石混交で、「どれが本当に使えるのか」がわかりにくい。
-          だったら自分で試して、正直に書いてみようと思いました。
+          専門職として安定した収入を得ながらも、「収入の柱を増やしたい」「お金の知識をもっと身につけたい」という思いから、副業・投資の世界に飛び込みました。
         </p>
         <p class="text-sm mt-3">
-          誇張なし・本音あり。良いことも悪いことも正直に書く。それが <strong>Novlify</strong> のスタンスです。
+          調べれば調べるほど感じたのは、「ネット上の情報の多くが、誇張や偏りだらけ」ということ。
+          理系の視点で情報を精査し、実際に使ってみた感想を<strong>誇張なし・本音</strong>で伝えるブログがあればいいと思い、Novlifyを立ち上げました。
         </p>
-        <p class="text-sm mt-3">
-          各記事はNoriが自ら調査・確認したうえで公開しています。情報の正確性を大切にし、読者の方に役立つ内容を心がけています。
-        </p>
+      </section>
+
+      <!-- 執筆方針 -->
+      <section>
+        <h2 class="text-base font-bold text-slate-800 mb-3 pb-2 border-b-2 border-amber-100">
+          記事の執筆方針
+        </h2>
+        <div class="space-y-3">
+          <div class="flex items-start gap-3 p-4 bg-slate-50 rounded-xl text-sm">
+            <span class="text-xl flex-shrink-0">🔍</span>
+            <div>
+              <p class="font-bold text-slate-700 mb-0.5">一次情報・公式情報を確認する</p>
+              <p class="text-slate-500 text-xs">公式サイト・金融庁・法令等の一次情報を確認したうえで執筆。伝聞だけの情報は掲載しません。</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-slate-50 rounded-xl text-sm">
+            <span class="text-xl flex-shrink-0">💬</span>
+            <div>
+              <p class="font-bold text-slate-700 mb-0.5">良い点も悪い点も正直に書く</p>
+              <p class="text-slate-500 text-xs">アフィリエイト報酬に関係なく、デメリット・注意点も包み隠さず記載します。</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-4 bg-slate-50 rounded-xl text-sm">
+            <span class="text-xl flex-shrink-0">🔄</span>
+            <div>
+              <p class="font-bold text-slate-700 mb-0.5">情報を定期的にアップデートする</p>
+              <p class="text-slate-500 text-xs">制度改正・サービス変更があった際は記事を随時更新し、古い情報を放置しません。</p>
+            </div>
+          </div>
+        </div>
       </section>
 
       <!-- 扱うテーマ -->
@@ -96,8 +164,16 @@ import Layout from '../layouts/Layout.astro';
         </div>
       </section>
 
+      <!-- アフィリエイト開示 -->
+      <section class="p-4 bg-amber-50 rounded-xl text-xs text-slate-600 border border-amber-100">
+        <p class="font-bold text-slate-700 mb-2">📢 広告・アフィリエイトについて</p>
+        <p>本ブログはアフィリエイト広告（Amazonアソシエイト、A8.net、アクセストレード等）を利用しています。
+        リンク経由でのご購入により、サイト運営者に報酬が発生する場合があります。
+        ただし、<strong>広告報酬の有無にかかわらず、すべての評価・レビューは独自の調査と実体験に基づいて作成しています。</strong></p>
+      </section>
+
       <!-- 免責 -->
-      <section class="p-4 bg-amber-50 rounded-xl text-xs text-slate-500">
+      <section class="p-4 bg-slate-50 rounded-xl text-xs text-slate-500">
         <p class="font-bold text-slate-600 mb-1">⚠️ 記事に関するお断り</p>
         <p>本ブログの記事は情報提供を目的としており、投資・医療・法律などの専門的なアドバイスではありません。
         投資判断は必ずご自身の責任で行ってください。記事の内容は執筆時点の情報であり、最新情報は各公式サイトをご確認ください。</p>
@@ -110,7 +186,7 @@ import Layout from '../layouts/Layout.astro';
         </h2>
         <p class="text-sm">
           ご質問・ご意見・取材・コラボのご依頼は
-          <a href="/contact" class="text-amber-600 hover:text-amber-700 underline font-semibold">お問い合わせフォーム</a>
+          <a href="/contact" class="text-amber-600 hover:text-amber-700 underline font-semibold">お問い合わせページ</a>
           からお気軽にどうぞ。
         </p>
       </section>
