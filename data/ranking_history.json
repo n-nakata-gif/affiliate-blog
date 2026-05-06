@@ -1,0 +1,81 @@
+{
+  "2026-W18": {
+    "https://novlify.jp/blog/travel_20260426/": {
+      "url": "https://novlify.jp/blog/travel_20260426/",
+      "clicks": 1,
+      "impressions": 7,
+      "ctr": 14.29,
+      "position": 9.3
+    },
+    "http://novlify.jp/blog/travel_20260426": {
+      "url": "http://novlify.jp/blog/travel_20260426",
+      "clicks": 0,
+      "impressions": 2,
+      "ctr": 0,
+      "position": 6.5
+    },
+    "https://novlify.jp/blog/business_20260428/": {
+      "url": "https://novlify.jp/blog/business_20260428/",
+      "clicks": 0,
+      "impressions": 4,
+      "ctr": 0,
+      "position": 7
+    },
+    "https://novlify.jp/blog/business_20260429/": {
+      "url": "https://novlify.jp/blog/business_20260429/",
+      "clicks": 0,
+      "impressions": 2,
+      "ctr": 0,
+      "position": 10
+    },
+    "https://novlify.jp/blog/gadget_20260429/": {
+      "url": "https://novlify.jp/blog/gadget_20260429/",
+      "clicks": 0,
+      "impressions": 2,
+      "ctr": 0,
+      "position": 7.5
+    },
+    "https://novlify.jp/blog/gourmet_20260427/": {
+      "url": "https://novlify.jp/blog/gourmet_20260427/",
+      "clicks": 0,
+      "impressions": 1,
+      "ctr": 0,
+      "position": 10
+    },
+    "https://novlify.jp/blog/gourmet_20260428/": {
+      "url": "https://novlify.jp/blog/gourmet_20260428/",
+      "clicks": 0,
+      "impressions": 1,
+      "ctr": 0,
+      "position": 8
+    },
+    "https://novlify.jp/blog/investment_20260426/": {
+      "url": "https://novlify.jp/blog/investment_20260426/",
+      "clicks": 0,
+      "impressions": 1,
+      "ctr": 0,
+      "position": 1
+    },
+    "https://novlify.jp/blog/investment_20260428/": {
+      "url": "https://novlify.jp/blog/investment_20260428/",
+      "clicks": 0,
+      "impressions": 2,
+      "ctr": 0,
+      "position": 7
+    },
+    "https://novlify.jp/blog/protein-supplement-guide/": {
+      "url": "https://novlify.jp/blog/protein-supplement-guide/",
+      "clicks": 0,
+      "impressions": 1,
+      "ctr": 0,
+      "position": 40
+    },
+    "https://novlify.jp/blog/travel_20260427/": {
+      "url": "https://novlify.jp/blog/travel_20260427/",
+      "clicks": 0,
+      "impressions": 2,
+      "ctr": 0,
+      "position": 11.5
+    }
+  }
+}
