@@ -733,7 +733,26 @@ _BUSINESS_LINKS = [
     {"name": "マネーフォワード クラウド確定申告", "url": "https://px.a8.net/svt/ejp?a8mat=4B3HQJ+4620I+4JGQ+BXB8Z", "desc": "確定申告を自動化・ラクに完了",        "logo": _GF.format("moneyforward.com")},
 ]
 
+# 松井証券 iDeCo アフィリエイト（A8.net）
+_MATSUI_IDECO_TEXT_URL = "https://px.a8.net/svt/ejp?a8mat=4B3HQF+EFRFW2+3XCC+BXIYQ"
+_MATSUI_IDECO_BANNER_HTML = (
+    '<div style="text-align:center;margin:1.5rem 0;">'
+    '<p style="font-size:0.9rem;font-weight:bold;color:#1a1a1a;margin-bottom:10px;">'
+    '💰 iDeCoで節税しながら老後資金を積み立てよう</p>'
+    '<a href="https://px.a8.net/svt/ejp?a8mat=4B3HQF+EFRFW2+3XCC+BYT9D" '
+    'rel="nofollow sponsored" target="_blank">'
+    '<img border="0" width="300" height="250" '
+    'alt="松井証券ではじめるiDeCo" loading="lazy" '
+    'src="https://www24.a8.net/svt/bgt?aid=260503431873&wid=001&eno=01'
+    '&mid=s00000018318002010000&mc=1" style="border-radius:8px;max-width:100%;">'
+    '</a>'
+    '<img border="0" width="1" height="1" '
+    'src="https://www19.a8.net/0.gif?a8mat=4B3HQF+EFRFW2+3XCC+BYT9D" alt="">'
+    '</div>'
+)
+
 _INVESTMENT_LINKS = [
+    {"name": "松井証券 iDeCo",            "url": _MATSUI_IDECO_TEXT_URL,           "desc": "節税しながら老後資金を積み立て。手数料無料のiDeCo",  "logo": _GF.format("matsui.co.jp"),       "a8net": True},
     {"name": "Amazon（投資・資産運用書）", "url": "https://www.amazon.co.jp/s?k=%E6%8A%95%E8%B3%87+%E8%B3%87%E7%94%A3%E9%81%8B%E7%94%A8&tag=nexigen22-22", "desc": "投資・お金の本をAmazonで",    "logo": _GF.format("amazon.co.jp")},
     {"name": "SBI証券",                   "url": "https://www.sbisec.co.jp",       "desc": "新NISA・つみたて投資ならSBI証券",           "logo": _GF.format("sbisec.co.jp")},
     {"name": "楽天証券",                  "url": "https://www.rakuten-sec.co.jp",  "desc": "楽天ポイントで投資デビュー",  "rakuten": True, "logo": _GF.format("rakuten-sec.co.jp")},
@@ -1017,7 +1036,7 @@ def build_affiliate_section(genre: str, keyword: str, products: list, amazon_pro
             if link.get("rakuten") and rakuten_aff_id:
                 url = make_rakuten_affiliate_url(url, rakuten_aff_id, a8mat)
             # rel="sponsored" は実際にアフィリエイト提携済みのリンクのみに付与
-            is_affiliate = link.get("rakuten") or "tag=nexigen22-22" in url
+            is_affiliate = link.get("rakuten") or link.get("a8net") or "tag=nexigen22-22" in url or "px.a8.net" in url
             rel = "noopener sponsored" if is_affiliate else "noopener"
             logo = link.get("logo", "")
             logo_html = (
@@ -1039,6 +1058,10 @@ def build_affiliate_section(genre: str, keyword: str, products: list, amazon_pro
                 f'</a>\n'
             )
         lines.append("</div>\n")
+
+    # 投資記事：松井証券iDeCoバナー
+    if genre == "investment":
+        lines.append(_MATSUI_IDECO_BANNER_HTML + "\n")
 
     # アフィリエイトセクション先頭にアンカーIDを追加済み（上部で設定）
     # 直接遷移CTAボタン（2ボタン構成）
