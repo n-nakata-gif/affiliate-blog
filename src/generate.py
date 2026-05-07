@@ -706,20 +706,28 @@ def insert_images_into_article(article: str, images: list) -> str:
 # ※ リンクURLはA8.net/もしもアフィリエイトの発行IDに差し替えてください
 _GF = "https://www.google.com/s2/favicons?domain={}&sz=64"  # Google Favicon helper
 
+# ValueCommerce Yahoo!ショッピング アフィリエイト
+_VC_BASE = "https://ck.jp.ap.valuecommerce.com/servlet/referral?sid=3769965&pid=892608337"
+
+def _vc_url(yahoo_url: str) -> str:
+    """ValueCommerce MyLink形式でYahoo!ショッピングURLにトラッキングを付与"""
+    return _VC_BASE + "&vc_url=" + urllib.parse.quote(yahoo_url, safe="")
+
 _TRAVEL_LINKS = [
-    {"name": "じゃらんnet",   "url": "https://px.a8.net/svt/ejp?a8mat=4B3HQI+DYHVCI+14CS+6C9LD", "desc": "全国の宿・ホテルをお得に予約",          "logo": _GF.format("jalan.net")},
-    {"name": "楽天トラベル",  "url": "https://travel.rakuten.co.jp", "desc": "楽天ポイントで宿・航空券をお得に",          "rakuten": True, "logo": _GF.format("travel.rakuten.co.jp")},
-    {"name": "一休.com",      "url": "https://px.a8.net/svt/ejp?a8mat=4B3HQJ+A2L06Q+1OK+6LHDU", "desc": "高級旅館・ホテルのタイムセールプラン", "logo": _GF.format("ikyu.com")},
-    {"name": "agoda",         "url": "https://px.a8.net/svt/ejp?a8mat=4B3HQJ+A36FSI+4X1W+5YRHE", "desc": "国内・海外ホテルを最大85%OFFで予約",  "logo": _GF.format("agoda.com")},
-    {"name": "Booking.com",   "url": "https://www.booking.com", "desc": "世界中の宿を最安値で比較",                    "logo": _GF.format("booking.com")},
-    {"name": "skyticket",     "url": "https://skyticket.jp",    "desc": "格安航空券・新幹線・ホテル比較",               "logo": _GF.format("skyticket.jp")},
+    {"name": "じゃらんnet",         "url": "https://px.a8.net/svt/ejp?a8mat=4B3HQI+DYHVCI+14CS+6C9LD",    "desc": "全国の宿・ホテルをお得に予約",          "logo": _GF.format("jalan.net"),    "a8net": True},
+    {"name": "楽天トラベル",        "url": "https://travel.rakuten.co.jp",                                  "desc": "楽天ポイントで宿・航空券をお得に",      "rakuten": True, "logo": _GF.format("travel.rakuten.co.jp")},
+    {"name": "一休.com",            "url": "https://px.a8.net/svt/ejp?a8mat=4B3HQJ+A2L06Q+1OK+6LHDU",    "desc": "高級旅館・ホテルのタイムセールプラン",  "logo": _GF.format("ikyu.com"),     "a8net": True},
+    {"name": "agoda",               "url": "https://px.a8.net/svt/ejp?a8mat=4B3HQJ+A36FSI+4X1W+5YRHE",   "desc": "国内・海外ホテルを最大85%OFFで予約",    "logo": _GF.format("agoda.com"),    "a8net": True},
+    {"name": "Yahoo!ショッピング（旅行グッズ）", "url": _vc_url("https://shopping.yahoo.co.jp/search?p=%E6%97%85%E8%A1%8C+%E3%82%B0%E3%83%83%E3%82%BA"), "desc": "旅行グッズ・スーツケースをお得に",  "logo": _GF.format("shopping.yahoo.co.jp"), "a8net": True},
+    {"name": "skyticket",           "url": "https://skyticket.jp",                                          "desc": "格安航空券・新幹線・ホテル比較",         "logo": _GF.format("skyticket.jp")},
 ]
 
 _GOURMET_LINKS = [
-    {"name": "ホットペッパーグルメ",    "url": "https://www.hotpepper.jp",           "desc": "お得なクーポンでレストラン予約",           "logo": _GF.format("hotpepper.jp")},
-    {"name": "一休.comレストラン",      "url": "https://restaurant.ikyu.com",        "desc": "高級レストランの特別プラン",               "logo": _GF.format("restaurant.ikyu.com")},
-    {"name": "楽天市場（食品・グルメ）", "url": "https://search.rakuten.co.jp/search/mall/%E9%A3%9F%E5%93%81+%E3%82%B0%E3%83%AB%E3%83%A1/", "desc": "楽天ポイントでお得に食品・グルメを購入", "rakuten": True, "logo": _GF.format("rakuten.co.jp")},
-    {"name": "Oisix（オイシックス）",   "url": "https://www.oisix.com",              "desc": "有機野菜・安心食材のお試しセット",         "logo": _GF.format("oisix.com")},
+    {"name": "ホットペッパーグルメ",          "url": "https://www.hotpepper.jp",           "desc": "お得なクーポンでレストラン予約",                   "logo": _GF.format("hotpepper.jp")},
+    {"name": "一休.comレストラン",            "url": "https://restaurant.ikyu.com",        "desc": "高級レストランの特別プラン",                       "logo": _GF.format("restaurant.ikyu.com")},
+    {"name": "楽天市場（食品・グルメ）",      "url": "https://search.rakuten.co.jp/search/mall/%E9%A3%9F%E5%93%81+%E3%82%B0%E3%83%AB%E3%83%A1/", "desc": "楽天ポイントでお得に食品・グルメを購入", "rakuten": True, "logo": _GF.format("rakuten.co.jp")},
+    {"name": "Yahoo!ショッピング（お取り寄せ）", "url": _vc_url("https://shopping.yahoo.co.jp/search?p=%E3%81%8A%E5%8F%96%E3%82%8A%E5%AF%84%E3%81%9B+%E3%82%B0%E3%83%AB%E3%83%A1"), "desc": "お取り寄せグルメをYahoo!ショッピングで",  "logo": _GF.format("shopping.yahoo.co.jp"), "a8net": True},
+    {"name": "Oisix（オイシックス）",         "url": "https://www.oisix.com",              "desc": "有機野菜・安心食材のお試しセット",                 "logo": _GF.format("oisix.com")},
 ]
 
 _BUSINESS_LINKS = [
@@ -761,10 +769,11 @@ _INVESTMENT_LINKS = [
 ]
 
 _GADGET_LINKS = [
-    {"name": "Amazon",                      "url": "https://www.amazon.co.jp/?tag=nexigen22-22", "desc": "最新ガジェットをお得に購入",              "logo": _GF.format("amazon.co.jp")},
-    {"name": "ヨドバシカメラ",              "url": "https://www.yodobashi.com",  "desc": "家電・ガジェットをポイント還元で",             "logo": _GF.format("yodobashi.com")},
-    {"name": "楽天市場（家電・ガジェット）", "url": "https://search.rakuten.co.jp/search/mall/%E3%82%AC%E3%82%B8%E3%82%A7%E3%83%83%E3%83%88+%E5%AE%B6%E9%9B%BB/", "desc": "楽天ポイントでお得にガジェット購入", "rakuten": True, "logo": _GF.format("rakuten.co.jp")},
-    {"name": "価格.com",                    "url": "https://kakaku.com",         "desc": "最安値・スペック比較で賢く購入",               "logo": _GF.format("kakaku.com")},
+    {"name": "Amazon",                        "url": "https://www.amazon.co.jp/?tag=nexigen22-22",   "desc": "最新ガジェットをお得に購入",              "logo": _GF.format("amazon.co.jp")},
+    {"name": "Yahoo!ショッピング（ガジェット）", "url": _vc_url("https://shopping.yahoo.co.jp/search?p=%E3%82%AC%E3%82%B8%E3%82%A7%E3%83%83%E3%83%88+%E5%AE%B6%E9%9B%BB"), "desc": "PayPayポイントでお得にガジェット購入", "logo": _GF.format("shopping.yahoo.co.jp"), "a8net": True},
+    {"name": "楽天市場（家電・ガジェット）",  "url": "https://search.rakuten.co.jp/search/mall/%E3%82%AC%E3%82%B8%E3%82%A7%E3%83%83%E3%83%88+%E5%AE%B6%E9%9B%BB/", "desc": "楽天ポイントでお得にガジェット購入", "rakuten": True, "logo": _GF.format("rakuten.co.jp")},
+    {"name": "ヨドバシカメラ",               "url": "https://www.yodobashi.com",                    "desc": "家電・ガジェットをポイント還元で",        "logo": _GF.format("yodobashi.com")},
+    {"name": "価格.com",                     "url": "https://kakaku.com",                           "desc": "最安値・スペック比較で賢く購入",          "logo": _GF.format("kakaku.com")},
 ]
 
 
