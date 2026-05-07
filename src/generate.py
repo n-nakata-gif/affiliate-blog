@@ -22,7 +22,8 @@ BRANCH = "main"
 MODEL = "claude-opus-4-7"
 RAKUTEN_ROOM_URL = "https://room.rakuten.co.jp/room_5034e46bc3/"
 MIN_CHARS = 3000
-TOPICS_PATH = "data/topics.json"
+TOPICS_PATH       = "data/topics.json"
+SUGGESTIONS_PATH  = "data/keyword_suggestions.json"
 
 _COMMON_PRINCIPLES = """\
 - 常に最新トレンドを意識し、読者に有益な情報を提供する
@@ -286,7 +287,63 @@ def load_topics() -> list:
         return json.load(f)
 
 
-def select_topic(topics: list, date_str: str, genre: str) -> dict:
+def load_and_consume_suggestion(genre: str, gh_token: str) -> dict | None:
+    """
+    keyword_suggestions.json からジャンル一致の提案を1件取り出す。
+    取り出した提案はファイルから削除し、GitHub に上書き保存する。
+    提案がなければ None を返す。
+    """
+    path = Path(SUGGESTIONS_PATH)
+    if not path.exists():
+        return None
+
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except Exception as e:
+        print(f"[keyword_suggest] ファイル読み込み失敗: {e}")
+        return None
+
+    theme = None
+    for block in data.get("suggestions", []):
+        if block.get("genre") == genre and block.get("themes"):
+            theme = block["themes"].pop(0)   # 先頭を取り出して削除
+            break
+
+    if theme is None:
+        return None
+
+    # 使用済みを反映して GitHub に保存
+    try:
+        push_file(gh_token, SUGGESTIONS_PATH,
+                  json.dumps(data, ensure_ascii=False, indent=2),
+                  f"chore: consume keyword suggestion [{genre}] [skip ci]")
+        print(f"[keyword_suggest] 使用済み提案を削除: {theme.get('title')}")
+    except Exception as e:
+        print(f"[keyword_suggest] ファイル更新失敗（スキップ）: {e}")
+
+    config = GENRE_CONFIG[genre]
+    return {
+        "genre":        genre,
+        "title":        theme.get("title", ""),
+        "tags":         config["default_tags"],
+        "summary":      theme.get("reason", ""),
+        "key_points":   [],
+        "keyword_main": theme.get("target_keyword", ""),
+        "keyword_sub":  [],
+        "target_reader": "",
+        "_source":      "keyword_suggest",
+    }
+
+
+def select_topic(topics: list, date_str: str, genre: str, gh_token: str = "") -> dict:
+    # ① キーワード提案を優先（最新のGSCデータに基づくテーマ）
+    if gh_token:
+        suggestion = load_and_consume_suggestion(genre, gh_token)
+        if suggestion:
+            print(f"[keyword_suggest] テーマ採用: {suggestion['title']}")
+            return suggestion
+
+    # ② フォールバック: topics.json
     if not topics:
         raise ValueError(f"{TOPICS_PATH} が空です")
     filtered = [t for t in topics if t.get("genre", "business") == genre]
@@ -1517,7 +1574,7 @@ def main():
     date_str = now.strftime("%Y%m%d")
 
     topics = load_topics()
-    topic  = select_topic(topics, date_str, genre)
+    topic  = select_topic(topics, date_str, genre, gh_token=gh_token)
 
     client = anthropic.Anthropic(api_key=api_key)
 
