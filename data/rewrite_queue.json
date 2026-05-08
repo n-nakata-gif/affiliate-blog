@@ -1,0 +1,40 @@
+{
+  "updated_at": "2026-05-09T05:30:58.697169+09:00",
+  "total": 3,
+  "pending": 0,
+  "queue": [
+    {
+      "slug": "best-coffee-grinder-2024",
+      "file": "best-coffee-grinder-2024.md",
+      "title": "コーヒーグラインダーおすすめ5選【2024年版】自宅で本格コーヒーを楽しもう",
+      "tags": "[\"コーヒー\", \"キッチン家電\", \"レビュー\"]",
+      "pubDate": "2024-11-01",
+      "genre": "gadget",
+      "status": "done",
+      "detected_at": "2026-05-09T05:30:16.558714+09:00",
+      "processed_at": "2026-05-09T05:30:58.696322+09:00"
+    },
+    {
+      "slug": "protein-supplement-guide",
+      "file": "protein-supplement-guide.md",
+      "title": "プロテイン選びの完全ガイド【2024年】初心者でも失敗しないおすすめ商品5選",
+      "tags": "[\"プロテイン\", \"筋トレ\", \"健康\"]",
+      "pubDate": "2024-12-01",
+      "genre": "gadget",
+      "status": "done",
+      "detected_at": "2026-05-09T05:30:16.560094+09:00",
+      "processed_at": "2026-05-09T05:30:58.696837+09:00"
+    },
+    {
+      "slug": "remote-work-desk-setup",
+      "file": "remote-work-desk-setup.md",
+      "title": "在宅ワークのデスク環境を整える！おすすめアイテム10選【テレワーク快適化】",
+      "tags": "[\"在宅ワーク\", \"デスク\", \"ガジェット\"]",
+      "pubDate": "2024-11-15",
+      "genre": "business",
+      "status": "done",
+      "detected_at": "2026-05-09T05:30:16.560139+09:00",
+      "processed_at": "2026-05-09T05:30:58.697165+09:00"
+    }
+  ]
+}

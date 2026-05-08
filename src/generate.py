@@ -1,3 +1,4 @@
+from __future__ import annotations  # Python 3.9 互換（dict | None 型ヒント対応）
 import argparse
 import os
 import sys

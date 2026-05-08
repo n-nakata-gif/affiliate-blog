@@ -1,0 +1,28 @@
+name: Affiliate Rewrite Job
+
+on:
+  workflow_dispatch:   # GitHub の Actions タブから手動実行 / detect_no_affiliate.py から自動トリガー
+
+jobs:
+  rewrite:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run affiliate rewrite (max 3 articles)
+        run: python src/rewrite_affiliate.py
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add src/content/blog/ data/rewrite_queue.json
+          git diff --staged --quiet || git commit -m "fix: add affiliate sections to articles [skip ci]"
+          git push
