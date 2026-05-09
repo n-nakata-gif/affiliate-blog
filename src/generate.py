@@ -1591,6 +1591,15 @@ def main():
     genre = args.genre
     config = GENRE_CONFIG[genre]
 
+    # ── ジャンルによるモデル切り替え ──
+    # 投資記事は正確性が特に重要なため Opus を使用（他は Sonnet でコスト削減）
+    global MODEL
+    if genre == "investment":
+        MODEL = "claude-opus-4-7"
+        logger.info("investmentジャンル → claude-opus-4-7 を使用")
+    else:
+        logger.info("ジャンル %s → claude-sonnet-4-6 を使用", genre)
+
     api_key  = os.environ.get("ANTHROPIC_API_KEY")
     gh_token = os.environ.get("GH_TOKEN")
 
