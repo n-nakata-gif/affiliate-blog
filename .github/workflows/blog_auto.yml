@@ -91,6 +91,27 @@ jobs:
           RAKUTEN_APP_ID: ${{ secrets.RAKUTEN_APP_ID }}
           RAKUTEN_AFFILIATE_ID: ${{ secrets.RAKUTEN_AFFILIATE_ID }}
         run: python src/generate.py --genre investment
+      - name: Notify failure by email
+        if: failure()
+        env:
+          GMAIL_USER:         ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+        run: |
+          python3 - <<'PYEOF'
+          import os, smtplib
+          from email.mime.text import MIMEText
+          u = os.environ.get("GMAIL_USER", "")
+          p = os.environ.get("GMAIL_APP_PASSWORD", "")
+          if not u or not p:
+              print("Gmail未設定のためスキップ"); exit(0)
+          msg = MIMEText("investment-post ジョブが失敗しました。\nhttps://github.com/n-nakata-gif/affiliate-blog/actions/workflows/blog_auto.yml", "plain", "utf-8")
+          msg["Subject"] = "【Novlify】⚠ 投資記事の自動投稿が失敗しました"
+          msg["From"] = u; msg["To"] = u
+          with smtplib.SMTP("smtp.gmail.com", 587) as s:
+              s.ehlo(); s.starttls(); s.login(u, p)
+              s.sendmail(u, u, msg.as_bytes())
+          print("失敗通知メールを送信しました")
+          PYEOF
 
   travel-post:
     if: github.event.schedule == '0 0 * * 6' || github.event_name == 'workflow_dispatch'
