@@ -12,33 +12,52 @@ on:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
+# 全ジョブ共通の自動修正ステップ（失敗時のみ実行）
+# auto_fix.py が Claude でエラーを解析し、修正できればコミットしてメール通知する
+
 jobs:
   gadget-post:
     if: github.event.schedule == '0 0 * * 1,4' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
       - run: pip install -r requirements.txt
       - name: Generate
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          X_API_KEY: ${{ secrets.X_API_KEY }}
-          X_API_SECRET: ${{ secrets.X_API_SECRET }}
-          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
-          X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
+          ANTHROPIC_API_KEY:     ${{ secrets.ANTHROPIC_API_KEY }}
+          GH_TOKEN:              ${{ secrets.GH_TOKEN }}
+          X_API_KEY:             ${{ secrets.X_API_KEY }}
+          X_API_SECRET:          ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN:        ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_SECRET:       ${{ secrets.X_ACCESS_SECRET }}
           PINTEREST_ACCESS_TOKEN: ${{ secrets.PINTEREST_ACCESS_TOKEN }}
-          UNSPLASH_API_KEY: ${{ secrets.UNSPLASH_API_KEY }}
+          UNSPLASH_API_KEY:      ${{ secrets.UNSPLASH_API_KEY }}
         run: python src/generate.py --genre gadget
+      - name: Auto-fix on failure
+        if: failure()
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GH_TOKEN:          ${{ secrets.GITHUB_TOKEN }}
+          GMAIL_USER:        ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+        run: python src/auto_fix.py --mode error --job gadget-post
 
   business-post:
     if: github.event.schedule == '0 0 * * 2,5' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -53,112 +72,135 @@ jobs:
         run: python src/analyze.py
       - name: Generate
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          GMAIL_USER: ${{ secrets.GMAIL_USER }}
-          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
-          X_API_KEY: ${{ secrets.X_API_KEY }}
-          X_API_SECRET: ${{ secrets.X_API_SECRET }}
-          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
-          X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
+          ANTHROPIC_API_KEY:     ${{ secrets.ANTHROPIC_API_KEY }}
+          GH_TOKEN:              ${{ secrets.GH_TOKEN }}
+          GMAIL_USER:            ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD:    ${{ secrets.GMAIL_APP_PASSWORD }}
+          X_API_KEY:             ${{ secrets.X_API_KEY }}
+          X_API_SECRET:          ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN:        ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_SECRET:       ${{ secrets.X_ACCESS_SECRET }}
           PINTEREST_ACCESS_TOKEN: ${{ secrets.PINTEREST_ACCESS_TOKEN }}
-          UNSPLASH_API_KEY: ${{ secrets.UNSPLASH_API_KEY }}
-          RAKUTEN_APP_ID: ${{ secrets.RAKUTEN_APP_ID }}
-          RAKUTEN_AFFILIATE_ID: ${{ secrets.RAKUTEN_AFFILIATE_ID }}
+          UNSPLASH_API_KEY:      ${{ secrets.UNSPLASH_API_KEY }}
+          RAKUTEN_APP_ID:        ${{ secrets.RAKUTEN_APP_ID }}
+          RAKUTEN_AFFILIATE_ID:  ${{ secrets.RAKUTEN_AFFILIATE_ID }}
         run: python src/generate.py --genre business
+      - name: Auto-fix on failure
+        if: failure()
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GH_TOKEN:          ${{ secrets.GITHUB_TOKEN }}
+          GMAIL_USER:        ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+        run: python src/auto_fix.py --mode error --job business-post
 
   investment-post:
     if: github.event.schedule == '0 0 * * 3' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
       - run: pip install -r requirements.txt
       - name: Generate
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          GMAIL_USER: ${{ secrets.GMAIL_USER }}
-          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
-          X_API_KEY: ${{ secrets.X_API_KEY }}
-          X_API_SECRET: ${{ secrets.X_API_SECRET }}
-          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
-          X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
+          ANTHROPIC_API_KEY:     ${{ secrets.ANTHROPIC_API_KEY }}
+          GH_TOKEN:              ${{ secrets.GH_TOKEN }}
+          GMAIL_USER:            ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD:    ${{ secrets.GMAIL_APP_PASSWORD }}
+          X_API_KEY:             ${{ secrets.X_API_KEY }}
+          X_API_SECRET:          ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN:        ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_SECRET:       ${{ secrets.X_ACCESS_SECRET }}
           PINTEREST_ACCESS_TOKEN: ${{ secrets.PINTEREST_ACCESS_TOKEN }}
-          UNSPLASH_API_KEY: ${{ secrets.UNSPLASH_API_KEY }}
-          RAKUTEN_APP_ID: ${{ secrets.RAKUTEN_APP_ID }}
-          RAKUTEN_AFFILIATE_ID: ${{ secrets.RAKUTEN_AFFILIATE_ID }}
+          UNSPLASH_API_KEY:      ${{ secrets.UNSPLASH_API_KEY }}
+          RAKUTEN_APP_ID:        ${{ secrets.RAKUTEN_APP_ID }}
+          RAKUTEN_AFFILIATE_ID:  ${{ secrets.RAKUTEN_AFFILIATE_ID }}
         run: python src/generate.py --genre investment
-      - name: Notify failure by email
+      - name: Auto-fix on failure
         if: failure()
         env:
-          GMAIL_USER:         ${{ secrets.GMAIL_USER }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GH_TOKEN:          ${{ secrets.GITHUB_TOKEN }}
+          GMAIL_USER:        ${{ secrets.GMAIL_USER }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
-        run: |
-          python3 - <<'PYEOF'
-          import os, smtplib
-          from email.mime.text import MIMEText
-          u = os.environ.get("GMAIL_USER", "")
-          p = os.environ.get("GMAIL_APP_PASSWORD", "")
-          if not u or not p:
-              print("Gmail未設定のためスキップ"); exit(0)
-          msg = MIMEText("investment-post ジョブが失敗しました。\nhttps://github.com/n-nakata-gif/affiliate-blog/actions/workflows/blog_auto.yml", "plain", "utf-8")
-          msg["Subject"] = "【Novlify】⚠ 投資記事の自動投稿が失敗しました"
-          msg["From"] = u; msg["To"] = u
-          with smtplib.SMTP("smtp.gmail.com", 587) as s:
-              s.ehlo(); s.starttls(); s.login(u, p)
-              s.sendmail(u, u, msg.as_bytes())
-          print("失敗通知メールを送信しました")
-          PYEOF
+        run: python src/auto_fix.py --mode error --job investment-post
 
   travel-post:
     if: github.event.schedule == '0 0 * * 6' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
       - run: pip install -r requirements.txt
       - name: Generate
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          GMAIL_USER: ${{ secrets.GMAIL_USER }}
-          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
-          X_API_KEY: ${{ secrets.X_API_KEY }}
-          X_API_SECRET: ${{ secrets.X_API_SECRET }}
-          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
-          X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
+          ANTHROPIC_API_KEY:     ${{ secrets.ANTHROPIC_API_KEY }}
+          GH_TOKEN:              ${{ secrets.GH_TOKEN }}
+          GMAIL_USER:            ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD:    ${{ secrets.GMAIL_APP_PASSWORD }}
+          X_API_KEY:             ${{ secrets.X_API_KEY }}
+          X_API_SECRET:          ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN:        ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_SECRET:       ${{ secrets.X_ACCESS_SECRET }}
           PINTEREST_ACCESS_TOKEN: ${{ secrets.PINTEREST_ACCESS_TOKEN }}
-          UNSPLASH_API_KEY: ${{ secrets.UNSPLASH_API_KEY }}
-          RAKUTEN_APP_ID: ${{ secrets.RAKUTEN_APP_ID }}
-          RAKUTEN_AFFILIATE_ID: ${{ secrets.RAKUTEN_AFFILIATE_ID }}
+          UNSPLASH_API_KEY:      ${{ secrets.UNSPLASH_API_KEY }}
+          RAKUTEN_APP_ID:        ${{ secrets.RAKUTEN_APP_ID }}
+          RAKUTEN_AFFILIATE_ID:  ${{ secrets.RAKUTEN_AFFILIATE_ID }}
         run: python src/generate.py --genre travel
+      - name: Auto-fix on failure
+        if: failure()
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GH_TOKEN:          ${{ secrets.GITHUB_TOKEN }}
+          GMAIL_USER:        ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+        run: python src/auto_fix.py --mode error --job travel-post
 
   gourmet-post:
     if: github.event.schedule == '0 0 * * 0' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
       - run: pip install -r requirements.txt
       - name: Generate
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          GMAIL_USER: ${{ secrets.GMAIL_USER }}
-          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
-          X_API_KEY: ${{ secrets.X_API_KEY }}
-          X_API_SECRET: ${{ secrets.X_API_SECRET }}
-          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
-          X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
+          ANTHROPIC_API_KEY:     ${{ secrets.ANTHROPIC_API_KEY }}
+          GH_TOKEN:              ${{ secrets.GH_TOKEN }}
+          GMAIL_USER:            ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD:    ${{ secrets.GMAIL_APP_PASSWORD }}
+          X_API_KEY:             ${{ secrets.X_API_KEY }}
+          X_API_SECRET:          ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN:        ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_SECRET:       ${{ secrets.X_ACCESS_SECRET }}
           PINTEREST_ACCESS_TOKEN: ${{ secrets.PINTEREST_ACCESS_TOKEN }}
-          UNSPLASH_API_KEY: ${{ secrets.UNSPLASH_API_KEY }}
-          RAKUTEN_APP_ID: ${{ secrets.RAKUTEN_APP_ID }}
-          RAKUTEN_AFFILIATE_ID: ${{ secrets.RAKUTEN_AFFILIATE_ID }}
+          UNSPLASH_API_KEY:      ${{ secrets.UNSPLASH_API_KEY }}
+          RAKUTEN_APP_ID:        ${{ secrets.RAKUTEN_APP_ID }}
+          RAKUTEN_AFFILIATE_ID:  ${{ secrets.RAKUTEN_AFFILIATE_ID }}
         run: python src/generate.py --genre gourmet
+      - name: Auto-fix on failure
+        if: failure()
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GH_TOKEN:          ${{ secrets.GITHUB_TOKEN }}
+          GMAIL_USER:        ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+        run: python src/auto_fix.py --mode error --job gourmet-post
