@@ -378,6 +378,17 @@ def count_body_chars(md: str) -> int:
 
 # ── 記事生成（Claude API） ────────────────────────────────────
 
+# ── ジャンル別会話キャラクター ─────────────────────────────────────
+# (質問役, 回答役) — 読者が感情移入しやすい具体的なペルソナ
+_DIALOGUE_CHARS: dict[str, tuple[str, str]] = {
+    "business":   ("まさと（副業を始めたい30代の会社員）",      "ひろ（副業歴5年・本業と掛け持ちで月10万達成）"),
+    "investment": ("ゆい（投資デビューしたての専業主婦）",       "けん（個人投資家・運用歴10年・配当生活目標）"),
+    "gadget":     ("たける（デジモノ疎いがほしいサラリーマン）", "そら（ガジェットマニアのフリーエンジニア）"),
+    "travel":     ("あき（初の国内旅行を計画中のパパ）",        "りえ（年10回以上旅する旅行ブロガー）"),
+    "gourmet":    ("のぞみ（食べ歩きが趣味のアラサーOL）",      "しょうた（地元の隠れ名店を知り尽くす常連客）"),
+}
+
+
 def build_prompt(topic: dict, date_str: str, genre: str) -> str:
     today = datetime.strptime(date_str, "%Y%m%d").strftime("%Y-%m-%d")
     config = GENRE_CONFIG.get(genre, GENRE_CONFIG["business"])
@@ -410,6 +421,7 @@ def build_prompt(topic: dict, date_str: str, genre: str) -> str:
         seo_section = ""
 
     body_sections = _BODY_SECTIONS.get(genre, _BODY_SECTIONS["business"])
+    char_a, char_b = _DIALOGUE_CHARS.get(genre, _DIALOGUE_CHARS["business"])
 
     return f"""以下のトピックについて、ブログ記事（Markdown形式）を作成してください。
 
@@ -440,17 +452,17 @@ tags: {tags_str}
 {body_sections}
 
 ## 会話シーンの挿入（必須）
-記事中の自然な箇所に、以下の形式で **1〜2箇所**「読者Aさんと詳しいBさんの会話」を挿入してください。
+記事中の自然な箇所に、以下の形式で **1〜2箇所** 会話を挿入してください。
 
 ```
-> 💬 **Aさん（読者）**：「○○って実際どうなんですか？難しそうで…」
+> 💬 **{char_a}**：「○○って実際どうなんですか？難しそうで…」
 >
-> 💬 **Bさん（詳しい人）**：「確かに最初はとっつきにくいですよね。でも実は○○のコツさえ押さえれば大丈夫です！」
+> 💬 **{char_b}**：「確かに最初はとっつきにくいですよね。でも実は○○のコツさえ押さえれば大丈夫です！」
 ```
 
 - 会話は記事テーマに関連した自然な内容にする
-- Aさんは読者が感じる素直な疑問・不安を代弁する
-- Bさんは共感しつつ具体的なヒントを答える（断定的すぎない）
+- {char_a.split('（')[0]}は読者が感じる素直な疑問・不安を代弁する
+- {char_b.split('（')[0]}は共感しつつ具体的なヒントを答える（断定的すぎない）
 - 見出しの直後など、テキストの流れを補完する位置に置く
 
 ## SVG図解の挿入（必須）

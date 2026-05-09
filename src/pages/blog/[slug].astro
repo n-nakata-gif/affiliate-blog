@@ -502,14 +502,31 @@ const articleSchema = {
     border-top: 2px solid #f3f4f6;
     margin: 2rem 0;
   }
+  /* テーブルスクロールラッパー（JSで自動付与） */
+  .article-body .table-scroll-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 1.5rem 0;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  /* スマホ：右端にスクロールヒントのグラデーション */
+  @media (max-width: 640px) {
+    .article-body .table-scroll-wrapper {
+      background: linear-gradient(to right, #fff 0%, transparent 4%) left,
+                  linear-gradient(to left,  #fff 0%, transparent 4%) right;
+      background-attachment: local, local;
+    }
+  }
   .article-body table {
     width: 100%;
     border-collapse: collapse;
-    margin: 1.5rem 0;
+    margin: 0;
     font-size: 0.875rem;
-    border-radius: 8px;
+    border-radius: 0;
     overflow: hidden;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    min-width: 480px;
+    box-shadow: none;
   }
   .article-body th {
     background: #f59e0b;
@@ -558,3 +575,19 @@ const articleSchema = {
   /* 会話ブロック強調 */
   .article-body blockquote strong { color: #d97706; }
 </style>
+
+<!-- テーブルをスマホでスワイプスクロール可能にする -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const body = document.querySelector('.article-body');
+    if (!body) return;
+    body.querySelectorAll('table').forEach(table => {
+      // すでにラップ済みならスキップ
+      if (table.parentElement?.classList.contains('table-scroll-wrapper')) return;
+      const wrapper = document.createElement('div');
+      wrapper.className = 'table-scroll-wrapper';
+      table.parentNode.insertBefore(wrapper, table);
+      wrapper.appendChild(table);
+    });
+  });
+</script>
