@@ -1,0 +1,13 @@
+Novlify 収益レポート 2026/05/11
+
+■ AdSense  未連携（ADSENSE_PUBLISHER_ID を Secrets に追加で自動集計）
+
+■ 今週の投稿  1本
+  ガジェット 1本
+
+■ 各プラットフォーム確認
+  AdSense: https://adsense.google.com/adsense/
+  A8.net: https://www.a8.net/
+  ValueCommerce: https://member.valuecommerce.com/
+  Amazon: https://affiliate.amazon.co.jp/
+  楽天アフィリエイト: https://affiliate.rakuten.co.jp/
