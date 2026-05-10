@@ -2,7 +2,6 @@ name: Weekly Quality Check
 
 on:
   schedule:
-    # 毎週木曜 10:00 JST = 01:00 UTC
     - cron: "0 1 * * 0"   # 毎週日曜 10:00 JST（月曜に確認）
   workflow_dispatch:
 
