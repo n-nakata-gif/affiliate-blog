@@ -69,7 +69,7 @@ _COMMON_PRINCIPLES = """\
 - 複数の商品・サービスを紹介する場合は比較表を使って視覚化し、読者が迷わず選べるようにする（選定基準・比較ポイントを明示すること）
 - 比較表（Markdownテーブル）の最後の列には「詳細・公式サイト」列を追加し、各サービス・商品の公式サイトや購入ページへのMarkdownリンク `[詳細はこちら](URL)` を記載すること。URLが不明な場合は代表的な検索URLを入れる
 - 知名度の低いサービスを紹介する場合は、同ジャンルの比較・まとめ記事を先に作り、その内部リンク先として個別記事を設置する構成にする
-- **クレジットカード申込リンクは記事本文に絶対に含めない**（楽天カード・エポスカード・三井住友カード等のカード申込アフィリエイトリンク未提携のため）。クレジットカードを話題として言及することは可能だが、申込ページへのURLは記載しない"""
+- **クレジットカード申込リンクは記事本文に絶対に含めない**（楽天カード・三井住友カード等のカード申込アフィリエイトリンク未提携のため）。ただし**エポスカードはA8.net提携済みのため申込リンク掲載可**。クレジットカードを話題として言及することは可能だが、未提携カードの申込ページへのURLは記載しない"""
 
 _TITLE_TECHNIQUES = """\
 - 複合キーワード（2〜3語）を使い、ニッチな検索ニーズに応えるタイトルにする（例：「副業 初心者 30代」「NISA 積立 少額 始め方」）
@@ -731,6 +731,7 @@ _TRAVEL_LINKS = [
     {"name": "楽天トラベル",        "url": "https://travel.rakuten.co.jp",                                  "desc": "楽天ポイントで宿・航空券をお得に",      "rakuten": True, "logo": _GF.format("travel.rakuten.co.jp")},
     {"name": "一休.com",            "url": "https://px.a8.net/svt/ejp?a8mat=4B3HQJ+A2L06Q+1OK+6LHDU",    "desc": "高級旅館・ホテルのタイムセールプラン",  "logo": _GF.format("ikyu.com"),     "a8net": True},
     {"name": "agoda",               "url": "https://px.a8.net/svt/ejp?a8mat=4B3HQJ+A36FSI+4X1W+5YRHE",   "desc": "国内・海外ホテルを最大85%OFFで予約",    "logo": _GF.format("agoda.com"),    "a8net": True},
+    {"name": "エポスカード",        "url": "https://px.a8.net/svt/ejp?a8mat=4B3GYK+5DHWDU+38L8+BXYE9",   "desc": "年会費永年無料・海外旅行保険が自動付帯", "logo": _GF.format("eposcard.co.jp"), "a8net": True},
     {"name": "Yahoo!ショッピング（旅行グッズ）", "url": _vc_url("https://shopping.yahoo.co.jp/search?p=%E6%97%85%E8%A1%8C+%E3%82%B0%E3%83%83%E3%82%BA"), "desc": "旅行グッズ・スーツケースをお得に",  "logo": _GF.format("shopping.yahoo.co.jp"), "a8net": True},
     {"name": "skyticket",           "url": "https://skyticket.jp",                                          "desc": "格安航空券・新幹線・ホテル比較",         "logo": _GF.format("skyticket.jp")},
 ]
