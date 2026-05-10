@@ -25,7 +25,12 @@ BLOG_DIR = Path(__file__).parent / "content" / "blog"
 DATA_DIR = Path(__file__).parent.parent / "data"
 SRC_DIR  = Path(__file__).parent
 CLIENT   = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY", ""))
-MODEL    = "claude-sonnet-4-5"
+MODEL    = "claude-sonnet-4-6"
+
+# アフィリエイトセクション区切りマーカー
+AFFILIATE_MARKER = '<div id="affiliate-section"></div>'
+# PR告知divパターン（先頭に置かれる広告表示）
+PR_DIV_PATTERN   = re.compile(r'<div[^>]*background:#fff8e1[^>]*>.*?</div>\s*', re.DOTALL)
 
 # ── ユーティリティ ──────────────────────────────────────────────
 
@@ -93,10 +98,11 @@ def fix_quality_issues() -> list[str]:
                 result = fix_bad_title(issue)
             elif itype == "dup_title":
                 result = fix_dup_title(issue)
+            elif itype == "short_body":
+                result = fix_short_body(issue)
             else:
-                # short_body は本文拡張リスクが高いため人間判断に委ねる
                 issue["status"] = "skipped"
-                log_lines.append(f"SKIP {itype}: {issue.get('file','')} (人間判断推奨)")
+                log_lines.append(f"SKIP {itype}: {issue.get('file','')} (未対応タイプ)")
                 continue
 
             if result:
@@ -118,6 +124,74 @@ def fix_quality_issues() -> list[str]:
 
     print("\n".join(log_lines))
     return changed_files, log_lines
+
+
+def _count_chars(body: str) -> int:
+    """quality_check.py と同じロジックで本文文字数を計算"""
+    t = re.sub(r"<[^>]+>", "", body)
+    t = re.sub(r"^#{1,6}\s+", "", t, flags=re.MULTILINE)
+    t = re.sub(r"\*{1,3}(.+?)\*{1,3}", r"\1", t)
+    t = re.sub(r"!\[.*?\]\(.*?\)", "", t)
+    t = re.sub(r"\[(.+?)\]\(.*?\)", r"\1", t)
+    t = re.sub(r"```[\s\S]*?```", "", t)
+    return len(re.sub(r"\s+", "", t))
+
+
+def fix_short_body(issue: dict) -> str | None:
+    """文字数不足記事を Claude でリライトして 2000 字以上に拡充する"""
+    path = BLOG_DIR / issue["file"]
+    if not path.exists():
+        return None
+
+    content  = path.read_text(encoding="utf-8")
+    meta, body, fm_raw = parse_frontmatter(content)
+    title    = meta.get("title", "")
+    cur_chars = issue.get("chars", 0)
+
+    # アフィリエイトセクション（末尾）を分離して保持
+    if AFFILIATE_MARKER in body:
+        main_body, _, affiliate_tail = body.partition(AFFILIATE_MARKER)
+        affiliate_section = AFFILIATE_MARKER + affiliate_tail
+    else:
+        main_body = body
+        affiliate_section = ""
+
+    # PR告知divを分離して保持（冒頭の広告表示）
+    pr_match = PR_DIV_PATTERN.search(main_body)
+    pr_div   = pr_match.group(0).strip() if pr_match else ""
+    clean_body = PR_DIV_PATTERN.sub("", main_body, count=1).strip()
+
+    resp = CLIENT.messages.create(
+        model=MODEL, max_tokens=6000,
+        messages=[{"role": "user", "content":
+            f"以下の記事本文を、読者に役立つ情報（FAQ・具体例・注意点・比較表など）を追加して"
+            f"2000字以上になるようリライトしてください。\n\n"
+            f"タイトル：{title}\n"
+            f"現在：約{cur_chars}字 → 目標：2000字以上\n\n"
+            f"【ルール】\n"
+            f"- 既存の見出し構成・製品情報・価格帯は維持する\n"
+            f"- Markdownで記述（## 見出し、表、**太字**）\n"
+            f"- HTML広告コード・アフィリエイトリンクは含めない\n"
+            f"- 本文のみ返す（前置き・説明は不要）\n\n"
+            f"【現在の本文】\n{clean_body}"}]
+    )
+    new_body = resp.content[0].text.strip()
+
+    # 文字数が足りなければ失敗扱い
+    if _count_chars(new_body) < 2000:
+        return None
+
+    # 組み立て: フロントマター → PR告知 → リライト本文 → アフィリエイトセクション
+    parts: list[str] = [fm_raw, ""]
+    if pr_div:
+        parts += [pr_div, ""]
+    parts.append(new_body)
+    if affiliate_section:
+        parts += ["", affiliate_section]
+
+    path.write_text("\n".join(parts), encoding="utf-8")
+    print(f"  本文リライト: {cur_chars}字 → {_count_chars(new_body)}字 ({path.name})")
+    return str(path)
 
 
 def fix_bad_title(issue: dict) -> str | None:
