@@ -138,6 +138,8 @@ def fix_bad_title(issue: dict) -> str | None:
             f"方向性:「{direction}」。タイトルのみ返してください（前置き不要）。\n\n{old_title}"}]
     )
     new_title = resp.content[0].text.strip().strip('"').strip("'")
+    # Claudeが「# タイトル」形式で返すことがあるので除去
+    new_title = re.sub(r"^#+\s*", "", new_title)
     if not (32 <= len(new_title) <= 60):
         return None
 
@@ -181,6 +183,8 @@ def fix_dup_title(issue: dict) -> str | None:
             f"タイトルのみ返してください（前置き不要）。\n\n{old_title}"}]
     )
     new_title = resp.content[0].text.strip().strip('"').strip("'")
+    # Claudeが「# タイトル」形式で返すことがあるので除去
+    new_title = re.sub(r"^#+\s*", "", new_title)
     if new_title == old_title or not (32 <= len(new_title) <= 60):
         return None
 

@@ -1,59 +1,26 @@
 {
-  "updated_at": "2026-05-09T11:08:22.507755+09:00",
+  "updated_at": "2026-05-10T17:43:09.484638+09:00",
   "issues": [
     {
       "type": "short_body",
       "file": "best-coffee-grinder-2024.md",
       "chars": 1177,
       "title": "コーヒーグラインダーおすすめ5選【2024年版】自宅で本格コーヒーを楽しもう",
-      "status": "skipped"
+      "status": "pending"
     },
     {
       "type": "short_body",
       "file": "protein-supplement-guide.md",
       "chars": 1615,
       "title": "プロテイン選びの完全ガイド【2024年】初心者でも失敗しないおすすめ商品5選",
-      "status": "skipped"
+      "status": "pending"
     },
     {
       "type": "short_body",
       "file": "remote-work-desk-setup.md",
       "chars": 1592,
       "title": "在宅ワークのデスク環境を整える！おすすめアイテム10選【テレワーク快適化】",
-      "status": "skipped"
-    },
-    {
-      "type": "bad_title",
-      "file": "gourmet_20260427.md",
-      "length": 28,
-      "issue": "短すぎ",
-      "title": "旬の食材レシピ完全ガイド：季節の恵みで作る簡単レシピ4選",
-      "status": "error"
-    },
-    {
-      "type": "bad_title",
-      "file": "gourmet_20260429.md",
-      "length": 28,
-      "issue": "短すぎ",
-      "title": "旬の食材レシピガイド：季節の恵みを活かす料理と保存のコツ",
-      "status": "error"
-    },
-    {
-      "type": "bad_title",
-      "file": "gourmet_20260503.md",
-      "length": 31,
-      "issue": "短すぎ",
-      "title": "旬の食材レシピ12選｜季節の恵みで作る簡単絶品料理と保存のコツ",
-      "status": "error"
-    },
-    {
-      "type": "dup_title",
-      "files": [
-        "travel_20260427.md",
-        "travel_20260429.md"
-      ],
-      "title": "知らないと損する格安旅行のコツ7選｜交通費・宿泊費を半額にする予約術",
-      "status": "error"
+      "status": "pending"
     }
   ]
 }
