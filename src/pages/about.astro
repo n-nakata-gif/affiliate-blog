@@ -4,7 +4,7 @@ import Layout from '../layouts/Layout.astro';
 
 <Layout
   title="運営者プロフィール | Novlify"
-  description="Novlify運営者Nori（環境計量士・理系専門職）のプロフィール。副業・投資・旅行・グルメを本音で発信するブログの運営方針をご紹介します。"
+  description="Novlify運営者Nori（佐賀県在住・化学系会社員）のプロフィール。家族5人のパパが、日々の経験をもとに副業・投資・旅行・グルメ情報を発信するブログの運営方針をご紹介します。"
 >
   <Fragment slot="head">
     <script type="application/ld+json" set:html={JSON.stringify({
@@ -13,8 +13,8 @@ import Layout from '../layouts/Layout.astro';
       "@id": "https://novlify.jp/about#author",
       "name": "Nori",
       "url": "https://novlify.jp/about",
-      "description": "長崎県在住の環境計量士。理系専門職として働きながら副業・投資・旅行・グルメ・ガジェット情報を発信。",
-      "jobTitle": "環境計量士・ブロガー",
+      "description": "佐賀県在住の化学系会社員。妻と子供3人の5人家族。日々の経験をもとに副業・投資・旅行・グルメ・ガジェット情報を発信。",
+      "jobTitle": "化学系会社員・ブロガー",
       "knowsAbout": ["副業", "投資", "資産運用", "旅行", "グルメ", "ガジェット"],
       "worksFor": {
         "@type": "Organization",
@@ -23,7 +23,7 @@ import Layout from '../layouts/Layout.astro';
       },
       "address": {
         "@type": "PostalAddress",
-        "addressRegion": "長崎県",
+        "addressRegion": "佐賀県",
         "addressCountry": "JP"
       }
     })} />
@@ -50,21 +50,21 @@ import Layout from '../layouts/Layout.astro';
         </div>
         <div class="flex-1">
           <h2 class="text-xl font-black text-slate-800 mb-1">Nori（のり）</h2>
-          <p class="text-sm text-amber-600 font-bold mb-3">Novlify 運営者 ／ 環境計量士</p>
+          <p class="text-sm text-amber-600 font-bold mb-3">Novlify 運営者 ／ 佐賀県在住</p>
           <p class="text-sm">
-            長崎県在住。国家資格「環境計量士」を持つ理系専門職として、水質・騒音振動の計量証明業務に携わっています。
-            本業で培った「データに基づく客観的な分析力」を活かし、副業・投資・ガジェット情報を正直・丁寧に発信しています。
+            佐賀県在住の化学系会社員。妻と子供3人の5人家族のパパです。
+            仕事・子育て・趣味のなかで得た経験や気づきを、同じ境遇の方に役立ててもらいたくてブログを始めました。
           </p>
         </div>
       </section>
 
-      <!-- 資格・専門性バッジ -->
+      <!-- バッジ -->
       <section class="flex flex-wrap gap-2">
         <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100">
-          🏅 環境計量士（国家資格）
+          🧪 化学系専門職
         </span>
         <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-green-50 text-green-700 border border-green-100">
-          📊 データ分析・理系専門職
+          👨‍👩‍👧‍👦 妻・子供3人の5人家族
         </span>
         <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-100">
           💹 投資歴5年以上
@@ -82,11 +82,12 @@ import Layout from '../layouts/Layout.astro';
           ブログを始めたきっかけ
         </h2>
         <p class="text-sm">
-          専門職として安定した収入を得ながらも、「収入の柱を増やしたい」「お金の知識をもっと身につけたい」という思いから、副業・投資の世界に飛び込みました。
+          会社員として働きながら、子育てや日々の生活のなかで感じた「もっとうまくやれる方法があるはず」という気持ちが積み重なっていきました。
+          副業・投資・節約・旅行の計画…自分が試行錯誤して学んできたことを、同じように悩む誰かに届けられたら、と思いNovlifyを立ち上げました。
         </p>
         <p class="text-sm mt-3">
-          調べれば調べるほど感じたのは、「ネット上の情報の多くが、誇張や偏りだらけ」ということ。
-          理系の視点で情報を精査し、実際に使ってみた感想を<strong>誇張なし・本音</strong>で伝えるブログがあればいいと思い、Novlifyを立ち上げました。
+          インターネット上には情報があふれていますが、「実際に試した人の本音」は意外と少ないと感じています。
+          難しい言葉は使わず、自分の経験を<strong>正直・丁寧</strong>に伝えることを大切にしています。
         </p>
       </section>
 
@@ -144,7 +145,7 @@ import Layout from '../layouts/Layout.astro';
             <span class="text-2xl">✈️</span>
             <div>
               <p class="font-bold text-slate-700">旅行・観光</p>
-              <p class="text-slate-500 text-xs mt-0.5">九州を中心とした国内旅行、格安プランの探し方</p>
+              <p class="text-slate-500 text-xs mt-0.5">九州を中心とした国内旅行、家族旅行プランの探し方</p>
             </div>
           </div>
           <div class="flex items-start gap-3 p-3 bg-slate-50 rounded-xl">
@@ -179,16 +180,19 @@ import Layout from '../layouts/Layout.astro';
         投資判断は必ずご自身の責任で行ってください。記事の内容は執筆時点の情報であり、最新情報は各公式サイトをご確認ください。</p>
       </section>
 
-      <!-- お問い合わせ -->
+      <!-- リンク -->
       <section>
-        <h2 class="text-base font-bold text-slate-800 mb-2 pb-2 border-b-2 border-amber-100">
-          お問い合わせ
+        <h2 class="text-base font-bold text-slate-800 mb-3 pb-2 border-b-2 border-amber-100">
+          関連ページ
         </h2>
-        <p class="text-sm">
-          ご質問・ご意見・取材・コラボのご依頼は
-          <a href="/contact" class="text-amber-600 hover:text-amber-700 underline font-semibold">お問い合わせページ</a>
-          からお気軽にどうぞ。
-        </p>
+        <div class="flex flex-wrap gap-3 text-sm">
+          <a href="/contact" class="inline-flex items-center gap-1.5 px-4 py-2 bg-amber-50 text-amber-700 rounded-lg border border-amber-200 hover:bg-amber-100 font-semibold transition-colors">
+            ✉️ お問い合わせ
+          </a>
+          <a href="/privacy-policy" class="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-50 text-slate-600 rounded-lg border border-slate-200 hover:bg-slate-100 font-semibold transition-colors">
+            🔒 プライバシーポリシー
+          </a>
+        </div>
       </section>
 
     </div>
