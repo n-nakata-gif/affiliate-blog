@@ -2,11 +2,11 @@ name: Blog Auto Post
 
 on:
   schedule:
-    - cron: "0 0 * * 1,4"   # 月・木 09:00 JST
-    - cron: "0 0 * * 2,5"   # 火・金 09:00 JST
-    - cron: "0 0 * * 3"     # 水 09:00 JST
-    - cron: "0 0 * * 6"     # 土 09:00 JST
-    - cron: "0 0 * * 0"     # 日 09:00 JST
+    - cron: "0 0 * * 1,4"   # 月・木 09:00 JST → gourmet（週2本）
+    - cron: "0 0 * * 2,6"   # 火・土 09:00 JST → travel（週2本）
+    - cron: "0 0 * * 3"     # 水 09:00 JST     → business（週1本）
+    - cron: "0 0 * * 5"     # 金 09:00 JST     → investment（週1本）
+    - cron: "0 0 * * 0"     # 日 09:00 JST     → gadget（週1本）
   workflow_dispatch:
 
 env:
@@ -17,7 +17,7 @@ env:
 
 jobs:
   gadget-post:
-    if: github.event.schedule == '0 0 * * 1,4' || github.event_name == 'workflow_dispatch'
+    if: github.event.schedule == '0 0 * * 0' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -50,7 +50,7 @@ jobs:
         run: python src/auto_fix.py --mode error --job gadget-post
 
   business-post:
-    if: github.event.schedule == '0 0 * * 2,5' || github.event_name == 'workflow_dispatch'
+    if: github.event.schedule == '0 0 * * 3' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -95,7 +95,7 @@ jobs:
         run: python src/auto_fix.py --mode error --job business-post
 
   investment-post:
-    if: github.event.schedule == '0 0 * * 3' || github.event_name == 'workflow_dispatch'
+    if: github.event.schedule == '0 0 * * 5' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -132,7 +132,7 @@ jobs:
         run: python src/auto_fix.py --mode error --job investment-post
 
   travel-post:
-    if: github.event.schedule == '0 0 * * 6' || github.event_name == 'workflow_dispatch'
+    if: github.event.schedule == '0 0 * * 2,6' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -169,7 +169,7 @@ jobs:
         run: python src/auto_fix.py --mode error --job travel-post
 
   gourmet-post:
-    if: github.event.schedule == '0 0 * * 0' || github.event_name == 'workflow_dispatch'
+    if: github.event.schedule == '0 0 * * 1,4' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       contents: write
