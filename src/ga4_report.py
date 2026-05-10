@@ -114,5 +114,22 @@ if __name__ == "__main__":
         print(f"GA4取得失敗（スキップ）: {e}")
         raise SystemExit(0)
     print(f"期間: {report['period']}")
-    print(f"PV: {report['summary']['pageviews']}, Sessions: {report['summary']['sessions']}")
-    send_report(report)
+    s = report["summary"]
+    print(f"PV: {s['pageviews']}, Sessions: {s['sessions']}")
+    if os.environ.get("WEEKLY_BATCH") == "1":
+        from pathlib import Path
+        lines = [
+            f"期間: {report['period']}",
+            f"PV: {s['pageviews']:,}  セッション: {s['sessions']:,}  ユーザー: {s['users']:,}",
+            "",
+            "■ 記事別TOP10",
+        ] + [f"  {p['title'][:40]}: {p['pv']:,} PV" for p in report["top_pages"]] + [
+            "",
+            "■ 流入チャネル",
+        ] + [f"  {c['channel']}: {c['sessions']:,}回" for c in report["channels"]]
+        report_dir = Path("data/weekly_reports")
+        report_dir.mkdir(parents=True, exist_ok=True)
+        (report_dir / "ga4.txt").write_text("\n".join(lines), encoding="utf-8")
+        print("GA4レポートを保存（週次まとめ送信）")
+    else:
+        send_report(report)

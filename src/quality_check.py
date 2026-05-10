@@ -135,4 +135,10 @@ if __name__ == "__main__":
     save_issues(results)
     text = build_text(results, date_str)
     print(text)
-    send_email(text, date_str, n)
+    if os.environ.get("WEEKLY_BATCH") == "1":
+        report_dir = DATA_DIR / "weekly_reports"
+        report_dir.mkdir(parents=True, exist_ok=True)
+        (report_dir / "quality.txt").write_text(text, encoding="utf-8")
+        print("品質レポートを保存（週次まとめ送信）")
+    else:
+        send_email(text, date_str, n)

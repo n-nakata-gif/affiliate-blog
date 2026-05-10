@@ -530,9 +530,33 @@ def main():
             del history[old_key]
     save_history(history)
 
-    # メールレポート送信
-    html = build_report_html(date_str, current, changes, rewrite_triggers)
-    send_report_email(html, date_str)
+    # メールレポート送信 or バッチ保存
+    if os.environ.get("WEEKLY_BATCH") == "1":
+        from pathlib import Path
+        lines = [
+            f"計測: {len(current)}記事",
+            f"急落: {len(changes['dropped'])}件  改善: {len(changes['improved'])}件  新規: {len(changes['new_entries'])}件",
+        ]
+        if changes["dropped"]:
+            lines.append("急落TOP3:")
+            for r in changes["dropped"][:3]:
+                lines.append(f"  {shorten_url(r['url'])}: {r['prev_position']}位→{r['position']}位")
+        if changes["improved"]:
+            lines.append("改善TOP3:")
+            for r in changes["improved"][:3]:
+                lines.append(f"  {shorten_url(r['url'])}: {r['prev_position']}位→{r['position']}位")
+        high = [t for t in rewrite_triggers if t["priority"] == "high"]
+        if high:
+            lines.append(f"リライト高優先: {len(high)}件")
+            for t in high[:3]:
+                lines.append(f"  {shorten_url(t['url'])} ({t['position']}位)")
+        report_dir = Path("data/weekly_reports")
+        report_dir.mkdir(parents=True, exist_ok=True)
+        (report_dir / "ranking.txt").write_text("\n".join(lines), encoding="utf-8")
+        print("順位レポートを保存（週次まとめ送信）")
+    else:
+        html = build_report_html(date_str, current, changes, rewrite_triggers)
+        send_report_email(html, date_str)
 
     # コンソールサマリー出力
     print("\n=== リライト高優先候補 ===")

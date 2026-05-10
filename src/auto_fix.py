@@ -293,7 +293,13 @@ def main():
         if len(changed) > 1:   # quality_issues.json 以外に変更があった
             git_commit(changed, "fix: auto-fix quality issues [skip ci]")
             body = "品質チェック自動修正\n\n" + "\n".join(log_lines)
-            send_notify(f"【Novlify】品質 自動修正完了 | {now}", body)
+            if os.environ.get("WEEKLY_BATCH") == "1":
+                report_dir = DATA_DIR / "weekly_reports"
+                report_dir.mkdir(parents=True, exist_ok=True)
+                (report_dir / "quality_fix.txt").write_text(body, encoding="utf-8")
+                print("修正ログを保存（週次まとめ送信）")
+            else:
+                send_notify(f"【Novlify】品質 自動修正完了 | {now}", body)
         else:
             print("修正対象なし or 全スキップ")
 

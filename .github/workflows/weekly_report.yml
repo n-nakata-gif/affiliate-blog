@@ -1,0 +1,85 @@
+name: Weekly Sunday Report
+
+on:
+  schedule:
+    - cron: "0 13 * * 0"   # 毎週日曜 22:00 JST（月曜朝に確認）
+  workflow_dispatch:
+
+jobs:
+  weekly-report:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
+    env:
+      WEEKLY_BATCH: "1"   # 各スクリプトが個別メールを送らず data/weekly_reports/ に保存
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install google-analytics-data google-auth google-api-python-client
+
+      # ── 各レポートを data/weekly_reports/ に保存 ──────────────
+
+      - name: GA4 アクセス解析
+        env:
+          GA4_PROPERTY_ID:          ${{ secrets.GA4_PROPERTY_ID }}
+          GA4_SERVICE_ACCOUNT_JSON: ${{ secrets.GA4_SERVICE_ACCOUNT_JSON }}
+        run: python src/ga4_report.py
+
+      - name: 収益レポート
+        env:
+          GA4_SERVICE_ACCOUNT_JSON: ${{ secrets.GA4_SERVICE_ACCOUNT_JSON }}
+          ADSENSE_PUBLISHER_ID:     ${{ secrets.ADSENSE_PUBLISHER_ID }}
+        run: python src/revenue_report.py
+
+      - name: 品質チェック
+        run: python src/quality_check.py
+
+      - name: 品質自動修正
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python src/auto_fix.py --mode quality
+
+      - name: キーワード提案
+        env:
+          ANTHROPIC_API_KEY:      ${{ secrets.ANTHROPIC_API_KEY }}
+          GSC_SITE_URL:           ${{ secrets.GSC_SITE_URL }}
+          GSC_OAUTH_CREDENTIALS:  ${{ secrets.GSC_OAUTH_CREDENTIALS }}
+        run: python src/keyword_suggest.py
+
+      - name: 検索順位モニタリング
+        env:
+          GSC_SITE_URL:          ${{ secrets.GSC_SITE_URL }}
+          GSC_OAUTH_CREDENTIALS: ${{ secrets.GSC_OAUTH_CREDENTIALS }}
+        run: python src/ranking_monitor.py
+
+      - name: アフィリエイトなし記事の検出
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python src/detect_no_affiliate.py
+
+      # ── リポジトリへのデータ保存 ────────────────────────────────
+
+      - name: データをコミット
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/
+          git diff --staged --quiet || git commit -m "chore: weekly report data [skip ci]"
+          git pull --rebase && git push
+
+      # ── 最後に1通だけまとめてメール送信 ────────────────────────
+
+      - name: 週次まとめメール送信
+        env:
+          GMAIL_USER:         ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+        run: python src/weekly_summary.py

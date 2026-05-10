@@ -138,4 +138,11 @@ if __name__ == "__main__":
     genre_cnt = count_articles_this_week()
     text = build_text(adsense, genre_cnt, date_str)
     print(text)
-    send_email(text, date_str, adsense)
+    if os.environ.get("WEEKLY_BATCH") == "1":
+        from pathlib import Path
+        report_dir = Path("data/weekly_reports")
+        report_dir.mkdir(parents=True, exist_ok=True)
+        (report_dir / "revenue.txt").write_text(text, encoding="utf-8")
+        print("収益レポートを保存（週次まとめ送信）")
+    else:
+        send_email(text, date_str, adsense)

@@ -202,4 +202,17 @@ if __name__ == "__main__":
     print(f"テーマ提案: {len(suggestions)} ジャンル")
 
     save_suggestions(suggestions)
-    send_keyword_report(sc_data, suggestions)
+    if os.environ.get("WEEKLY_BATCH") == "1":
+        # テキストサマリーを保存（週次まとめメール用）
+        lines = []
+        for g in suggestions:
+            lines.append(f"■ {g['genre']}")
+            for t in g.get("themes", []):
+                lines.append(f"  [{t.get('priority','?')}] {t['title']}")
+                lines.append(f"       KW: {t['target_keyword']} / {t['reason']}")
+        text = "\n".join(lines)
+        DATA_DIR.mkdir(exist_ok=True)
+        (DATA_DIR / "weekly_reports" / "keywords.txt").write_text(text, encoding="utf-8")
+        print("キーワード提案を保存（週次まとめ送信）")
+    else:
+        send_keyword_report(sc_data, suggestions)
