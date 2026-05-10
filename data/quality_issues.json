@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-05-10T16:11:32.442270+09:00",
+  "updated_at": "2026-05-09T11:08:22.507755+09:00",
   "issues": [
     {
       "type": "short_body",
@@ -28,7 +28,7 @@
       "length": 28,
       "issue": "短すぎ",
       "title": "旬の食材レシピ完全ガイド：季節の恵みで作る簡単レシピ4選",
-      "status": "done"
+      "status": "error"
     },
     {
       "type": "bad_title",
@@ -36,7 +36,7 @@
       "length": 28,
       "issue": "短すぎ",
       "title": "旬の食材レシピガイド：季節の恵みを活かす料理と保存のコツ",
-      "status": "done"
+      "status": "error"
     },
     {
       "type": "bad_title",
@@ -44,7 +44,7 @@
       "length": 31,
       "issue": "短すぎ",
       "title": "旬の食材レシピ12選｜季節の恵みで作る簡単絶品料理と保存のコツ",
-      "status": "done"
+      "status": "error"
     },
     {
       "type": "dup_title",
@@ -53,7 +53,7 @@
         "travel_20260429.md"
       ],
       "title": "知らないと損する格安旅行のコツ7選｜交通費・宿泊費を半額にする予約術",
-      "status": "done"
+      "status": "error"
     }
   ]
 }
