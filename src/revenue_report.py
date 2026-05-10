@@ -21,10 +21,10 @@ BLOG_DIR = Path(__file__).parent / "content" / "blog"
 
 DASHBOARD_LINKS = [
     ("AdSense",        "https://adsense.google.com/adsense/"),
-    ("A8.net",         "https://www.a8.net/a8v2/asTransaction.f"),
-    ("ValueCommerce",  "https://k.valuecommerce.com/affiliate/report/"),
-    ("Amazon",         "https://affiliate.amazon.co.jp/home/reports/summary"),
-    ("楽天アフィリエイト",  "https://affiliate.rakuten.co.jp/reports/summary/"),
+    ("A8.net",         "https://www.a8.net/"),
+    ("ValueCommerce",  "https://member.valuecommerce.com/"),
+    ("Amazon",         "https://affiliate.amazon.co.jp/"),
+    ("楽天アフィリエイト",  "https://affiliate.rakuten.co.jp/"),
 ]
 
 
