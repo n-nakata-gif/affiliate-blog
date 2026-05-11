@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60">
+  <!-- 背景 -->
+  <circle cx="30" cy="30" r="30" fill="#fce7f3"/>
+  <!-- 長い髪（後ろ） -->
+  <path d="M13 26 Q11 48 19 55 Q30 60 41 55 Q49 48 47 26" fill="#7c2d12"/>
+  <!-- 顔 -->
+  <ellipse cx="30" cy="32" rx="15" ry="17" fill="#fef3c7"/>
+  <!-- 髪（前・上） -->
+  <path d="M15 24 Q15 9 30 8 Q45 9 45 24 Q41 15 30 14 Q19 15 15 24Z" fill="#7c2d12"/>
+  <!-- 白目（左） -->
+  <ellipse cx="23.5" cy="29" rx="4" ry="4.5" fill="white"/>
+  <!-- 白目（右） -->
+  <ellipse cx="36.5" cy="29" rx="4" ry="4.5" fill="white"/>
+  <!-- 瞳（左） -->
+  <circle cx="23.5" cy="30" r="2.8" fill="#1a0a0a"/>
+  <!-- 瞳（右） -->
+  <circle cx="36.5" cy="30" r="2.8" fill="#1a0a0a"/>
+  <!-- ハイライト（左） -->
+  <circle cx="24.8" cy="28.5" r="1.1" fill="white"/>
+  <!-- ハイライト（右） -->
+  <circle cx="37.8" cy="28.5" r="1.1" fill="white"/>
+  <!-- 頬染め（左） -->
+  <ellipse cx="19" cy="34" rx="4.5" ry="2.5" fill="#fb7185" opacity="0.35"/>
+  <!-- 頬染め（右） -->
+  <ellipse cx="41" cy="34" rx="4.5" ry="2.5" fill="#fb7185" opacity="0.35"/>
+  <!-- 鼻 -->
+  <ellipse cx="30" cy="36" rx="1.5" ry="1" fill="#e8a87c" opacity="0.7"/>
+  <!-- 口（笑顔） -->
+  <path d="M25 40 Q30 46 35 40" stroke="#c2410c" stroke-width="2" fill="none" stroke-linecap="round"/>
+</svg>

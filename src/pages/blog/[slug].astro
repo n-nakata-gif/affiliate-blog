@@ -37,7 +37,7 @@ const articleSchema = {
     '@id': 'https://novlify.jp/about#author',
     name: 'Nori',
     url: 'https://novlify.jp/about',
-    jobTitle: '環境計量士・ブロガー',
+    jobTitle: '化学系会社員・ブロガー',
   },
   publisher: {
     '@type': 'Organization',
@@ -124,8 +124,8 @@ const articleSchema = {
         <div class="author-box__avatar">N</div>
         <div class="author-box__body">
           <p class="author-box__name">Nori（のり）</p>
-          <p class="author-box__role">環境計量士 ／ Novlify 運営者</p>
-          <p class="author-box__bio">長崎県在住。国家資格「環境計量士」を持つ理系専門職。データに基づく客観的な視点で、副業・投資・旅行・ガジェット情報を本音で発信しています。</p>
+          <p class="author-box__role">化学系会社員 ／ Novlify 運営者</p>
+          <p class="author-box__bio">佐賀県在住。化学系の会社に勤める5人家族のパパ。自分の経験をもとに、副業・投資・旅行・ガジェット情報を本音で発信しています。</p>
           <a href="/about" class="author-box__link">プロフィール詳細 →</a>
         </div>
       </div>
@@ -574,20 +574,103 @@ const articleSchema = {
   .article-body figcaption { font-size: 0.8em; color: #888; margin-top: 6px; }
   /* 会話ブロック強調 */
   .article-body blockquote strong { color: #d97706; }
+
+  /* ── 会話アバター行 ── */
+  .conv-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 6px 0;
+  }
+  .conv-row + .conv-row {
+    border-top: 1px dashed #fde68a;
+    margin-top: 6px;
+    padding-top: 12px;
+  }
+  .conv-avatar {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 2px solid #fde68a;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.10);
+    background: #fff;
+    object-fit: cover;
+  }
+  .conv-bubble {
+    flex: 1;
+    font-size: 0.92rem;
+    color: #444;
+    line-height: 1.75;
+    padding-top: 6px;
+  }
+  .conv-bubble strong { color: #d97706; }
+  @media (max-width: 640px) {
+    .conv-avatar { width: 40px; height: 40px; }
+  }
 </style>
 
-<!-- テーブルをスマホでスワイプスクロール可能にする -->
+<!-- テーブルをスマホでスワイプスクロール可能にする + 会話アバター挿入 -->
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     const body = document.querySelector('.article-body');
     if (!body) return;
+
+    /* ── テーブルラッパー ── */
     body.querySelectorAll('table').forEach(table => {
-      // すでにラップ済みならスキップ
       if (table.parentElement?.classList.contains('table-scroll-wrapper')) return;
       const wrapper = document.createElement('div');
       wrapper.className = 'table-scroll-wrapper';
       table.parentNode.insertBefore(wrapper, table);
       wrapper.appendChild(table);
+    });
+
+    /* ── 会話アバター挿入 ── */
+    // アバター判定ルール
+    function getAvatarSrc(text: string): string {
+      // 女性判定：女性名・女性キーワード
+      if (/のぞみ|ゆみ|さくら|あかね|OL|女性|主婦|ママ|女子/.test(text)) {
+        return '/avatars/female.svg';
+      }
+      // 男性判定：男性名・男性キーワード
+      if (/しょうた|けんじ|たろう|じろう|男性|サラリーマン|ジム仲間|パパ|男/.test(text)) {
+        return '/avatars/male.svg';
+      }
+      // 詳しい人・回答側
+      if (/Bさん|詳しい人|編集部|回答|アドバイス/.test(text)) {
+        return '/avatars/expert.svg';
+      }
+      // 読者・疑問側（デフォルト）
+      return '/avatars/reader.svg';
+    }
+
+    body.querySelectorAll('blockquote').forEach(bq => {
+      const paras = Array.from(bq.querySelectorAll('p'));
+      const hasConv = paras.some(p => p.textContent?.includes('💬'));
+      if (!hasConv) return;
+
+      paras.forEach(p => {
+        if (!p.textContent?.includes('💬')) return;
+
+        const text = p.textContent ?? '';
+        const avatarSrc = getAvatarSrc(text);
+
+        const row = document.createElement('div');
+        row.className = 'conv-row';
+
+        const img = document.createElement('img');
+        img.src = avatarSrc;
+        img.alt = '';
+        img.className = 'conv-avatar';
+
+        const bubble = document.createElement('div');
+        bubble.className = 'conv-bubble';
+        bubble.innerHTML = p.innerHTML;
+
+        row.appendChild(img);
+        row.appendChild(bubble);
+        p.replaceWith(row);
+      });
     });
   });
 </script>
