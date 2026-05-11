@@ -100,6 +100,8 @@ def fix_quality_issues() -> list[str]:
                 result = fix_dup_title(issue)
             elif itype == "short_body":
                 result = fix_short_body(issue)
+            elif itype == "bad_frontmatter":
+                result = fix_bad_frontmatter(issue)
             else:
                 issue["status"] = "skipped"
                 log_lines.append(f"SKIP {itype}: {issue.get('file','')} (未対応タイプ)")
@@ -135,6 +137,23 @@ def _count_chars(body: str) -> int:
     t = re.sub(r"\[(.+?)\]\(.*?\)", r"\1", t)
     t = re.sub(r"```[\s\S]*?```", "", t)
     return len(re.sub(r"\s+", "", t))
+
+
+def fix_bad_frontmatter(issue: dict) -> str | None:
+    """frontmatterがバッククォートで囲まれている記事を修正する"""
+    import re
+    path = BLOG_DIR / issue["file"]
+    if not path.exists():
+        return None
+    content = path.read_text(encoding="utf-8")
+    # ``` または ```markdown でfrontmatterが囲まれている場合を除去
+    fixed = re.sub(r'^```(?:markdown)?\n(---\n)', r'\1', content.strip())
+    fixed = re.sub(r'(---\n)```\n', r'\1', fixed)
+    if fixed == content.strip():
+        return None  # 変更なし
+    path.write_text(fixed + "\n", encoding="utf-8")
+    logger.info("fix_bad_frontmatter: %s", issue["file"])
+    return f"fixed frontmatter backtick: {issue['file']}"
 
 
 def fix_short_body(issue: dict) -> str | None:

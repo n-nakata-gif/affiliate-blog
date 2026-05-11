@@ -500,6 +500,19 @@ tags: {tags_str}
 """
 
 
+def sanitize_article(text: str) -> str:
+    """Claude APIが返す記事のfrontmatterを修正する。
+    プロンプトのサンプルを真似て ```...``` でfrontmatterを囲んで出力することがあるため除去する。
+    例: ```\n---\ntitle: ...\n---\n``` → ---\ntitle: ...\n---
+    """
+    import re
+    # ` ```markdown ` または ` ``` ` でfrontmatterが囲まれている場合を除去
+    text = re.sub(r'^```(?:markdown)?\n(---\n)', r'\1', text.strip())
+    # frontmatterの閉じ --- の直後にある ``` を除去
+    text = re.sub(r'(---\n)```\n', r'\1', text)
+    return text
+
+
 def generate_article(client: anthropic.Anthropic, prompt: str, genre: str) -> str:
     import time
     config = GENRE_CONFIG.get(genre, GENRE_CONFIG["business"])
@@ -517,7 +530,7 @@ def generate_article(client: anthropic.Anthropic, prompt: str, genre: str) -> st
                 ],
                 messages=[{"role": "user", "content": prompt}],
             )
-            return response.content[0].text
+            return sanitize_article(response.content[0].text)
         except anthropic.RateLimitError:
             if attempt < 2:
                 logger.warning("レートリミット。60秒後にリトライ (%d/3)", attempt + 1)

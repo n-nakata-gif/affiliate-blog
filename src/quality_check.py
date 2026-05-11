@@ -42,11 +42,15 @@ def count_chars(body: str) -> int:
 
 def check_articles() -> dict:
     files = sorted(BLOG_DIR.glob("*.md"))
-    short, bad_title, title_map = [], [], defaultdict(list)
+    short, bad_title, bad_frontmatter, title_map = [], [], [], defaultdict(list)
     for path in files:
         content = path.read_text(encoding="utf-8")
+        fn = path.name
+        # frontmatterがバッククォートで囲まれていないか検査
+        if content.lstrip().startswith("```"):
+            bad_frontmatter.append({"file": fn, "issue": "frontmatter_backtick"})
+            continue  # parseできないのでスキップ
         meta, body = parse_frontmatter(content)
-        fn    = path.name
         title = meta.get("title", "（未設定）")
         pub   = meta.get("pubDate", "")
         chars = count_chars(body)
@@ -59,7 +63,8 @@ def check_articles() -> dict:
         title_map[title].append(fn)
     dups = [{"title": t, "files": f, "count": len(f)}
             for t, f in title_map.items() if len(f) >= 2]
-    return {"total": len(files), "short": short, "bad_title": bad_title, "dups": dups}
+    return {"total": len(files), "short": short, "bad_title": bad_title,
+            "dups": dups, "bad_frontmatter": bad_frontmatter}
 
 
 def save_issues(results: dict) -> int:
@@ -74,6 +79,9 @@ def save_issues(results: dict) -> int:
     for d in results["dups"]:
         issues.append({"type": "dup_title",   "files": d["files"], "title": d["title"],
                        "status": "pending"})
+    for b in results.get("bad_frontmatter", []):
+        issues.append({"type": "bad_frontmatter", "file": b["file"],
+                       "issue": b["issue"], "status": "pending"})
     DATA_DIR.mkdir(exist_ok=True)
     (DATA_DIR / "quality_issues.json").write_text(
         json.dumps({"updated_at": datetime.now(JST).isoformat(), "issues": issues},
@@ -86,10 +94,15 @@ def build_text(results: dict, date_str: str) -> str:
     short  = results["short"]
     bad    = results["bad_title"]
     dups   = results["dups"]
-    n      = len(short) + len(bad) + len(dups)
+    bfm    = results.get("bad_frontmatter", [])
+    n      = len(short) + len(bad) + len(dups) + len(bfm)
 
     lines = [f"Novlify 品質チェック {date_str}  総記事 {total}本 / 要対応 {n}件", ""]
 
+    if bfm:
+        lines.append(f"■ frontmatterバグ（バッククォート囲み）{len(bfm)}件")
+        for b in bfm:
+            lines.append(f"  {b['file']}  ← ビルドエラーになるため即修正が必要")
     if short:
         lines.append(f"■ 文字数不足（{MIN_BODY}字未満）{len(short)}件")
         for a in short:
