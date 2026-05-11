@@ -232,18 +232,93 @@ const ogImage = image || 'https://cdn.pixabay.com/photo/2016/11/29/08/41/apple-1
         color: #666;
       }
 
+      /* ── ハンバーガーボタン ── */
+      .hamburger {
+        display: none;
+        flex-direction: column;
+        justify-content: center;
+        gap: 5px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 6px;
+        transition: background 0.2s;
+      }
+      .hamburger:hover { background: #fef3c7; }
+      .hamburger__bar {
+        display: block;
+        width: 22px;
+        height: 2px;
+        background: #333;
+        border-radius: 2px;
+        transition: transform 0.3s, opacity 0.3s;
+      }
+      /* 開いた時のX変形 */
+      .hamburger.is-open .hamburger__bar:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+      .hamburger.is-open .hamburger__bar:nth-child(2) { opacity: 0; }
+      .hamburger.is-open .hamburger__bar:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+      /* ── モバイルメニュードロワー ── */
+      .mobile-menu {
+        display: none;
+        position: fixed;
+        top: 63px; /* header高さ分 */
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 99;
+      }
+      .mobile-menu.is-open { display: block; }
+      .mobile-menu__overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0,0,0,0.4);
+      }
+      .mobile-menu__panel {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 75%;
+        max-width: 280px;
+        height: 100%;
+        background: #fff;
+        overflow-y: auto;
+        box-shadow: -4px 0 20px rgba(0,0,0,0.15);
+        padding: 0 0 40px;
+      }
+      .mobile-menu__section {
+        padding: 12px 0;
+        border-bottom: 1px solid #f3f4f6;
+      }
+      .mobile-menu__section-title {
+        display: block;
+        padding: 6px 20px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #f59e0b;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .mobile-menu__link {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 11px 20px;
+        font-size: 0.92rem;
+        font-weight: 500;
+        color: #333;
+        text-decoration: none;
+        transition: background 0.15s;
+      }
+      .mobile-menu__link:hover { background: #fffbeb; color: #d97706; }
+
       /* レスポンシブ */
       @media (max-width: 640px) {
-        .site-nav { gap: 12px; }
-        .site-nav a { font-size: 0.78rem; }
-        .site-nav__dropdown-trigger { font-size: 0.78rem; }
+        .hamburger { display: flex; }
+        .site-nav { display: none; } /* デスクトップnavは非表示 */
         .site-main { padding: 20px 14px; }
         .site-footer__top { flex-direction: column; align-items: flex-start; }
-        .site-nav__dropdown-menu {
-          left: auto;
-          right: 0;
-          transform: none;
-        }
       }
     </style>
   </head>
@@ -252,6 +327,8 @@ const ogImage = image || 'https://cdn.pixabay.com/photo/2016/11/29/08/41/apple-1
     <header class="site-header">
       <div class="site-header__inner">
         <a href="/" class="site-logo">Nov<span>lify</span></a>
+
+        <!-- デスクトップ用ナビ -->
         <nav class="site-nav">
           <a href="/">ホーム</a>
           <div class="site-nav__dropdown">
@@ -267,8 +344,35 @@ const ogImage = image || 'https://cdn.pixabay.com/photo/2016/11/29/08/41/apple-1
           <a href="/about">About</a>
           <a href="/contact">お問い合わせ</a>
         </nav>
+
+        <!-- スマホ用ハンバーガーボタン -->
+        <button class="hamburger" id="hamburger-btn" aria-label="メニューを開く" aria-expanded="false">
+          <span class="hamburger__bar"></span>
+          <span class="hamburger__bar"></span>
+          <span class="hamburger__bar"></span>
+        </button>
       </div>
     </header>
+
+    <!-- スマホ用ドロワーメニュー -->
+    <div class="mobile-menu" id="mobile-menu" role="dialog" aria-modal="true">
+      <div class="mobile-menu__overlay" id="menu-overlay"></div>
+      <nav class="mobile-menu__panel">
+        <div class="mobile-menu__section">
+          <a href="/" class="mobile-menu__link">🏠 ホーム</a>
+          <a href="/about" class="mobile-menu__link">👤 About</a>
+          <a href="/contact" class="mobile-menu__link">✉️ お問い合わせ</a>
+        </div>
+        <div class="mobile-menu__section">
+          <span class="mobile-menu__section-title">カテゴリ</span>
+          <a href="/category/business" class="mobile-menu__link">💼 副業・ビジネス</a>
+          <a href="/category/investment" class="mobile-menu__link">📈 投資・資産運用</a>
+          <a href="/category/travel" class="mobile-menu__link">✈️ 旅行・観光</a>
+          <a href="/category/gourmet" class="mobile-menu__link">🍜 グルメ・食</a>
+          <a href="/category/gadget" class="mobile-menu__link">🎧 ガジェット・テック</a>
+        </div>
+      </nav>
+    </div>
 
     <main class="site-main">
       {adsenseId && (
@@ -301,6 +405,36 @@ const ogImage = image || 'https://cdn.pixabay.com/photo/2016/11/29/08/41/apple-1
         </div>
       )}
     </main>
+
+    <!-- ハンバーガーメニュー開閉スクリプト -->
+    <script>
+      const btn = document.getElementById('hamburger-btn');
+      const menu = document.getElementById('mobile-menu');
+      const overlay = document.getElementById('menu-overlay');
+
+      function openMenu() {
+        menu?.classList.add('is-open');
+        btn?.classList.add('is-open');
+        btn?.setAttribute('aria-expanded', 'true');
+        document.body.style.overflow = 'hidden';
+      }
+      function closeMenu() {
+        menu?.classList.remove('is-open');
+        btn?.classList.remove('is-open');
+        btn?.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+      }
+
+      btn?.addEventListener('click', () => {
+        btn.classList.contains('is-open') ? closeMenu() : openMenu();
+      });
+      overlay?.addEventListener('click', closeMenu);
+
+      // メニュー内リンクをタップしたら閉じる
+      document.querySelectorAll('.mobile-menu__link').forEach(link => {
+        link.addEventListener('click', closeMenu);
+      });
+    </script>
 
     <footer class="site-footer">
       <div class="site-footer__inner">
