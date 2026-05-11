@@ -4,6 +4,7 @@ description: "プロテインの種類・選び方から、味・コスパ・溶
 pubDate: 2024-12-01
 tags: ["プロテイン", "筋トレ", "健康"]
 affiliate_added: "true"
+heroImage: "https://images.unsplash.com/photo-1676300184390-04ddf405d4f0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w5MzQxODZ8MHwxfHNlYXJjaHw1fHxoZWFsdGh5JTIwbWVhbCUyMHNhbGFkJTIwdmVnZXRhYmxlc3xlbnwxfDB8fHwxNzc3NzMwMzE1fDA&ixlib=rb-4.1.0&q=80&w=1080"
 ---
 
 「プロテインを飲み始めたいけど種類が多すぎて選べない」という方のために、初心者でも失敗しない選び方とおすすめ商品を解説します。プロテインは正しく選んで正しいタイミングで飲むことで、トレーニングの効果を最大限に引き出せます。一方で選び方を誤ると、飲み続けられなかったり、目的に合わなかったりすることも。この記事で基本をしっかり押さえましょう。

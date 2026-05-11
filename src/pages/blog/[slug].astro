@@ -16,11 +16,16 @@ const { Content, headings } = await render(post);
 // 目次用 h2 のみ抽出
 const tocItems = headings.filter(h => h.depth === 2);
 
-// アイキャッチ画像
+// アイキャッチ画像（favicon・小アイコン系URLは除外）
+const SKIP_IMG = /google\.com\/s2\/favicons|favicon\.ico|\/favicon|[?&]sz=\d{1,2}(&|$)|width=["']\d{1,2}["']|height=["']\d{1,2}["']/;
 function getEyecatch(body: string | undefined): string {
   if (!body) return '';
-  const m = body.match(/src="(https?:\/\/[^"]+)"/);
-  return m ? m[1] : '';
+  const htmlRegex = /src="(https?:\/\/[^"]+)"/g;
+  let m: RegExpExecArray | null;
+  while ((m = htmlRegex.exec(body)) !== null) {
+    if (!SKIP_IMG.test(m[0])) return m[1];
+  }
+  return '';
 }
 const eyecatch = getEyecatch(post.body);
 

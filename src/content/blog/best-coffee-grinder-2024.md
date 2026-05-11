@@ -4,6 +4,7 @@ description: "自宅でカフェ品質のコーヒーを楽しむためのグラ
 pubDate: 2024-11-01
 tags: ["コーヒー", "キッチン家電", "レビュー"]
 affiliate_added: "true"
+heroImage: "https://images.unsplash.com/photo-1614835794530-bf3e4ae4f42e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w5MzQxODZ8MHwxfHNlYXJjaHwxfHxmb29kJTIwZGVsaWNpb3VzJTIwcmVzdGF1cmFudCUyMGNvb2tpbmd8ZW58MXwwfHx8MTc3ODEwMjM0Nnww&ixlib=rb-4.1.0&q=80&w=1080"
 ---
 
 自宅でおいしいコーヒーを淹れるために、**グラインダー（コーヒーミル）選び**は非常に重要です。豆を挽きたてで使うだけで、味わいが驚くほど変わります。市販の粉コーヒーと挽きたてでは、香りの豊かさや風味のクリアさがまったく別物。一度挽きたての味を知ると、もう粉には戻れないという方が続出するほどです。

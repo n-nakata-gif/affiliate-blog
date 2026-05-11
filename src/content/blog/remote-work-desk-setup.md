@@ -4,6 +4,7 @@ description: "在宅ワークの作業効率を上げるデスク周りのアイ
 pubDate: 2024-11-15
 tags: ["在宅ワーク", "デスク", "ガジェット"]
 affiliate_added: "true"
+heroImage: "https://images.unsplash.com/photo-1584670508996-c3144057a8d0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w5MzQxODZ8MHwxfHNlYXJjaHwxfHxmcmVlbGFuY2UlMjByZW1vdGUlMjB3b3JrJTIwZGVza3xlbnwxfDB8fHwxNzc3NzMwMzEyfDA&ixlib=rb-4.1.0&q=80&w=1080"
 ---
 
 テレワークが当たり前になった今、**自宅の作業環境**を整えることが仕事の質に直結します。今回は在宅ワークをより快適にする厳選アイテムを10個ご紹介します。「会社のデスクより自宅の方が作業しにくい」と感じている方に向けて、投資対効果の高いアイテムを優先度順に解説します。

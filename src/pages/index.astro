@@ -7,11 +7,16 @@ const posts = (await getCollection('blog')).sort(
 );
 
 // アイキャッチ画像を取得（frontmatter.heroImage → 本文内img → デフォルト）
+// favicon・小アイコン系URLは除外する
+const SKIP_IMG = /google\.com\/s2\/favicons|favicon\.ico|\/favicon|[?&]sz=\d{1,2}(&|$)|width=["']\d{1,2}["']|height=["']\d{1,2}["']/;
 function getEyecatch(body: string | undefined): string {
   if (!body) return '';
-  // HTML img タグ
-  const htmlM = body.match(/src="(https?:\/\/[^"]+)"/);
-  if (htmlM) return htmlM[1];
+  // HTML img タグ（favicon等を除外して最初の大きい画像を探す）
+  const htmlRegex = /src="(https?:\/\/[^"]+)"/g;
+  let m: RegExpExecArray | null;
+  while ((m = htmlRegex.exec(body)) !== null) {
+    if (!SKIP_IMG.test(m[0])) return m[1];
+  }
   // Markdown 画像記法 ![alt](url)
   const mdM = body.match(/!\[[^\]]*\]\((https?:\/\/[^)]+)\)/);
   if (mdM) return mdM[1];
