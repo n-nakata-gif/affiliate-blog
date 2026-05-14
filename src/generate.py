@@ -1464,12 +1464,12 @@ def generate_room_posts_content(
     article_url: str,
     keyword: str,
     genre: str,
-    rakuten_aff_id: str,
+    rakuten_aff_id: str = "",   # 省略可（ドラフト生成自体には不要）
     n: int = 3,
 ) -> list:
-    """Claude APIで楽天ROOM投稿ドラフトを生成する（公式APIなし・手動投稿補助用）"""
-    if not rakuten_aff_id:
-        return []
+    """Claude APIで楽天ROOM投稿ドラフトを生成する（公式APIなし・手動投稿補助用）
+    ※ RAKUTEN_AFFILIATE_ID は不要。Claude API のみで生成します。
+    """
 
     genre_label = _ROOM_GENRE_LABELS.get(genre, genre)
     default_tags = " ".join(_ROOM_GENRE_HASHTAGS.get(genre, ["#楽天ROOM", "#楽天市場"]))
@@ -1550,56 +1550,31 @@ def build_room_draft_markdown(
     pub_date = f"{date_str[:4]}-{date_str[4:6]}-{date_str[6:]}"
 
     lines = [
-        f"# 楽天ROOM 投稿ドラフト（{pub_date} / {genre_label}）",
-        "",
-        f"**元記事**: [{article_title}]({article_url})",
-        f"**生成日**: {pub_date}",
-        "",
-        "---",
-        "",
-        "## 📱 投稿手順（約3分/件）",
-        "",
-        "1. スマホで **楽天ROOMアプリ** を開く",
-        "2. 右下の「＋」ボタン →「商品を追加」をタップ",
-        "3. 下の「🔍 検索キーワード」で商品を検索",
-        "4. 気に入った商品をタップして「コレクションに追加」",
-        "5. 「💬 コメント」と「#️⃣ ハッシュタグ」をコピペ",
-        "6. 「投稿する」をタップ ✅",
-        "",
-        f"👉 あなたのROOMページ: {RAKUTEN_ROOM_URL}",
+        f"# 楽天ROOM 投稿ドラフト",
+        f"## 記事：{article_title}（{genre}_{date_str}）",
+        f"## 【投稿コンセプト】{genre_label}に関心がある読者へのリアルなおすすめ",
         "",
         "---",
         "",
     ]
 
     for i, post in enumerate(posts, 1):
-        hashtags_str = " ".join(post.get("hashtags", []))
+        hashtags_str = "  " + " ".join(post.get("hashtags", []))
         lines += [
             f"## 投稿 {i} — {post['product_keyword']}",
             "",
-            "### 🔍 検索キーワード（ROOMアプリの商品検索に入力）",
-            "```",
-            post["product_keyword"],
-            "```",
+            "🔍 検索キーワード",
+            f"  {post['product_keyword']}",
             "",
-            "### 💬 コメント（コピーしてROOMに貼付）",
-            "```",
-            post["comment"],
-            "```",
+            "💬 コメント",
+            f"  {post['comment']}",
             "",
-            "### #️⃣ ハッシュタグ（コメントの後に追加）",
-            "```",
+            "#️⃣ ハッシュタグ",
             hashtags_str,
-            "```",
             "",
             "---",
             "",
         ]
-
-    lines += [
-        "> 🤖 このファイルは記事生成時に自動生成されました。",
-        f"> 楽天ROOMへの投稿はアプリから手動で行ってください。",
-    ]
 
     return "\n".join(lines)
 
@@ -1768,33 +1743,30 @@ def main():
     # ここでは即時投稿しない（generate.py の役割はコンテンツ生成のみ）
 
     # ── 楽天ROOM 投稿ドラフト生成 ────────────────────────────
-    if rakuten_aff_id:
-        room_posts = generate_room_posts_content(
-            client,
+    # RAKUTEN_AFFILIATE_ID の有無に関わらず常に生成（Claude API のみで生成）
+    room_posts = generate_room_posts_content(
+        client,
+        article_title=extract_title(article),
+        article_url=article_url,
+        keyword=title_hint,
+        genre=genre,
+        n=3,
+    )
+    if room_posts:
+        room_md = build_room_draft_markdown(
+            room_posts,
             article_title=extract_title(article),
             article_url=article_url,
-            keyword=title_hint,
             genre=genre,
-            rakuten_aff_id=rakuten_aff_id,
-            n=3,
+            date_str=date_str,
         )
-        if room_posts:
-            room_md = build_room_draft_markdown(
-                room_posts,
-                article_title=extract_title(article),
-                article_url=article_url,
-                genre=genre,
-                date_str=date_str,
-            )
-            room_path = f"data/room_drafts/{genre}_{date_str}.md"
-            try:
-                push_file(gh_token, room_path, room_md, f"auto: room drafts {genre} {date_str}")
-                logger.info("楽天ROOM投稿ドラフト保存: %s", room_path)
-                print(f"楽天ROOMドラフト: https://github.com/{REPO}/blob/main/{room_path}")
-            except Exception as e:
-                logger.warning("楽天ROOMドラフト保存失敗（スキップ）: %s", e)
-    else:
-        logger.info("RAKUTEN_AFFILIATE_ID 未設定のため楽天ROOMドラフト生成スキップ")
+        room_path = f"data/room_drafts/{genre}_{date_str}.md"
+        try:
+            push_file(gh_token, room_path, room_md, f"auto: room drafts {genre} {date_str}")
+            logger.info("楽天ROOM投稿ドラフト保存: %s", room_path)
+            print(f"楽天ROOMドラフト: https://github.com/{REPO}/blob/main/{room_path}")
+        except Exception as e:
+            logger.warning("楽天ROOMドラフト保存失敗（スキップ）: %s", e)
 
 
 if __name__ == "__main__":
