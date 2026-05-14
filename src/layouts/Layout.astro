@@ -1,11 +1,21 @@
 ---
+import { NOINDEX_PATHS } from '../config/seo.ts';
+
 export interface Props {
   title: string;
   description?: string;
   image?: string;
+  /** 個別ページで手動 noindex にしたい場合だけ使用。通常は src/config/seo.ts の NOINDEX_PATHS で管理 */
   noindex?: boolean;
 }
-const { title, description = 'Novlify - 副業・投資・旅行・グルメの本音情報', image, noindex = false } = Astro.props;
+const { title, description = 'Novlify - 副業・投資・旅行・グルメの本音情報', image, noindex: noindexProp = false } = Astro.props;
+
+// NOINDEX_PATHS に含まれるページは自動で noindex にする
+const isAutoNoindex = NOINDEX_PATHS.some(
+  (p) => Astro.url.pathname === p || Astro.url.pathname === `${p}/`
+);
+const noindex = noindexProp || isAutoNoindex;
+
 const adsenseId = import.meta.env.PUBLIC_ADSENSE_ID;
 const ogImage = image || 'https://cdn.pixabay.com/photo/2016/11/29/08/41/apple-1868496_1280.jpg';
 ---
