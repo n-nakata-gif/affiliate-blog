@@ -5,7 +5,11 @@ import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   site: 'https://novlify.jp',
-  integrations: [sitemap()],
+  integrations: [
+    sitemap({
+      filter: (page) => !page.includes('/disclaimer'),
+    }),
+  ],
   vite: {
     plugins: [tailwindcss()]
   }
