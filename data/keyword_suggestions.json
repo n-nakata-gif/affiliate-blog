@@ -59,14 +59,7 @@
     },
     {
       "genre": "gourmet",
-      "themes": [
-        {
-          "title": "プロテインの選び方完全ガイド｜種類・成分・目的別に解説",
-          "target_keyword": "プロテイン 選び方",
-          "reason": "初心者記事と組み合わせ内部リンク強化、検索意図を補完できる",
-          "priority": "high"
-        }
-      ]
+      "themes": []
     }
   ]
 }
