@@ -1761,10 +1761,16 @@ def main():
             date_str=date_str,
         )
         room_path = f"data/room_drafts/{genre}_{date_str}.md"
+        draft_name = f"{genre}_{date_str}"
         try:
             push_file(gh_token, room_path, room_md, f"auto: room drafts {genre} {date_str}")
             logger.info("楽天ROOM投稿ドラフト保存: %s", room_path)
             print(f"楽天ROOMドラフト: https://github.com/{REPO}/blob/main/{room_path}")
+            # ── 新規ドラフトは posted.json に追加しない ──────────────────────────
+            # Claude が次回セッション開始時に未投稿として検出・自動投稿する
+            # （CLAUDE.md の指示に従い、セッション開始時に posted.json と照合）
+            logger.info("楽天ROOMドラフト未投稿: %s (次回Claude起動時に自動投稿)", draft_name)
+            print(f"⚠️  楽天ROOM未投稿: {draft_name} → 次回Claude起動時に自動投稿されます")
         except Exception as e:
             logger.warning("楽天ROOMドラフト保存失敗（スキップ）: %s", e)
 
