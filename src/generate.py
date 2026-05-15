@@ -1681,6 +1681,7 @@ def main():
                 genre=genre,
                 slug=slug,
                 output_dir=Path(tmp_dir),
+                bg_image_url=hero_image_url or None,  # Unsplash画像を背景に流用
             )
             thumb_bytes = thumb_local.read_bytes()
         thumb_repo_path = f"public/thumbnails/{slug}.png"

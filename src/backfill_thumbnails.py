@@ -47,6 +47,25 @@ def extract_frontmatter(text: str) -> dict[str, str]:
     return result
 
 
+# favicon・極小アイコンは除外
+_SKIP_IMG = re.compile(
+    r'google\.com/s2/favicons|favicon\.ico|/favicon'
+    r'|[?&]sz=\d{1,2}(&|$)|width=["\']?\d{1,2}["\']?|height=["\']?\d{1,2}["\']?'
+)
+
+def extract_bg_url(text: str) -> str | None:
+    """記事本文から最初のUnsplash画像URLを取得して背景用に返す"""
+    # Unsplash URL を優先して探す
+    for m in re.finditer(r'src="(https://images\.unsplash\.com/[^"]+)"', text):
+        url = m.group(1)
+        if not _SKIP_IMG.search(url):
+            # w=1200 を強制してサイズを揃える
+            url = re.sub(r'[&?]w=\d+', '', url)
+            sep = '&' if '?' in url else '?'
+            return url + sep + 'w=1200&q=80'
+    return None
+
+
 def guess_genre(slug: str) -> str:
     """ファイル名のプレフィクスからジャンルを推測"""
     for genre in KNOWN_GENRES:
@@ -86,30 +105,32 @@ def main() -> None:
             skip += 1
             continue
 
-        # タイトルを frontmatter から取得
+        # タイトル・背景URLを frontmatter / 本文から取得
         try:
-            text  = md_path.read_text(encoding="utf-8")
-            fm    = extract_frontmatter(text)
-            title = fm.get("title") or slug
+            text   = md_path.read_text(encoding="utf-8")
+            fm     = extract_frontmatter(text)
+            title  = fm.get("title") or slug
+            bg_url = extract_bg_url(text)  # 記事本文のUnsplash画像を背景に流用
         except Exception as e:
-            print(f"  [ERR]  {slug}: frontmatter 読み取り失敗 - {e}")
+            print(f"  [ERR]  {slug}: 読み取り失敗 - {e}")
             err += 1
             continue
 
         # サムネイル生成
+        bg_info = f" (bg={'custom' if bg_url else 'default'})"
         try:
             if args.dry_run:
-                out_path = create_thumbnail(title, genre, slug, OUTPUT_DIR)
-                print(f"  [DRY]  {slug} → {out_path}")
+                out_path = create_thumbnail(title, genre, slug, OUTPUT_DIR, bg_url)
+                print(f"  [DRY]  {slug}{bg_info} → {out_path}")
                 ok += 1
             else:
                 with tempfile.TemporaryDirectory() as tmp_dir:
-                    thumb = create_thumbnail(title, genre, slug, Path(tmp_dir))
+                    thumb = create_thumbnail(title, genre, slug, Path(tmp_dir), bg_url)
                     thumb_bytes = thumb.read_bytes()
 
                 repo_path = f"public/thumbnails/{slug}.png"
                 push_binary_file(gh_token, repo_path, thumb_bytes, f"auto: add thumbnail {slug}")
-                print(f"  [OK]   {slug} → {repo_path}")
+                print(f"  [OK]   {slug}{bg_info} → {repo_path}")
                 ok += 1
 
         except Exception as e:
