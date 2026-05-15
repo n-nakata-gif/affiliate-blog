@@ -1257,6 +1257,32 @@ def push_file(token: str, repo_path: str, content: str, commit_message: str) -> 
         raise
 
 
+def push_binary_file(token: str, repo_path: str, data: bytes, commit_message: str) -> str | None:
+    """バイナリファイル（画像等）を GitHub にプッシュする"""
+    encoded = base64.b64encode(data).decode("ascii")
+    try:
+        existing = gh("GET", f"contents/{repo_path}?ref={BRANCH}", token)
+        sha = existing.get("sha")
+    except RuntimeError as e:
+        if "404" in str(e):
+            sha = None
+        else:
+            raise
+
+    body: dict = {"message": commit_message, "content": encoded, "branch": BRANCH}
+    if sha:
+        body["sha"] = sha
+
+    try:
+        result = gh("PUT", f"contents/{repo_path}", token, body)
+        return result["commit"]["sha"]
+    except RuntimeError as e:
+        if "409" in str(e):
+            logger.warning("409 Conflict: %s は既に存在するためスキップします", repo_path)
+            return None
+        raise
+
+
 # ── frontmatterパース ─────────────────────────────────────────
 
 def extract_title(content: str) -> str:
@@ -1643,11 +1669,36 @@ def main():
     # ── PR表記バナーをh1直後に自動挿入 ──────────────────────
     article = insert_pr_notice(article, date_str)
 
-    # ── heroImage を frontmatter に追加 ──────────────────────
-    if hero_image_url:
+    # ── サムネイル自動生成 ────────────────────────────────────
+    slug = f"{genre}_{date_str}"
+    thumbnail_web_path = f"/thumbnails/{slug}.png"
+    try:
+        import tempfile
+        from generate_thumbnail import create_thumbnail
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            thumb_local = create_thumbnail(
+                title=extract_title(article) or slug,
+                genre=genre,
+                slug=slug,
+                output_dir=Path(tmp_dir),
+            )
+            thumb_bytes = thumb_local.read_bytes()
+        thumb_repo_path = f"public/thumbnails/{slug}.png"
+        push_binary_file(
+            gh_token, thumb_repo_path, thumb_bytes,
+            f"auto: add thumbnail {slug}",
+        )
+        logger.info("サムネイル生成・プッシュ完了: %s", thumb_repo_path)
+    except Exception as e:
+        logger.warning("サムネイル生成スキップ（エラー）: %s", e)
+        thumbnail_web_path = hero_image_url  # フォールバック: Unsplash
+
+    # ── heroImage を frontmatter に追加（サムネイル優先、なければ Unsplash）──
+    final_hero = thumbnail_web_path or hero_image_url
+    if final_hero:
         article = re.sub(
             r'^(---\n[\s\S]*?)(---\n)',
-            lambda m: m.group(1) + f'heroImage: "{hero_image_url}"\n' + m.group(2),
+            lambda m: m.group(1) + f'heroImage: "{final_hero}"\n' + m.group(2),
             article, count=1
         )
 
