@@ -29,6 +29,13 @@ function getEyecatch(body: string | undefined): string {
 }
 const eyecatch = getEyecatch(post.body);
 
+// OGP 用の絶対 URL 画像（heroImage 優先、相対パスは絶対 URL に変換）
+const SITE_ORIGIN = 'https://novlify.jp';
+const rawHero = (post.data as any).heroImage as string | undefined;
+const ogImageUrl = rawHero
+  ? (rawHero.startsWith('http') ? rawHero : `${SITE_ORIGIN}${rawHero}`)
+  : eyecatch || undefined;
+
 const articleSchema = {
   '@context': 'https://schema.org',
   '@type': 'Article',
@@ -55,7 +62,7 @@ const articleSchema = {
 <Layout
   title={`${post.data.title} | Novlify`}
   description={post.data.description}
-  image={eyecatch || undefined}
+  image={ogImageUrl}
 >
   <Fragment slot="head">
     <script type="application/ld+json" set:html={JSON.stringify(articleSchema)} />

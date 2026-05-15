@@ -17,7 +17,11 @@ const isAutoNoindex = NOINDEX_PATHS.some(
 const noindex = noindexProp || isAutoNoindex;
 
 const adsenseId = import.meta.env.PUBLIC_ADSENSE_ID;
-const ogImage = image || 'https://cdn.pixabay.com/photo/2016/11/29/08/41/apple-1868496_1280.jpg';
+const _SITE = 'https://novlify.jp';
+const _rawImage = image || '';
+const ogImage = _rawImage
+  ? (_rawImage.startsWith('http') ? _rawImage : `${_SITE}${_rawImage}`)
+  : 'https://cdn.pixabay.com/photo/2016/11/29/08/41/apple-1868496_1280.jpg';
 ---
 
 <!DOCTYPE html>
