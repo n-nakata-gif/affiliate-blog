@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cmd=$(jq -r '.tool_input.command // \"\"'); file=$(jq -r '.tool_input.file_path // .tool_response.filePath // \"\"'); if echo \"$cmd\" | grep -q 'generate\\.py' || echo \"$file\" | grep -q 'room_drafts/.*\\.md'; then echo '{\"systemMessage\":\"⚠️ 楽天ROOMドラフトが作成されました。CLAUDE.mdの手順に従って楽天ROOMに投稿してください。\"}'; fi",
+            "timeout": 5,
+            "statusMessage": "楽天ROOMドラフトをチェック中..."
+          }
+        ]
+      }
+    ]
+  }
+}
