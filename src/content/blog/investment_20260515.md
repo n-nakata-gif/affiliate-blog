@@ -3,7 +3,7 @@ title: "新NISA 初心者 おすすめ 2026｜最初に買うべき投資信託5
 description: "新NISAを2026年から始めたい初心者向けに、最初に買うべき投資信託5本を選定基準とともに比較。メリットだけでなくリスク・注意点も正直に解説します。"
 pubDate: 2026-05-15
 tags: ["投資", "資産運用", "NISA"]
-heroImage: "https://images.unsplash.com/photo-1579621970795-87facc2f976d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w5MzQxODZ8MHwxfHNlYXJjaHwxfHxmaW5hbmNlJTIwbW9uZXklMjBpbnZlc3RtZW50JTIwZ3Jvd3RofGVufDF8MHx8fDE3Nzg4MzkzMzV8MA&ixlib=rb-4.1.0&q=80&w=1080"
+heroImage: "/thumbnails/investment_20260515.png"
 ---
 
 ※本記事はPRを含みます  
