@@ -31,40 +31,40 @@ FONT_REGULAR = "/System/Library/Fonts/ヒラギノ角ゴシック W3.ttc"
 GENRE_THEMES: dict[str, dict] = {
     "gourmet": {
         "bg_color":    (60, 15, 5),
-        "text_color":  (255, 230, 160),   # 温かみのあるクリーム
-        "badge_fill":  (200, 70, 20),
+        "text_color":  (255, 220, 0),     # 鮮やかなイエロー
+        "badge_fill":  (210, 60, 10),
         "badge_text":  (255, 255, 255),
         "label":       "グルメ・食",
         "default_bg":  "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1200&q=80",
     },
     "gadget": {
         "bg_color":    (8, 15, 45),
-        "text_color":  (200, 230, 255),   # 落ち着いたスカイブルー
-        "badge_fill":  (25, 100, 180),
+        "text_color":  (0, 200, 255),     # 鮮やかなシアンブルー
+        "badge_fill":  (20, 100, 200),
         "badge_text":  (255, 255, 255),
         "label":       "ガジェット・テック",
         "default_bg":  "https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200&q=80",
     },
     "business": {
         "bg_color":    (5, 30, 20),
-        "text_color":  (190, 255, 210),   # 清潔感のあるミント
-        "badge_fill":  (15, 130, 65),
+        "text_color":  (80, 255, 140),    # 鮮やかなグリーン
+        "badge_fill":  (10, 150, 60),
         "badge_text":  (255, 255, 255),
         "label":       "ビジネス・副業",
         "default_bg":  "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=1200&q=80",
     },
     "investment": {
         "bg_color":    (40, 25, 5),
-        "text_color":  (255, 230, 120),   # ゴールド
-        "badge_fill":  (160, 115, 10),
+        "text_color":  (255, 220, 0),     # 鮮やかなゴールドイエロー
+        "badge_fill":  (180, 120, 0),
         "badge_text":  (255, 255, 255),
         "label":       "投資・資産運用",
         "default_bg":  "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&q=80",
     },
     "travel": {
         "bg_color":    (5, 28, 45),
-        "text_color":  (190, 240, 255),   # クリアなシアン
-        "badge_fill":  (10, 115, 165),
+        "text_color":  (255, 255, 255),   # 白（写真の色と被らない）
+        "badge_fill":  (10, 120, 180),
         "badge_text":  (255, 255, 255),
         "label":       "旅行・観光",
         "default_bg":  "https://images.unsplash.com/photo-1488085061387-422e29b40080?w=1200&q=80",
@@ -97,8 +97,8 @@ def _cover_fill(img: Image.Image, w: int, h: int) -> Image.Image:
     return img.crop(((nw - w) // 2, (nh - h) // 2, (nw - w) // 2 + w, (nh - h) // 2 + h))
 
 
-def _apply_overlay(base: Image.Image, alpha: int = 145) -> Image.Image:
-    """均一な暗いオーバーレイ（写真が見えつつ文字が映える適度な暗さ）"""
+def _apply_overlay(base: Image.Image, alpha: int = 110) -> Image.Image:
+    """均一な暗いオーバーレイ（写真が活きる薄め設定）"""
     result = base.convert("RGBA")
     dark   = Image.new("RGBA", base.size, (0, 0, 0, alpha))
     return Image.alpha_composite(result, dark).convert("RGB")
@@ -161,15 +161,15 @@ def _fit_lines(
     return lines, font
 
 
-def _draw_outlined(draw, xy, text, font, fill, stroke_w=8):
-    """白アウトライン文字（黒シャドウ → 白縁 → カラー）"""
+def _draw_outlined(draw, xy, text, font, fill, stroke_w=12):
+    """白アウトライン文字（黒シャドウ → 太い白縁 → カラー）"""
     x, y = xy
-    # 黒シャドウ
-    draw.text((x + 3, y + 3), text, font=font,
+    # 黒シャドウ（リベ大風の強いシャドウ）
+    draw.text((x + 5, y + 5), text, font=font,
               fill=(0, 0, 0, 0),
-              stroke_fill=(0, 0, 0, 170),
-              stroke_width=stroke_w + 4)
-    # 白縁 + カラー塗り
+              stroke_fill=(0, 0, 0, 200),
+              stroke_width=stroke_w + 5)
+    # 太い白縁 + 鮮やかカラー
     draw.text((x, y), text, font=font,
               fill=fill,
               stroke_fill=(255, 255, 255),
@@ -221,15 +221,15 @@ def create_thumbnail(
     display = _shorten(title)
 
     n = len(display)
-    if   n <= 8:  base = 112
-    elif n <= 12: base = 100
-    elif n <= 17: base = 90
-    elif n <= 22: base = 80
-    elif n <= 28: base = 72
-    else:         base = 64
+    if   n <= 8:  base = 130
+    elif n <= 12: base = 116
+    elif n <= 17: base = 104
+    elif n <= 22: base = 92
+    elif n <= 28: base = 82
+    else:         base = 72
 
-    MARGIN  = 44          # 左右余白を狭くしてテキストを大きく
-    STROKE  = 8
+    MARGIN  = 44
+    STROKE  = 12           # 太い白縁で視認性アップ
     max_w   = WIDTH - MARGIN * 2 - STROKE * 2
 
     lines, font_t = _fit_lines(display, draw, FONT_BOLD, base, max_w)
