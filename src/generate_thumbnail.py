@@ -186,6 +186,60 @@ def _draw_rounded_rect(
         draw.rectangle(xy, fill=fill)
 
 
+def _shorten_for_thumbnail(title: str) -> str:
+    """
+    サムネイル用に短縮したタイトルを返す。
+    '：' '｜' ' | ' の前の主題部分だけを使用。
+    例: "新幹線を安く乗る方法：早割・スマートEXの使い方" → "新幹線を安く乗る方法"
+    """
+    for sep in ["：", "｜", " | "]:
+        if sep in title:
+            return title.split(sep)[0].strip()
+    return title
+
+
+def _wrap_no_widow(
+    text: str,
+    draw: ImageDraw.ImageDraw,
+    font_path: str,
+    base_size: int,
+    max_width: int,
+    max_lines: int = 2,
+    min_last_ratio: float = 0.35,
+) -> tuple[list[str], ImageFont.FreeTypeFont]:
+    """
+    ウィドウ（末尾の極端に短い行）が出ないようにフォントサイズを調整して折り返す。
+
+    - base_size から始めて 6px ずつ下げながら最大 3回試みる
+    - 最終行の幅が max_width * min_last_ratio 以上になれば OK
+    - max_lines を超える場合も次のサイズへ
+    """
+    for delta in [0, 6, 12, 18]:
+        size = max(32, base_size - delta)
+        font = _load_font(font_path, size)
+        lines = _wrap_text(text, font, max_width, draw)
+
+        # 行数オーバーは除外
+        if len(lines) > max_lines + 1:
+            continue
+
+        # 末尾カット（3行目以降は省略）
+        if len(lines) > max_lines:
+            lines = lines[:max_lines] + [lines[max_lines][:2] + "…"]
+
+        # ウィドウチェック: 最終行が十分な幅か
+        last_w = draw.textlength(lines[-1], font=font)
+        if len(lines) <= 1 or last_w >= max_width * min_last_ratio:
+            return lines, font
+
+    # どうしても解消できない場合はそのまま返す
+    font = _load_font(font_path, max(32, base_size - 18))
+    lines = _wrap_text(text, font, max_width, draw)
+    if len(lines) > max_lines:
+        lines = lines[:max_lines] + [lines[max_lines][:2] + "…"]
+    return lines, font
+
+
 # ── メイン関数 ─────────────────────────────────────────────────────────
 
 def create_thumbnail(
@@ -226,23 +280,25 @@ def create_thumbnail(
     # ── 薄いオーバーレイ合成（背景写真を活かす）─────────────────
     img = _apply_light_overlay(bg)
 
+    # ── サムネイル用タイトル（「：」前の主題部分だけ使う）────────
+    display_title = _shorten_for_thumbnail(title)
+
     # ── フォント ─────────────────────────────────────────────────
     font_badge = _load_font(FONT_BOLD, 32)
     font_site  = _load_font(FONT_REGULAR, 26)
 
-    # タイトルフォントサイズ（大きめ）
-    n = len(title)
-    if n <= 13:
-        font_size = 88
-    elif n <= 20:
-        font_size = 76
-    elif n <= 28:
-        font_size = 66
-    elif n <= 38:
-        font_size = 58
+    # タイトルの文字数に応じた基準フォントサイズ（短縮後の文字数で判定）
+    n = len(display_title)
+    if n <= 10:
+        base_font_size = 92
+    elif n <= 16:
+        base_font_size = 82
+    elif n <= 22:
+        base_font_size = 72
+    elif n <= 30:
+        base_font_size = 64
     else:
-        font_size = 50
-    font_title = _load_font(FONT_BOLD, font_size)
+        base_font_size = 56
 
     # ── ジャンルバッジ（左上）────────────────────────────────────
     PAD_X, PAD_Y     = 56, 44
@@ -273,17 +329,20 @@ def create_thumbnail(
         fill=theme["badge_text"],
     )
 
-    # ── タイトルの折り返し計算 ────────────────────────────────────
+    # ── タイトルの折り返し計算（ウィドウ防止）───────────────────
     CARD_MARGIN_X  = 56          # カード左右の余白
     TEXT_PAD_X     = 44          # カード内テキスト左右のパディング
     TEXT_PAD_Y     = 32          # カード内テキスト上下のパディング
     max_tw = WIDTH - CARD_MARGIN_X * 2 - TEXT_PAD_X * 2
 
-    lines = _wrap_text(title, font_title, max_tw, draw)
-    if len(lines) > 3:
-        lines = lines[:2] + [lines[2] + "…"]
+    # ウィドウ（末尾の極端に短い行）が出ないよう調整しながら折り返す
+    lines, font_title = _wrap_no_widow(
+        display_title, draw, FONT_BOLD, base_font_size, max_tw,
+        max_lines=2, min_last_ratio=0.35,
+    )
+    font_size = font_title.size
 
-    line_gap  = 18
+    line_gap  = 20
     line_h    = font_size + line_gap
     total_h   = line_h * len(lines) - line_gap
 
