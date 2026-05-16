@@ -4,16 +4,15 @@ generate_thumbnail.py
 ブログ記事のサムネイル画像（1200×630px）を自動生成する
 
 デザイン仕様:
-  - 背景: 記事関連のUnsplash写真（URLで指定可）
-  - 薄い暗いオーバーレイ（写真をしっかり見せる）
-  - タイトル: 白い半透明カードの上に大きな濃い文字
+  - 背景: 記事関連のUnsplash写真
+  - 暗いオーバーレイ（写真を活かしつつ文字を際立てる）
+  - テキスト: 大きな白抜き文字（ジャンルカラー＋太い白アウトライン）
+              → YouTube人気チャンネル風の視認性の高いデザイン
   - バッジ: ジャンルカラーの丸角バッジ（左上）
   - サイト名: 下部中央（白文字）
 
 単体実行:
   python3 src/generate_thumbnail.py --genre gourmet --title "タイトル" --slug gourmet_20260514
-  python3 src/generate_thumbnail.py --genre gadget --title "タイトル" --slug gadget_xxx \
-      --bg-url "https://images.unsplash.com/photo-xxx"
 
 generate.py から呼び出し:
   from generate_thumbnail import create_thumbnail
@@ -39,51 +38,45 @@ FONT_BOLD    = "/System/Library/Fonts/ヒラギノ角ゴシック W6.ttc"
 FONT_REGULAR = "/System/Library/Fonts/ヒラギノ角ゴシック W3.ttc"
 
 # ── ジャンルテーマ ─────────────────────────────────────────────────────
-# bg_color: 画像が取得できない場合のソリッドカラー
-# overlay:  背景オーバーレイ・バッジ・アクセントラインに使う色（RGB）
-# card_text: タイトルカード上のテキスト色
+# text_color: 白抜き文字の内側色（鮮やかな色）
+# badge_fill: 左上バッジの背景色
 GENRE_THEMES: dict[str, dict] = {
     "gourmet": {
         "bg_color":   (80, 20, 10),
-        "overlay":    (180, 40, 15),    # 暖色系レッド
-        "card_text":  (140, 25, 10),
-        "badge_fill": (180, 40, 15),
+        "text_color": (255, 80, 15),     # 鮮やかオレンジレッド
+        "badge_fill": (220, 60, 10),
         "badge_text": (255, 255, 255),
         "label":      "グルメ・食",
         "default_bg": "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1200&q=80",
     },
     "gadget": {
         "bg_color":   (10, 20, 60),
-        "overlay":    (20, 60, 160),    # ディープブルー
-        "card_text":  (15, 45, 130),
-        "badge_fill": (20, 60, 160),
+        "text_color": (30, 170, 255),    # ブライトブルー
+        "badge_fill": (20, 130, 220),
         "badge_text": (255, 255, 255),
         "label":      "ガジェット・テック",
         "default_bg": "https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200&q=80",
     },
     "business": {
         "bg_color":   (5, 40, 30),
-        "overlay":    (10, 100, 75),    # エメラルドグリーン
-        "card_text":  (8, 80, 60),
-        "badge_fill": (10, 100, 75),
+        "text_color": (40, 220, 120),    # ブライトグリーン
+        "badge_fill": (15, 170, 85),
         "badge_text": (255, 255, 255),
         "label":      "ビジネス・副業",
         "default_bg": "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=1200&q=80",
     },
     "investment": {
         "bg_color":   (50, 30, 5),
-        "overlay":    (140, 85, 10),    # ゴールド
-        "card_text":  (110, 65, 8),
-        "badge_fill": (140, 85, 10),
+        "text_color": (255, 210, 0),     # ゴールドイエロー
+        "badge_fill": (190, 140, 0),
         "badge_text": (255, 255, 255),
         "label":      "投資・資産運用",
         "default_bg": "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&q=80",
     },
     "travel": {
         "bg_color":   (5, 35, 55),
-        "overlay":    (10, 95, 155),    # スカイブルー
-        "card_text":  (8, 75, 125),
-        "badge_fill": (10, 95, 155),
+        "text_color": (30, 215, 255),    # スカイシアン
+        "badge_fill": (10, 140, 205),
         "badge_text": (255, 255, 255),
         "label":      "旅行・観光",
         "default_bg": "https://images.unsplash.com/photo-1488085061387-422e29b40080?w=1200&q=80",
@@ -110,11 +103,10 @@ def _fetch_image(url: str, timeout: int = 8) -> Image.Image | None:
 
 
 def _cover_fill(img: Image.Image, target_w: int, target_h: int) -> Image.Image:
-    """画像をアスペクト比を保ったまま target サイズに cover-fill (中央クロップ)"""
+    """アスペクト比を保ちながら cover-fill（中央クロップ）"""
     src_w, src_h = img.size
     scale = max(target_w / src_w, target_h / src_h)
-    new_w = int(src_w * scale)
-    new_h = int(src_h * scale)
+    new_w, new_h = int(src_w * scale), int(src_h * scale)
     img = img.resize((new_w, new_h), Image.LANCZOS)
     left = (new_w - target_w) // 2
     top  = (new_h - target_h) // 2
@@ -122,30 +114,29 @@ def _cover_fill(img: Image.Image, target_w: int, target_h: int) -> Image.Image:
 
 
 def _make_solid_bg(w: int, h: int, color: tuple) -> Image.Image:
-    """ソリッドカラーの背景（フォールバック用）"""
     return Image.new("RGB", (w, h), color)
 
 
-def _apply_light_overlay(base: Image.Image) -> Image.Image:
+def _apply_overlay(base: Image.Image, dark_alpha: int = 150) -> Image.Image:
     """
-    背景写真が活きる薄めのオーバーレイ:
-      - 全体: 非常に薄い暗め（写真をしっかり見せる）
-      - 下部: 少し暗くしてサイト名を読みやすく
+    写真を活かしつつ白抜き文字が映えるよう調整するオーバーレイ:
+      - 全体: 均一な暗いオーバーレイ（文字を浮き立たせる）
+      - 下部: より暗くしてサイト名を読みやすく
     """
     w, h = base.size
     result = base.convert("RGBA")
 
-    # --- レイヤー1: 全体を軽く暗くする（写真はしっかり見える）---
-    dark = Image.new("RGBA", (w, h), (0, 0, 0, 80))   # 約30%暗め（以前は60%）
+    # 全体を暗く
+    dark = Image.new("RGBA", (w, h), (0, 0, 0, dark_alpha))
     result = Image.alpha_composite(result, dark)
 
-    # --- レイヤー2: 下部のみ暗くしてサイト名を読みやすく ---
+    # 下部グラデーション
     bottom = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     draw2 = ImageDraw.Draw(bottom)
     for y in range(h):
-        if y < h - 110:
+        if y < h - 120:
             continue
-        t = (y - (h - 110)) / 110
+        t = (y - (h - 120)) / 120
         alpha = int(200 * t)
         draw2.line([(0, y), (w, y)], fill=(0, 0, 0, alpha))
     result = Image.alpha_composite(result, bottom)
@@ -190,7 +181,7 @@ def _shorten_for_thumbnail(title: str) -> str:
     """
     サムネイル用に短縮したタイトルを返す。
     '：' '｜' ' | ' の前の主題部分だけを使用。
-    例: "新幹線を安く乗る方法：早割・スマートEXの使い方" → "新幹線を安く乗る方法"
+    例: "新幹線を安く乗る方法：早割…" → "新幹線を安く乗る方法"
     """
     for sep in ["：", "｜", " | "]:
         if sep in title:
@@ -205,39 +196,69 @@ def _wrap_no_widow(
     base_size: int,
     max_width: int,
     max_lines: int = 2,
-    min_last_ratio: float = 0.35,
+    min_last_ratio: float = 0.38,
 ) -> tuple[list[str], ImageFont.FreeTypeFont]:
     """
-    ウィドウ（末尾の極端に短い行）が出ないようにフォントサイズを調整して折り返す。
-
-    - base_size から始めて 6px ずつ下げながら最大 3回試みる
-    - 最終行の幅が max_width * min_last_ratio 以上になれば OK
-    - max_lines を超える場合も次のサイズへ
+    ウィドウ（末尾の極端に短い行）が出ないようフォントサイズを調整しながら折り返す。
+    base_size から 6px ずつ下げながら最大 4回試みる。
     """
-    for delta in [0, 6, 12, 18]:
-        size = max(32, base_size - delta)
+    for delta in [0, 6, 12, 18, 24]:
+        size = max(36, base_size - delta)
         font = _load_font(font_path, size)
         lines = _wrap_text(text, font, max_width, draw)
 
-        # 行数オーバーは除外
         if len(lines) > max_lines + 1:
             continue
 
-        # 末尾カット（3行目以降は省略）
         if len(lines) > max_lines:
             lines = lines[:max_lines] + [lines[max_lines][:2] + "…"]
 
-        # ウィドウチェック: 最終行が十分な幅か
         last_w = draw.textlength(lines[-1], font=font)
         if len(lines) <= 1 or last_w >= max_width * min_last_ratio:
             return lines, font
 
-    # どうしても解消できない場合はそのまま返す
-    font = _load_font(font_path, max(32, base_size - 18))
+    font = _load_font(font_path, max(36, base_size - 24))
     lines = _wrap_text(text, font, max_width, draw)
     if len(lines) > max_lines:
         lines = lines[:max_lines] + [lines[max_lines][:2] + "…"]
     return lines, font
+
+
+def _draw_outlined_text(
+    draw: ImageDraw.ImageDraw,
+    xy: tuple[int, int],
+    text: str,
+    font: ImageFont.FreeTypeFont,
+    fill: tuple,
+    stroke_width: int = 9,
+) -> None:
+    """
+    白抜き文字を描画する:
+      1. 黒いシャドウ（+4,+4 ずらし、黒ストローク）
+      2. 白いアウトライン + ジャンルカラーのテキスト
+    """
+    x, y = xy
+    sw = stroke_width
+
+    # シャドウパス（ずらして黒く描画）
+    draw.text(
+        (x + 4, y + 4),
+        text,
+        font=font,
+        fill=(0, 0, 0, 0),           # 塗りなし
+        stroke_fill=(0, 0, 0, 160),  # 黒ストロークでシャドウ
+        stroke_width=sw + 3,
+    )
+
+    # 本体: 白アウトライン + ジャンルカラー
+    draw.text(
+        (x, y),
+        text,
+        font=font,
+        fill=fill,
+        stroke_fill=(255, 255, 255),
+        stroke_width=sw,
+    )
 
 
 # ── メイン関数 ─────────────────────────────────────────────────────────
@@ -253,11 +274,11 @@ def create_thumbnail(
     サムネイル画像を生成して保存し、ファイルパスを返す。
 
     Args:
-        title:        記事タイトル
+        title:        記事タイトル（SEO用フルタイトルでOK。サムネイルでは自動短縮）
         genre:        ジャンル (gourmet / gadget / business / investment / travel)
-        slug:         保存ファイル名のベース (例: gourmet_20260514)
+        slug:         保存ファイル名のベース
         output_dir:   保存先ディレクトリ (省略時は public/thumbnails/)
-        bg_image_url: 背景に使う画像の URL（省略時はジャンルデフォルト画像）
+        bg_image_url: 背景画像URL（省略時はジャンルデフォルト）
 
     Returns:
         生成画像の Path
@@ -272,39 +293,37 @@ def create_thumbnail(
 
     if raw_img:
         bg = _cover_fill(raw_img, WIDTH, HEIGHT)
-        # 極軽めのブラー（写真の精細さを活かす）
-        bg = bg.filter(ImageFilter.GaussianBlur(radius=1))
+        bg = bg.filter(ImageFilter.GaussianBlur(radius=1.5))
     else:
         bg = _make_solid_bg(WIDTH, HEIGHT, theme["bg_color"])
 
-    # ── 薄いオーバーレイ合成（背景写真を活かす）─────────────────
-    img = _apply_light_overlay(bg)
-
-    # ── サムネイル用タイトル（「：」前の主題部分だけ使う）────────
-    display_title = _shorten_for_thumbnail(title)
+    # ── オーバーレイ（文字が映えるよう暗め）─────────────────────
+    img = _apply_overlay(bg, dark_alpha=155)
 
     # ── フォント ─────────────────────────────────────────────────
-    font_badge = _load_font(FONT_BOLD, 32)
-    font_site  = _load_font(FONT_REGULAR, 26)
+    font_badge = _load_font(FONT_BOLD, 30)
+    font_site  = _load_font(FONT_REGULAR, 24)
 
-    # タイトルの文字数に応じた基準フォントサイズ（短縮後の文字数で判定）
+    # ── サムネイル用タイトル（「：」前の主題部分だけ）───────────
+    display_title = _shorten_for_thumbnail(title)
+
+    # 文字数に応じた基準フォントサイズ（白抜き文字は大きく）
     n = len(display_title)
-    if n <= 10:
-        base_font_size = 92
-    elif n <= 16:
-        base_font_size = 82
-    elif n <= 22:
-        base_font_size = 72
-    elif n <= 30:
-        base_font_size = 64
+    if n <= 9:
+        base_font_size = 110
+    elif n <= 14:
+        base_font_size = 96
+    elif n <= 19:
+        base_font_size = 86
+    elif n <= 25:
+        base_font_size = 76
     else:
-        base_font_size = 56
+        base_font_size = 68
 
     # ── ジャンルバッジ（左上）────────────────────────────────────
-    PAD_X, PAD_Y     = 56, 44
-    BADGE_PH, BADGE_PV = 24, 12
+    PAD_X, PAD_Y     = 52, 42
+    BADGE_PH, BADGE_PV = 22, 10
 
-    # バッジを RGBA レイヤーで描画
     badge_layer = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
     badge_draw  = ImageDraw.Draw(badge_layer)
 
@@ -317,8 +336,8 @@ def create_thumbnail(
     _draw_rounded_rect(
         badge_draw,
         (PAD_X, PAD_Y, PAD_X + bw, PAD_Y + bh),
-        radius=26,
-        fill=(br, bg_, bb, 245),
+        radius=24,
+        fill=(br, bg_, bb, 240),
     )
     img = Image.alpha_composite(img.convert("RGBA"), badge_layer).convert("RGB")
     draw = ImageDraw.Draw(img)
@@ -329,72 +348,48 @@ def create_thumbnail(
         fill=theme["badge_text"],
     )
 
-    # ── タイトルの折り返し計算（ウィドウ防止）───────────────────
-    CARD_MARGIN_X  = 56          # カード左右の余白
-    TEXT_PAD_X     = 44          # カード内テキスト左右のパディング
-    TEXT_PAD_Y     = 32          # カード内テキスト上下のパディング
-    max_tw = WIDTH - CARD_MARGIN_X * 2 - TEXT_PAD_X * 2
+    # ── タイトル折り返し（ウィドウ防止）──────────────────────────
+    TEXT_X   = PAD_X          # 左端X
+    STROKE_W = 9               # 白アウトライン幅
+    # ストローク込みの実効幅で折り返し幅を計算
+    max_tw = WIDTH - TEXT_X - PAD_X - STROKE_W * 2
 
-    # ウィドウ（末尾の極端に短い行）が出ないよう調整しながら折り返す
     lines, font_title = _wrap_no_widow(
         display_title, draw, FONT_BOLD, base_font_size, max_tw,
-        max_lines=2, min_last_ratio=0.35,
+        max_lines=2, min_last_ratio=0.38,
     )
     font_size = font_title.size
 
-    line_gap  = 20
-    line_h    = font_size + line_gap
-    total_h   = line_h * len(lines) - line_gap
+    line_gap = 22
+    line_h   = font_size + line_gap
+    total_h  = line_h * len(lines) - line_gap
 
     badge_btm = PAD_Y + bh
-    # カードの垂直位置: バッジ下 60px 以降 or 画面中央付近
-    card_y1 = max(badge_btm + 50, (HEIGHT - total_h) // 2 - TEXT_PAD_Y - 20)
-    card_y2 = card_y1 + total_h + TEXT_PAD_Y * 2
-    card_x1 = CARD_MARGIN_X
-    card_x2 = WIDTH - CARD_MARGIN_X
+    # 縦方向: バッジ下・サイト名上の中央に配置
+    usable_top    = badge_btm + 40
+    usable_bottom = HEIGHT - 100   # サイト名エリアを除く
+    title_y = usable_top + (usable_bottom - usable_top - total_h) // 2
 
-    # ── アクセントライン（カード上部）──────────────────────────────
-    ar, ag, ab = theme["overlay"]
-    draw.rectangle(
-        [(card_x1, card_y1 - 8), (card_x1 + 130, card_y1 - 2)],
-        fill=(ar, ag, ab),
-    )
-    draw.rectangle(
-        [(card_x1 + 138, card_y1 - 8), (card_x1 + 165, card_y1 - 2)],
-        fill=(ar, ag, ab, 120),
-    )
-
-    # ── 白い半透明カード ──────────────────────────────────────────
-    card_layer = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
-    card_draw  = ImageDraw.Draw(card_layer)
-    _draw_rounded_rect(
-        card_draw,
-        (card_x1, card_y1, card_x2, card_y2),
-        radius=18,
-        fill=(255, 255, 255, 215),
-    )
-    img = Image.alpha_composite(img.convert("RGBA"), card_layer).convert("RGB")
-    draw = ImageDraw.Draw(img)
-
-    # ── タイトルテキスト（カード上に大きく）─────────────────────
-    cr, cg, cb = theme["card_text"]
-    title_y = card_y1 + TEXT_PAD_Y
-
+    # ── 白抜き文字でタイトル描画 ──────────────────────────────────
+    tc = theme["text_color"]
     for i, line in enumerate(lines):
         y = title_y + i * line_h
-        # 1px 程度の細いシャドウ（白カード上なので控えめに）
-        draw.text((card_x1 + TEXT_PAD_X + 1, y + 1), line,
-                  font=font_title, fill=(0, 0, 0, 40))
-        draw.text((card_x1 + TEXT_PAD_X, y), line,
-                  font=font_title, fill=(cr, cg, cb))
+        _draw_outlined_text(
+            draw,
+            (TEXT_X, y),
+            line,
+            font_title,
+            fill=tc,
+            stroke_width=STROKE_W,
+        )
 
     # ── サイト名（下部中央）─────────────────────────────────────
-    font_site_w = draw.textlength(SITE_NAME, font=font_site)
+    site_w = draw.textlength(SITE_NAME, font=font_site)
     draw.text(
-        ((WIDTH - font_site_w) // 2, HEIGHT - 60),
+        ((WIDTH - site_w) // 2, HEIGHT - 54),
         SITE_NAME,
         font=font_site,
-        fill=(255, 255, 255, 220),
+        fill=(255, 255, 255, 210),
     )
 
     # ── 保存 ────────────────────────────────────────────────────
