@@ -5,12 +5,14 @@ generate_thumbnail.py
 
 デザイン仕様:
   - 背景: 記事関連のUnsplash写真（URLで指定可）
-  - オーバーレイ: 暗い半透明グラデーション + ジャンルカラー
-  - テキスト: ヒラギノ角ゴシック W6 の太字白文字（ドロップシャドウ付き）
+  - 薄い暗いオーバーレイ（写真をしっかり見せる）
+  - タイトル: 白い半透明カードの上に大きな濃い文字
+  - バッジ: ジャンルカラーの丸角バッジ（左上）
+  - サイト名: 下部中央（白文字）
 
 単体実行:
   python3 src/generate_thumbnail.py --genre gourmet --title "タイトル" --slug gourmet_20260514
-  python3 src/generate_thumbnail.py --genre gadget --title "タイトル" --slug gadget_xxx \\
+  python3 src/generate_thumbnail.py --genre gadget --title "タイトル" --slug gadget_xxx \
       --bg-url "https://images.unsplash.com/photo-xxx"
 
 generate.py から呼び出し:
@@ -38,45 +40,51 @@ FONT_REGULAR = "/System/Library/Fonts/ヒラギノ角ゴシック W3.ttc"
 
 # ── ジャンルテーマ ─────────────────────────────────────────────────────
 # bg_color: 画像が取得できない場合のソリッドカラー
-# overlay:  画像の上に乗せるグラデーション色（RGBA）
+# overlay:  背景オーバーレイ・バッジ・アクセントラインに使う色（RGB）
+# card_text: タイトルカード上のテキスト色
 GENRE_THEMES: dict[str, dict] = {
     "gourmet": {
         "bg_color":   (80, 20, 10),
-        "overlay":    (160, 30, 10),    # 暖色系レッド
-        "badge_fill": (255, 255, 255),
-        "badge_text": (160, 30, 10),
+        "overlay":    (180, 40, 15),    # 暖色系レッド
+        "card_text":  (140, 25, 10),
+        "badge_fill": (180, 40, 15),
+        "badge_text": (255, 255, 255),
         "label":      "グルメ・食",
         "default_bg": "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1200&q=80",
     },
     "gadget": {
         "bg_color":   (10, 20, 60),
-        "overlay":    (15, 40, 120),    # ディープブルー
-        "badge_fill": (255, 255, 255),
-        "badge_text": (15, 40, 120),
+        "overlay":    (20, 60, 160),    # ディープブルー
+        "card_text":  (15, 45, 130),
+        "badge_fill": (20, 60, 160),
+        "badge_text": (255, 255, 255),
         "label":      "ガジェット・テック",
         "default_bg": "https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200&q=80",
     },
     "business": {
         "bg_color":   (5, 40, 30),
-        "overlay":    (8, 80, 60),      # エメラルドグリーン
-        "badge_fill": (255, 255, 255),
-        "badge_text": (8, 80, 60),
+        "overlay":    (10, 100, 75),    # エメラルドグリーン
+        "card_text":  (8, 80, 60),
+        "badge_fill": (10, 100, 75),
+        "badge_text": (255, 255, 255),
         "label":      "ビジネス・副業",
         "default_bg": "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=1200&q=80",
     },
     "investment": {
         "bg_color":   (50, 30, 5),
-        "overlay":    (110, 65, 8),     # ゴールド
-        "badge_fill": (255, 255, 255),
-        "badge_text": (110, 65, 8),
+        "overlay":    (140, 85, 10),    # ゴールド
+        "card_text":  (110, 65, 8),
+        "badge_fill": (140, 85, 10),
+        "badge_text": (255, 255, 255),
         "label":      "投資・資産運用",
         "default_bg": "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&q=80",
     },
     "travel": {
         "bg_color":   (5, 35, 55),
-        "overlay":    (8, 75, 120),     # スカイシアン
-        "badge_fill": (255, 255, 255),
-        "badge_text": (8, 75, 120),
+        "overlay":    (10, 95, 155),    # スカイブルー
+        "card_text":  (8, 75, 125),
+        "badge_fill": (10, 95, 155),
+        "badge_text": (255, 255, 255),
         "label":      "旅行・観光",
         "default_bg": "https://images.unsplash.com/photo-1488085061387-422e29b40080?w=1200&q=80",
     },
@@ -118,38 +126,27 @@ def _make_solid_bg(w: int, h: int, color: tuple) -> Image.Image:
     return Image.new("RGB", (w, h), color)
 
 
-def _apply_overlays(base: Image.Image, genre_color: tuple) -> Image.Image:
+def _apply_light_overlay(base: Image.Image) -> Image.Image:
     """
-    2層のオーバーレイを合成する:
-      1. 全体: 暗い半透明（画像を沈める）
-      2. 左〜中央: ジャンルカラー半透明グラデーション（テキスト読みやすさ確保）
+    背景写真が活きる薄めのオーバーレイ:
+      - 全体: 非常に薄い暗め（写真をしっかり見せる）
+      - 下部: 少し暗くしてサイト名を読みやすく
     """
     w, h = base.size
+    result = base.convert("RGBA")
 
-    # --- レイヤー1: 全体を暗くする均一オーバーレイ ---
-    dark = Image.new("RGBA", (w, h), (0, 0, 0, 155))   # 60% 暗め
-    result = Image.alpha_composite(base.convert("RGBA"), dark)
+    # --- レイヤー1: 全体を軽く暗くする（写真はしっかり見える）---
+    dark = Image.new("RGBA", (w, h), (0, 0, 0, 80))   # 約30%暗め（以前は60%）
+    result = Image.alpha_composite(result, dark)
 
-    # --- レイヤー2: 左側にジャンルカラーグラデーション ---
-    grad = Image.new("RGBA", (w, h), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(grad)
-    r, g, b = genre_color
-    # 左端: 不透明度 160 → 右端: 0 (水平グラデーション)
-    for x in range(w):
-        t = x / (w - 1)
-        # 左2/3は濃く、右1/3は薄く
-        alpha = int(max(0, 160 * (1 - t * 1.3)))
-        draw.line([(x, 0), (x, h)], fill=(r, g, b, alpha))
-    result = Image.alpha_composite(result, grad)
-
-    # --- レイヤー3: 下部をより暗くしてサイト名を読みやすく ---
+    # --- レイヤー2: 下部のみ暗くしてサイト名を読みやすく ---
     bottom = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     draw2 = ImageDraw.Draw(bottom)
     for y in range(h):
-        if y < h - 120:
+        if y < h - 110:
             continue
-        t = (y - (h - 120)) / 120
-        alpha = int(180 * t)
+        t = (y - (h - 110)) / 110
+        alpha = int(200 * t)
         draw2.line([(0, y), (w, y)], fill=(0, 0, 0, alpha))
     result = Image.alpha_composite(result, bottom)
 
@@ -221,43 +218,54 @@ def create_thumbnail(
 
     if raw_img:
         bg = _cover_fill(raw_img, WIDTH, HEIGHT)
-        # 軽いブラーで写真感を抑えてテキストを際立たせる
-        bg = bg.filter(ImageFilter.GaussianBlur(radius=2))
+        # 極軽めのブラー（写真の精細さを活かす）
+        bg = bg.filter(ImageFilter.GaussianBlur(radius=1))
     else:
-        # フォールバック: ソリッドカラー
         bg = _make_solid_bg(WIDTH, HEIGHT, theme["bg_color"])
 
-    # ── オーバーレイ合成 ─────────────────────────────────────────
-    img = _apply_overlays(bg, theme["overlay"])
-    draw = ImageDraw.Draw(img)
+    # ── 薄いオーバーレイ合成（背景写真を活かす）─────────────────
+    img = _apply_light_overlay(bg)
 
     # ── フォント ─────────────────────────────────────────────────
-    font_badge = _load_font(FONT_BOLD, 28)
+    font_badge = _load_font(FONT_BOLD, 32)
     font_site  = _load_font(FONT_REGULAR, 26)
 
-    if len(title) <= 18:
-        font_title = _load_font(FONT_BOLD, 70)
-    elif len(title) <= 28:
-        font_title = _load_font(FONT_BOLD, 60)
-    elif len(title) <= 40:
-        font_title = _load_font(FONT_BOLD, 52)
+    # タイトルフォントサイズ（大きめ）
+    n = len(title)
+    if n <= 13:
+        font_size = 88
+    elif n <= 20:
+        font_size = 76
+    elif n <= 28:
+        font_size = 66
+    elif n <= 38:
+        font_size = 58
     else:
-        font_title = _load_font(FONT_BOLD, 44)
+        font_size = 50
+    font_title = _load_font(FONT_BOLD, font_size)
 
     # ── ジャンルバッジ（左上）────────────────────────────────────
-    PAD_X, PAD_Y     = 60, 48
-    BADGE_PH, BADGE_PV = 20, 10
+    PAD_X, PAD_Y     = 56, 44
+    BADGE_PH, BADGE_PV = 24, 12
+
+    # バッジを RGBA レイヤーで描画
+    badge_layer = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
+    badge_draw  = ImageDraw.Draw(badge_layer)
 
     badge_text = theme["label"]
-    bbox = draw.textbbox((0, 0), badge_text, font=font_badge)
+    bbox = badge_draw.textbbox((0, 0), badge_text, font=font_badge)
     bw = bbox[2] - bbox[0] + BADGE_PH * 2
     bh = bbox[3] - bbox[1] + BADGE_PV * 2
+
+    br, bg_, bb = theme["badge_fill"]
     _draw_rounded_rect(
-        draw,
+        badge_draw,
         (PAD_X, PAD_Y, PAD_X + bw, PAD_Y + bh),
-        radius=22,
-        fill=theme["badge_fill"],
+        radius=26,
+        fill=(br, bg_, bb, 245),
     )
+    img = Image.alpha_composite(img.convert("RGBA"), badge_layer).convert("RGB")
+    draw = ImageDraw.Draw(img)
     draw.text(
         (PAD_X + BADGE_PH, PAD_Y + BADGE_PV - bbox[1]),
         badge_text,
@@ -265,47 +273,69 @@ def create_thumbnail(
         fill=theme["badge_text"],
     )
 
-    # ── タイトルテキスト ─────────────────────────────────────────
-    margin_x   = PAD_X
-    max_tw     = WIDTH - margin_x * 2
-    lines      = _wrap_text(title, font_title, max_tw, draw)
+    # ── タイトルの折り返し計算 ────────────────────────────────────
+    CARD_MARGIN_X  = 56          # カード左右の余白
+    TEXT_PAD_X     = 44          # カード内テキスト左右のパディング
+    TEXT_PAD_Y     = 32          # カード内テキスト上下のパディング
+    max_tw = WIDTH - CARD_MARGIN_X * 2 - TEXT_PAD_X * 2
 
+    lines = _wrap_text(title, font_title, max_tw, draw)
     if len(lines) > 3:
         lines = lines[:2] + [lines[2] + "…"]
 
-    line_gap  = 14
-    line_h    = font_title.size + line_gap
+    line_gap  = 18
+    line_h    = font_size + line_gap
     total_h   = line_h * len(lines) - line_gap
-    badge_btm = PAD_Y + bh
 
-    title_y = max(badge_btm + 44, (HEIGHT - total_h) // 2 - 20)
+    badge_btm = PAD_Y + bh
+    # カードの垂直位置: バッジ下 60px 以降 or 画面中央付近
+    card_y1 = max(badge_btm + 50, (HEIGHT - total_h) // 2 - TEXT_PAD_Y - 20)
+    card_y2 = card_y1 + total_h + TEXT_PAD_Y * 2
+    card_x1 = CARD_MARGIN_X
+    card_x2 = WIDTH - CARD_MARGIN_X
+
+    # ── アクセントライン（カード上部）──────────────────────────────
+    ar, ag, ab = theme["overlay"]
+    draw.rectangle(
+        [(card_x1, card_y1 - 8), (card_x1 + 130, card_y1 - 2)],
+        fill=(ar, ag, ab),
+    )
+    draw.rectangle(
+        [(card_x1 + 138, card_y1 - 8), (card_x1 + 165, card_y1 - 2)],
+        fill=(ar, ag, ab, 120),
+    )
+
+    # ── 白い半透明カード ──────────────────────────────────────────
+    card_layer = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
+    card_draw  = ImageDraw.Draw(card_layer)
+    _draw_rounded_rect(
+        card_draw,
+        (card_x1, card_y1, card_x2, card_y2),
+        radius=18,
+        fill=(255, 255, 255, 215),
+    )
+    img = Image.alpha_composite(img.convert("RGBA"), card_layer).convert("RGB")
+    draw = ImageDraw.Draw(img)
+
+    # ── タイトルテキスト（カード上に大きく）─────────────────────
+    cr, cg, cb = theme["card_text"]
+    title_y = card_y1 + TEXT_PAD_Y
 
     for i, line in enumerate(lines):
         y = title_y + i * line_h
-        # 多層シャドウ（背景画像上でも読める）
-        for dx, dy, alpha in [(3, 3, 120), (2, 2, 100), (1, 1, 80)]:
-            draw.text((margin_x + dx, y + dy), line, font=font_title,
-                      fill=(0, 0, 0, alpha))
-        draw.text((margin_x, y), line, font=font_title, fill=(255, 255, 255))
-
-    # ── タイトル下のアクセントライン ─────────────────────────────
-    accent_y = title_y + total_h + 24
-    draw.rectangle(
-        [(margin_x, accent_y), (margin_x + 100, accent_y + 5)],
-        fill=(255, 255, 255, 200),
-    )
-    draw.rectangle(
-        [(margin_x + 108, accent_y), (margin_x + 130, accent_y + 5)],
-        fill=(255, 255, 255, 90),
-    )
+        # 1px 程度の細いシャドウ（白カード上なので控えめに）
+        draw.text((card_x1 + TEXT_PAD_X + 1, y + 1), line,
+                  font=font_title, fill=(0, 0, 0, 40))
+        draw.text((card_x1 + TEXT_PAD_X, y), line,
+                  font=font_title, fill=(cr, cg, cb))
 
     # ── サイト名（下部中央）─────────────────────────────────────
-    site_w = draw.textlength(SITE_NAME, font=font_site)
+    font_site_w = draw.textlength(SITE_NAME, font=font_site)
     draw.text(
-        ((WIDTH - site_w) // 2, HEIGHT - 62),
+        ((WIDTH - font_site_w) // 2, HEIGHT - 60),
         SITE_NAME,
         font=font_site,
-        fill=(255, 255, 255, 210),
+        fill=(255, 255, 255, 220),
     )
 
     # ── 保存 ────────────────────────────────────────────────────
