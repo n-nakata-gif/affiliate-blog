@@ -42,14 +42,7 @@
     },
     {
       "genre": "travel",
-      "themes": [
-        {
-          "title": "国内旅行を安く抑えるコツ｜宿・交通費を最大半額にする方法",
-          "target_keyword": "国内旅行 安く おすすめ",
-          "reason": "旅行検索層の購買ニーズと一致し楽天・じゃらんアフィリエイト向き",
-          "priority": "medium"
-        }
-      ]
+      "themes": []
     },
     {
       "genre": "gourmet",
