@@ -26,8 +26,44 @@ WIDTH, HEIGHT = 1200, 630
 SITE_NAME     = "novlify.jp"
 OUTPUT_DIR    = Path(__file__).parent.parent / "public" / "thumbnails"
 
-FONT_BOLD    = "/System/Library/Fonts/ヒラギノ角ゴシック W6.ttc"
-FONT_REGULAR = "/System/Library/Fonts/ヒラギノ角ゴシック W3.ttc"
+
+def _resolve_font(bold: bool = True) -> str:
+    """macOS / Linux 両環境でJapanese太字フォントを自動検出して返す"""
+    candidates = (
+        [
+            # macOS ヒラギノ（太字）
+            "/System/Library/Fonts/ヒラギノ角ゴシック W6.ttc",
+            "/System/Library/Fonts/Supplemental/ヒラギノ角ゴシック W6.ttc",
+            # Ubuntu: fonts-noto-cjk
+            "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc",
+            "/usr/share/fonts/truetype/noto/NotoSansCJK-Bold.ttc",
+            "/usr/share/fonts/noto-cjk/NotoSansCJK-Bold.ttc",
+            # Ubuntu: fonts-ipafont
+            "/usr/share/fonts/opentype/ipafont-gothic/ipagp.ttf",
+            "/usr/share/fonts/truetype/ipafont/ipagp.ttf",
+            "/usr/share/fonts/truetype/fonts-ipafont/ipagp.ttf",
+        ] if bold else [
+            # macOS ヒラギノ（レギュラー）
+            "/System/Library/Fonts/ヒラギノ角ゴシック W3.ttc",
+            "/System/Library/Fonts/Supplemental/ヒラギノ角ゴシック W3.ttc",
+            # Ubuntu: fonts-noto-cjk
+            "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+            "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
+            "/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc",
+            # Ubuntu: fonts-ipafont
+            "/usr/share/fonts/opentype/ipafont-gothic/ipag.ttf",
+            "/usr/share/fonts/truetype/ipafont/ipag.ttf",
+            "/usr/share/fonts/truetype/fonts-ipafont/ipag.ttf",
+        ]
+    )
+    for p in candidates:
+        if Path(p).exists():
+            return p
+    return ""  # _load_font がデフォルトフォントにフォールバック
+
+
+FONT_BOLD    = _resolve_font(bold=True)
+FONT_REGULAR = _resolve_font(bold=False)
 
 # ── ジャンルテーマ ─────────────────────────────────────────────────────
 GENRE_THEMES: dict[str, dict] = {
