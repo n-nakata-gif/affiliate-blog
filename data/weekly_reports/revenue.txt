@@ -1,9 +1,9 @@
-Novlify 収益レポート 2026/05/11
+Novlify 収益レポート 2026/05/18
 
 ■ AdSense  未連携（ADSENSE_PUBLISHER_ID を Secrets に追加で自動集計）
 
-■ 今週の投稿  1本
-  ガジェット 1本
+■ 今週の投稿  0本
+  （なし）
 
 ■ 各プラットフォーム確認
   AdSense: https://adsense.google.com/adsense/
