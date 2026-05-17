@@ -39,6 +39,8 @@ jobs:
           X_ACCESS_SECRET:       ${{ secrets.X_ACCESS_SECRET }}
           PINTEREST_ACCESS_TOKEN: ${{ secrets.PINTEREST_ACCESS_TOKEN }}
           UNSPLASH_API_KEY:      ${{ secrets.UNSPLASH_API_KEY }}
+          RAKUTEN_APP_ID:        ${{ secrets.RAKUTEN_APP_ID }}
+          RAKUTEN_AFFILIATE_ID:  ${{ secrets.RAKUTEN_AFFILIATE_ID }}
         run: python src/generate.py --genre gadget
       - name: Auto-fix on failure
         if: failure()

@@ -1536,11 +1536,19 @@ def generate_room_posts_content(
             messages=[{"role": "user", "content": prompt}],
         )
         text = resp.content[0].text.strip()
-        json_match = re.search(r'\[[\s\S]*?\]', text)
+        # コードブロックマーカーを除去（```json ... ``` 形式に対応）
+        text = re.sub(r'^```(?:json)?\s*', '', text)
+        text = re.sub(r'\s*```$', '', text.strip())
+        # 貪欲マッチで外側の配列全体を取得（非貪欲だと最初の]で止まり壊れたJSONになる）
+        json_match = re.search(r'\[[\s\S]*\]', text)
         if not json_match:
-            logger.warning("楽天ROOM: JSON未検出")
+            logger.warning("楽天ROOM: JSON未検出 (response=%s)", text[:200])
             return []
-        posts = json.loads(json_match.group(0))
+        try:
+            posts = json.loads(json_match.group(0))
+        except json.JSONDecodeError as e:
+            logger.warning("楽天ROOM: JSONパース失敗: %s (text=%s)", e, json_match.group(0)[:200])
+            return []
         results = []
         for p in posts[:n]:
             if not isinstance(p, dict) or not p.get("comment"):
