@@ -32,14 +32,26 @@ REWRITE_IMPRESSIONS_MIN = 30    # かつ表示回数がこれ以上
 
 
 def get_gsc_service():
-    """GSC OAuth2認証でサービスオブジェクトを返す"""
+    """GSC認証でサービスオブジェクトを返す（サービスアカウント優先、OAuth フォールバック）"""
+    from googleapiclient.discovery import build
+
+    # ① サービスアカウント認証（永続・推奨）
+    sa_json = os.environ.get("GSC_SERVICE_ACCOUNT_JSON", "")
+    if sa_json:
+        import google.oauth2.service_account
+        info = json.loads(sa_json)
+        creds = google.oauth2.service_account.Credentials.from_service_account_info(
+            info, scopes=["https://www.googleapis.com/auth/webmasters.readonly"]
+        )
+        return build("searchconsole", "v1", credentials=creds)
+
+    # ② OAuth2認証（フォールバック・約7日でトークン失効するため非推奨）
     import google.oauth2.credentials
     import google.auth.transport.requests
-    from googleapiclient.discovery import build
 
     oauth_json = os.environ.get("GSC_OAUTH_CREDENTIALS", "")
     if not oauth_json:
-        raise RuntimeError("GSC_OAUTH_CREDENTIALS が未設定です")
+        raise RuntimeError("GSC_SERVICE_ACCOUNT_JSON も GSC_OAUTH_CREDENTIALS も未設定です")
 
     info = json.loads(oauth_json)
     creds = google.oauth2.credentials.Credentials(
@@ -486,9 +498,10 @@ def main():
         print("ERROR: GSC_SITE_URL が未設定です", flush=True)
         return
 
+    sa_creds    = os.environ.get("GSC_SERVICE_ACCOUNT_JSON", "")
     oauth_creds = os.environ.get("GSC_OAUTH_CREDENTIALS", "")
-    if not oauth_creds:
-        print("ERROR: GSC_OAUTH_CREDENTIALS が未設定です", flush=True)
+    if not sa_creds and not oauth_creds:
+        print("ERROR: GSC_SERVICE_ACCOUNT_JSON も GSC_OAUTH_CREDENTIALS も未設定です", flush=True)
         return
 
     now_jst  = datetime.now(JST)

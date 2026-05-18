@@ -25,29 +25,39 @@ GENRES = ["business", "gadget", "investment", "travel", "gourmet"]
 def fetch_search_console_data(site_url: str) -> dict | None:
     """Search Console データを取得。失敗時はNoneを返す。"""
     try:
-        import google.oauth2.credentials
-        import google.auth.transport.requests
         from googleapiclient.discovery import build
 
-        oauth_json = os.environ.get("GSC_OAUTH_CREDENTIALS", "")
-        if not oauth_json:
-            return None
+        # ① サービスアカウント認証（永続・推奨）
+        sa_json = os.environ.get("GSC_SERVICE_ACCOUNT_JSON", "")
+        if sa_json:
+            import google.oauth2.service_account
+            info = json.loads(sa_json)
+            creds = google.oauth2.service_account.Credentials.from_service_account_info(
+                info, scopes=["https://www.googleapis.com/auth/webmasters.readonly"]
+            )
+            service = build("searchconsole", "v1", credentials=creds)
+        else:
+            # ② OAuth2認証（フォールバック）
+            import google.oauth2.credentials
+            import google.auth.transport.requests
 
-        info = json.loads(oauth_json)
-        creds = google.oauth2.credentials.Credentials(
-            token=info.get("token"),
-            refresh_token=info["refresh_token"],
-            token_uri=info.get("token_uri", "https://oauth2.googleapis.com/token"),
-            client_id=info["client_id"],
-            client_secret=info["client_secret"],
-            scopes=info.get("scopes"),
-        )
+            oauth_json = os.environ.get("GSC_OAUTH_CREDENTIALS", "")
+            if not oauth_json:
+                return None
 
-        # トークンが期限切れの場合は自動リフレッシュ
-        if not creds.valid:
-            creds.refresh(google.auth.transport.requests.Request())
-
-        service = build("searchconsole", "v1", credentials=creds)
+            info = json.loads(oauth_json)
+            creds = google.oauth2.credentials.Credentials(
+                token=info.get("token"),
+                refresh_token=info["refresh_token"],
+                token_uri=info.get("token_uri", "https://oauth2.googleapis.com/token"),
+                client_id=info["client_id"],
+                client_secret=info["client_secret"],
+                scopes=info.get("scopes"),
+            )
+            # トークンが期限切れの場合は自動リフレッシュ
+            if not creds.valid:
+                creds.refresh(google.auth.transport.requests.Request())
+            service = build("searchconsole", "v1", credentials=creds)
 
         today = datetime.now(JST).date()
         end_date   = today - timedelta(days=3)
