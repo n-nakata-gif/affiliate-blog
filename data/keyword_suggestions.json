@@ -39,12 +39,6 @@
       "genre": "investment",
       "themes": [
         {
-          "title": "2026年版・初心者が最初に始めるべき資産運用3選",
-          "target_keyword": "資産運用 初心者 おすすめ 2026",
-          "reason": "初心者訴求はプロテイン初心者クエリと同様に需要が安定して高い",
-          "priority": "medium"
-        },
-        {
           "title": "新NISAで毎月1万円積立するならどの銘柄？初心者向け解説",
           "target_keyword": "新NISA 積立 初心者 おすすめ",
           "reason": "2026年も新NISA関心継続中、初心者層の検索ボリュームが大きい",
@@ -72,6 +66,12 @@
     {
       "genre": "gourmet",
       "themes": [
+        {
+          "title": "初心者向けプロテインおすすめ10選【味・コスパで徹底比較2026】",
+          "target_keyword": "プロテイン おすすめ 初心者",
+          "reason": "3imp・59位と大きく改善余地あり、詳細比較記事で上位進出が狙える",
+          "priority": "high"
+        },
         {
           "title": "キャンプ飯レシピ10選！BBQだけじゃない絶品アウトドアグルメ",
           "target_keyword": "キャンプ飯 レシピ おすすめ",
