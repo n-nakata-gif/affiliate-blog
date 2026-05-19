@@ -638,22 +638,48 @@ const articleSchema = {
     });
 
     /* ── 会話アバター挿入 ── */
-    // アバター判定ルール
-    function getAvatarSrc(text: string): string {
-      // 女性判定：女性名・女性キーワード
-      if (/のぞみ|ゆみ|さくら|あかね|OL|女性|主婦|ママ|女子/.test(text)) {
-        return '/avatars/female.svg';
+    const AVATAR_POOL = [
+      '/avatars/reader.svg',
+      '/avatars/male.svg',
+      '/avatars/expert.svg',
+      '/avatars/female.svg',
+    ];
+
+    // 発言者名を抽出（「💬 まさと（...）：」の"まさと"部分）
+    function extractSpeaker(text: string): string {
+      const m = text.match(/💬\s*([^\s（(：「]+)/);
+      return m ? m[1].trim() : '';
+    }
+
+    // 会話ブロック単位のnameMapを受け取り、同名なら同アバター・別名なら別アバターを返す
+    function getAvatarSrc(text: string, nameMap: Map<string, string>): string {
+      const name = extractSpeaker(text);
+
+      // 既出キャラは同じアバターを再利用
+      if (name && nameMap.has(name)) return nameMap.get(name)!;
+
+      let avatar: string;
+
+      // 女性判定
+      if (/のぞみ|ゆみ|さくら|あかね|みか|はるか|えみ|なな|りな|OL|女性|主婦|ママ|女子/.test(text)) {
+        avatar = '/avatars/female.svg';
       }
-      // 男性判定：男性名・男性キーワード
-      if (/しょうた|けんじ|たろう|じろう|男性|サラリーマン|ジム仲間|パパ|男/.test(text)) {
-        return '/avatars/male.svg';
+      // 男性判定（名前リストを拡充）
+      else if (/まさと|しょうた|けんじ|たろう|じろう|ゆうき|けんた|りょう|だいき|たかし|ひろし|男性|サラリーマン|ジム仲間|パパ|会社員.*男|男.*会社員/.test(text)) {
+        avatar = '/avatars/male.svg';
       }
-      // 詳しい人・回答側
-      if (/Bさん|詳しい人|編集部|回答|アドバイス/.test(text)) {
-        return '/avatars/expert.svg';
+      // 詳しい人・回答役
+      else if (/Bさん|詳しい人|編集部|回答|アドバイス|先輩|専門家/.test(text)) {
+        avatar = '/avatars/expert.svg';
       }
-      // 読者・疑問側（デフォルト）
-      return '/avatars/reader.svg';
+      // 未登録キャラ→被らないアバターを順番に割り当て
+      else {
+        const used = new Set(nameMap.values());
+        avatar = AVATAR_POOL.find(a => !used.has(a)) ?? AVATAR_POOL[nameMap.size % AVATAR_POOL.length];
+      }
+
+      if (name) nameMap.set(name, avatar);
+      return avatar;
     }
 
     body.querySelectorAll('blockquote').forEach(bq => {
@@ -661,11 +687,13 @@ const articleSchema = {
       const hasConv = paras.some(p => p.textContent?.includes('💬'));
       if (!hasConv) return;
 
+      const nameMap = new Map<string, string>(); // 会話ブロックごとにリセット
+
       paras.forEach(p => {
         if (!p.textContent?.includes('💬')) return;
 
         const text = p.textContent ?? '';
-        const avatarSrc = getAvatarSrc(text);
+        const avatarSrc = getAvatarSrc(text, nameMap);
 
         const row = document.createElement('div');
         row.className = 'conv-row';
