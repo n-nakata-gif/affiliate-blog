@@ -604,6 +604,7 @@ const articleSchema = {
     width: 48px;
     height: 48px;
     border-radius: 50%;
+    object-fit: cover;
     border: 2px solid #fde68a;
     box-shadow: 0 2px 6px rgba(0,0,0,0.10);
     background: #fff;
@@ -640,7 +641,7 @@ const articleSchema = {
     /* ── 会話アバター挿入 ── */
     const AVATAR_POOL = [
       '/avatars/reader.svg',
-      '/avatars/male.svg',
+      '/avatars/male.png',
       '/avatars/expert.svg',
       '/avatars/female.svg',
     ];
@@ -666,7 +667,7 @@ const articleSchema = {
       }
       // 男性判定（名前リストを拡充）
       else if (/まさと|しょうた|けんじ|たろう|じろう|ゆうき|けんた|りょう|だいき|たかし|ひろし|男性|サラリーマン|ジム仲間|パパ|会社員.*男|男.*会社員/.test(text)) {
-        avatar = '/avatars/male.svg';
+        avatar = '/avatars/male.png';
       }
       // 詳しい人・回答役
       else if (/Bさん|詳しい人|編集部|回答|アドバイス|先輩|専門家/.test(text)) {
