@@ -52,14 +52,7 @@
     },
     {
       "genre": "gourmet",
-      "themes": [
-        {
-          "title": "キャンプ飯レシピ10選！BBQだけじゃない絶品アウトドアグルメ",
-          "target_keyword": "キャンプ飯 レシピ おすすめ",
-          "reason": "キャンプ・BBQの流入層にグルメ記事で横断送客しCV率向上が期待できる",
-          "priority": "medium"
-        }
-      ]
+      "themes": []
     }
   ]
 }
