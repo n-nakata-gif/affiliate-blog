@@ -1,7 +1,7 @@
 {
-  "updated_at": "2026-05-09T05:30:58.697169+09:00",
-  "total": 3,
-  "pending": 0,
+  "updated_at": "2026-05-22T21:37:46.517854+00:00",
+  "total": 4,
+  "pending": 1,
   "queue": [
     {
       "slug": "best-coffee-grinder-2024",
@@ -35,6 +35,18 @@
       "status": "done",
       "detected_at": "2026-05-09T05:30:16.560139+09:00",
       "processed_at": "2026-05-09T05:30:58.697165+09:00"
+    },
+    {
+      "slug": "gadget_20260506",
+      "file": "gadget_20260506.md",
+      "title": "防水スピーカー比較【2026】JBL・BOSE・SONY選び方",
+      "tags": "[\"Bluetoothスピーカー\", \"アウトドア\", \"防水\"]",
+      "pubDate": "2026-05-06",
+      "genre": "gadget",
+      "status": "pending",
+      "reason": "検索順位急落: 4.5位→16.3位（2026-05-18週次レポートで検出）",
+      "priority": "high",
+      "detected_at": "2026-05-22T21:37:46.517745+00:00"
     }
   ]
 }
