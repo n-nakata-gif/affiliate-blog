@@ -1,5 +1,33 @@
 # affiliate-blog プロジェクト — Claudeへの自動指示
 
+## note自動投稿システム（2026年5月構築）
+
+### ファイル構成
+| ファイル | 役割 |
+|---------|------|
+| `src/note_generate.py` | ビジネス記事→note形式に変換（Claude API） |
+| `src/note_post.py` | Playwright経由でnote.comに自動投稿 |
+| `.github/workflows/note_daily.yml` | 火・金 21:00 JST に自動実行 |
+| `data/note_drafts/*.json` | 変換済みドラフト |
+| `data/note_posted.json` | 投稿済み管理 |
+
+### 手動実行コマンド
+```bash
+# ドラフト生成のみ
+python src/note_generate.py
+
+# 投稿のみ（ドラフトが必要）
+NOTE_EMAIL=xxx NOTE_PASSWORD=xxx python src/note_post.py
+```
+
+### noteの記事スタイル（必ず守ること）
+- ターゲット：「副業を始めたいけど何から手をつければいいかわからない30代会社員」
+- 構成：悩み共感→問題提起→解決策→まとめ＋Novlify誘導CTA
+- タイトル：数字入り・50文字以内
+- アフィリエイトリンク：楽天・Amazonのみ（それ以外はnote規約違反）
+
+---
+
 ## 楽天ROOM 自動投稿ルール（最優先）
 
 **このプロジェクトで作業するたびに、セッション開始時に必ず以下を実行してください。**
