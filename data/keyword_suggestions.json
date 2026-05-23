@@ -35,14 +35,7 @@
     },
     {
       "genre": "travel",
-      "themes": [
-        {
-          "title": "2026年夏の国内旅行おすすめ10選【カップル・家族・一人旅別】",
-          "target_keyword": "2026 夏 国内旅行 おすすめ",
-          "reason": "季節×属性の掛け合わせで検索意図を細分化しロングテール流入を狙う",
-          "priority": "high"
-        }
-      ]
+      "themes": []
     },
     {
       "genre": "gourmet",
