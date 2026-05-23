@@ -16,6 +16,53 @@ const { Content, headings } = await render(post);
 // 目次用 h2 のみ抽出
 const tocItems = headings.filter(h => h.depth === 2);
 
+// ─── ジャンル検出（スラッグのプレフィックスで判定） ───
+type Genre = 'investment' | 'business' | 'travel' | 'gadget' | 'gourmet';
+const GENRES: Genre[] = ['investment', 'business', 'travel', 'gadget', 'gourmet'];
+const genre: Genre = GENRES.find(g => post.id.startsWith(g)) ?? 'business';
+
+// ─── サイドバー用アフィリエイトリンク（ジャンル別 TOP 3） ───
+type SidebarLink = { name: string; url: string; desc: string; isAffiliate: boolean };
+const SIDEBAR_LINKS: Record<Genre, SidebarLink[]> = {
+  investment: [
+    { name: "松井証券 iDeCo", url: "https://px.a8.net/svt/ejp?a8mat=4B3HQF+EFRFW2+3XCC+BXIYQ", desc: "節税しながら老後資金を積み立て。手数料無料", isAffiliate: true },
+    { name: "SBI証券", url: "https://www.sbisec.co.jp", desc: "新NISA・つみたて投資で国内No.1の口座数", isAffiliate: false },
+    { name: "ウェルスナビ", url: "https://www.wealthnavi.com", desc: "おまかせロボアドバイザーで資産運用", isAffiliate: false },
+  ],
+  business: [
+    { name: "マネーフォワード クラウド", url: "https://px.a8.net/svt/ejp?a8mat=4B3HQJ+5YCTU+4JGQ+614CY", desc: "会計・確定申告をラクに自動化", isAffiliate: true },
+    { name: "クラウドワークス", url: "https://crowdworks.jp", desc: "副業・フリーランス案件を探す", isAffiliate: false },
+    { name: "Udemy", url: "https://www.udemy.com/ja/", desc: "オンライン講座でスキルアップ", isAffiliate: false },
+  ],
+  travel: [
+    { name: "じゃらんnet", url: "https://px.a8.net/svt/ejp?a8mat=4B3HQI+DYHVCI+14CS+6C9LD", desc: "全国の宿・ホテルをお得に予約", isAffiliate: true },
+    { name: "一休.com", url: "https://px.a8.net/svt/ejp?a8mat=4B3HQJ+A2L06Q+1OK+6LHDU", desc: "高級旅館のタイムセールプラン", isAffiliate: true },
+    { name: "agoda", url: "https://px.a8.net/svt/ejp?a8mat=4B3HQJ+A36FSI+4X1W+5YRHE", desc: "国内・海外ホテルを最大85%OFF", isAffiliate: true },
+  ],
+  gourmet: [
+    { name: "ホットペッパーグルメ", url: "https://www.hotpepper.jp", desc: "お得なクーポンでレストラン予約", isAffiliate: false },
+    { name: "一休.comレストラン", url: "https://restaurant.ikyu.com", desc: "高級レストランの特別プラン", isAffiliate: false },
+    { name: "楽天市場（食品・グルメ）", url: "https://search.rakuten.co.jp/search/mall/%E9%A3%9F%E5%93%81+%E3%82%B0%E3%83%AB%E3%83%A1/", desc: "楽天ポイントでお得に食品購入", isAffiliate: false },
+  ],
+  gadget: [
+    { name: "Amazon", url: "https://www.amazon.co.jp/?tag=nexigen22-22", desc: "最新ガジェットをお得に購入", isAffiliate: true },
+    { name: "Yahoo!ショッピング", url: "https://shopping.yahoo.co.jp/search?p=%E3%82%AC%E3%82%B8%E3%82%A7%E3%83%83%E3%83%88+%E5%AE%B6%E9%9B%BB", desc: "PayPayポイントでお得に購入", isAffiliate: false },
+    { name: "楽天市場", url: "https://search.rakuten.co.jp/search/mall/%E3%82%AC%E3%82%B8%E3%82%A7%E3%83%83%E3%83%88+%E5%AE%B6%E9%9B%BB/", desc: "楽天ポイントでお得に購入", isAffiliate: false },
+  ],
+};
+const currentSidebarLinks = SIDEBAR_LINKS[genre];
+
+// ─── 記事中盤 CTA（目次直後に表示） ───
+type MidCta = { text: string; url: string; btnText: string };
+const MID_CTA: Record<Genre, MidCta> = {
+  investment: { text: "💰 投資デビューするなら、まずは口座開設から。iDeCoで節税しながら老後資金を積み立てよう。", url: "https://px.a8.net/svt/ejp?a8mat=4B3HQF+EFRFW2+3XCC+BXIYQ", btnText: "松井証券 iDeCoを無料で始める →" },
+  business:   { text: "📊 副業・フリーランスの会計をかんたんに。確定申告もクラウドで自動化しよう。", url: "https://px.a8.net/svt/ejp?a8mat=4B3HQJ+5YCTU+4JGQ+614CY", btnText: "マネーフォワードを無料で試す →" },
+  travel:     { text: "✈️ 旅行費用をもっとお得に。今すぐ宿を比較して早割プランを探そう。", url: "https://px.a8.net/svt/ejp?a8mat=4B3HQI+DYHVCI+14CS+6C9LD", btnText: "じゃらんnetで宿を探す →" },
+  gourmet:    { text: "🍽️ 美食をもっとお得に楽しもう。今すぐクーポンを探してみよう。", url: "https://www.hotpepper.jp", btnText: "ホットペッパーでクーポンを探す →" },
+  gadget:     { text: "🛒 ガジェットをお得に購入するなら。今すぐ最安値をチェックしよう。", url: "https://www.amazon.co.jp/?tag=nexigen22-22", btnText: "Amazonでガジェットを探す →" },
+};
+const currentMidCta = MID_CTA[genre];
+
 // アイキャッチ画像（favicon・小アイコン系URLは除外）
 const SKIP_IMG = /google\.com\/s2\/favicons|favicon\.ico|\/favicon|[?&]sz=\d{1,2}(&|$)|width=["']\d{1,2}["']|height=["']\d{1,2}["']/;
 function getEyecatch(body: string | undefined): string {
@@ -126,6 +173,15 @@ const articleSchema = {
         </nav>
       )}
 
+      <!-- 記事中盤 CTA（目次直後） -->
+      <div class="mid-cta">
+        <p class="mid-cta__text">{currentMidCta.text}</p>
+        <a href={currentMidCta.url} class="mid-cta__btn" target="_blank" rel="noopener sponsored">
+          {currentMidCta.btnText}
+        </a>
+        <p class="mid-cta__note">※広告・PR含む</p>
+      </div>
+
       <!-- 本文 -->
       <div class="article-body">
         <Content />
@@ -164,6 +220,52 @@ const articleSchema = {
 
     </article>
 
+    <!-- ─── サイドバー（デスクトップのみ表示） ─── -->
+    <aside class="sidebar">
+      <div class="sidebar-inner">
+
+        <!-- おすすめサービスウィジェット -->
+        <div class="sidebar-widget">
+          <div class="sidebar-widget__header">🎯 おすすめサービス</div>
+          <ul class="sidebar-links">
+            {currentSidebarLinks.map(link => (
+              <li class="sidebar-link-item">
+                <a
+                  href={link.url}
+                  target="_blank"
+                  rel={link.isAffiliate ? "noopener sponsored" : "noopener"}
+                  class="sidebar-link"
+                >
+                  <span class="sidebar-link__name">{link.name}</span>
+                  <span class="sidebar-link__desc">{link.desc}</span>
+                  <span class="sidebar-link__arrow">→</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+          <p class="sidebar-widget__pr">※一部PR・広告含む</p>
+        </div>
+
+        <!-- 目次ウィジェット -->
+        {tocItems.length >= 3 && (
+          <div class="sidebar-widget sidebar-toc-widget">
+            <div class="sidebar-widget__header">📋 目次</div>
+            <ol class="sidebar-toc">
+              {tocItems.map((item, i) => (
+                <li class="sidebar-toc__item">
+                  <a href={`#${item.slug}`} class="sidebar-toc__link">
+                    <span class="sidebar-toc__num">{i + 1}</span>
+                    <span class="sidebar-toc__text">{item.text}</span>
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
+
+      </div>
+    </aside>
+
   </div>
 
 </Layout>
@@ -183,10 +285,181 @@ const articleSchema = {
   .breadcrumb a:hover { text-decoration: underline; }
   .breadcrumb__sep { color: #ccc; }
 
-  /* レイアウト */
+  /* ─── レイアウト（2カラムグリッド） ─── */
   .article-layout {
-    max-width: 780px;
+    max-width: 1080px;
     margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 24px;
+    align-items: start;
+  }
+  @media (max-width: 860px) {
+    .article-layout {
+      grid-template-columns: 1fr;
+    }
+    .sidebar {
+      display: none;
+    }
+  }
+
+  /* ─── サイドバー ─── */
+  .sidebar-inner {
+    position: sticky;
+    top: 80px;
+  }
+  .sidebar-widget {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .sidebar-widget__header {
+    background: #f59e0b;
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.82rem;
+    padding: 10px 14px;
+    letter-spacing: 0.02em;
+  }
+  .sidebar-links {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .sidebar-link-item {
+    border-bottom: 1px solid #f3f4f6;
+  }
+  .sidebar-link-item:last-child {
+    border-bottom: none;
+  }
+  .sidebar-link {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    gap: 2px 6px;
+    padding: 12px 14px;
+    text-decoration: none;
+    transition: background 0.15s;
+  }
+  .sidebar-link:hover {
+    background: #fffbeb;
+  }
+  .sidebar-link__name {
+    grid-column: 1;
+    grid-row: 1;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    line-height: 1.3;
+  }
+  .sidebar-link__desc {
+    grid-column: 1;
+    grid-row: 2;
+    font-size: 0.72rem;
+    color: #777;
+    line-height: 1.4;
+  }
+  .sidebar-link__arrow {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    align-self: center;
+    font-size: 0.75rem;
+    color: #f59e0b;
+    font-weight: 700;
+  }
+  .sidebar-widget__pr {
+    font-size: 0.68rem;
+    color: #aaa;
+    text-align: center;
+    margin: 0;
+    padding: 6px 10px;
+    border-top: 1px solid #f3f4f6;
+    background: #fafafa;
+  }
+
+  /* サイドバー目次 */
+  .sidebar-toc {
+    list-style: none;
+    margin: 0;
+    padding: 8px 0;
+  }
+  .sidebar-toc__item {
+    border-bottom: 1px dotted #f3f4f6;
+  }
+  .sidebar-toc__item:last-child {
+    border-bottom: none;
+  }
+  .sidebar-toc__link {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 8px 14px;
+    text-decoration: none;
+    font-size: 0.78rem;
+    color: #374151;
+    line-height: 1.45;
+    transition: color 0.15s, background 0.15s;
+  }
+  .sidebar-toc__link:hover {
+    color: #d97706;
+    background: #fffbeb;
+  }
+  .sidebar-toc__num {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    background: #f59e0b;
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    border-radius: 3px;
+  }
+  .sidebar-toc__text {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* ─── 記事中盤 CTA ─── */
+  .mid-cta {
+    margin: 0 32px 32px;
+    background: linear-gradient(135deg, #fef3c7, #fffbeb);
+    border: 2px solid #f59e0b;
+    border-radius: 14px;
+    padding: 22px 24px;
+    text-align: center;
+  }
+  .mid-cta__text {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #92400e;
+    line-height: 1.65;
+    margin: 0 0 14px;
+  }
+  .mid-cta__btn {
+    display: inline-block;
+    background: #f59e0b;
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.88rem;
+    transition: background 0.2s;
+    box-shadow: 0 2px 8px rgba(245,158,11,0.35);
+  }
+  .mid-cta__btn:hover { background: #d97706; }
+  .mid-cta__note {
+    font-size: 0.68rem;
+    color: #b45309;
+    margin: 10px 0 0;
+  }
+  @media (max-width: 640px) {
+    .mid-cta { margin: 0 0 24px; }
   }
 
   /* 記事カード */
