@@ -27,9 +27,6 @@ NOTE_PASSWORD = os.environ.get("NOTE_PASSWORD", "")
 NOTE_LOGIN_URL = "https://note.com/login"
 NOTE_NEW_URL = "https://note.com/notes/new"
 
-# ログイン後のリダイレクト先として許容するURLパターン
-POST_LOGIN_URL_PATTERN = "**/note.com/**"
-
 
 def load_posted() -> list[str]:
     if NOTE_POSTED_FILE.exists():
@@ -57,36 +54,100 @@ def get_next_draft() -> tuple[Path, dict] | tuple[None, None]:
 
 
 def login(page: Page) -> None:
-    """note.comにログインする。"""
+    """note.comにログインする（多段階フォーム・SPA対応）。"""
     print("note.com ログイン中...")
     page.goto(NOTE_LOGIN_URL, wait_until="domcontentloaded")
-    page.wait_for_timeout(1500)
+    page.wait_for_timeout(2000)
 
-    # メールアドレス入力（複数セレクタに対応）
-    for sel in ['input[name="login_id"]', 'input[type="email"]', 'input[placeholder*="メール"]']:
+    # --- メールアドレス入力 ---
+    email_filled = False
+    for sel in [
+        'input[name="login_id"]',
+        'input[type="email"]',
+        'input[placeholder*="メール"]',
+        'input[placeholder*="mail"]',
+        'input[placeholder*="ID"]',
+    ]:
         try:
-            if page.locator(sel).count() > 0:
-                page.fill(sel, NOTE_EMAIL)
+            loc = page.locator(sel).first
+            if loc.is_visible(timeout=2000):
+                loc.fill(NOTE_EMAIL)
+                print(f"メール入力完了: {sel}")
+                email_filled = True
                 break
         except Exception:
             continue
 
-    # パスワード入力
-    for sel in ['input[name="password"]', 'input[type="password"]']:
+    if not email_filled:
+        page.screenshot(path="note_login_error.png")
+        raise RuntimeError("メールアドレス入力欄が見つかりませんでした（note_login_error.png を確認）")
+
+    # --- 「次へ」ボタンがある場合（多段階フォーム）は先にクリック ---
+    for next_sel in [
+        'button:has-text("次へ")',
+        'button:has-text("Next")',
+    ]:
         try:
-            if page.locator(sel).count() > 0:
-                page.fill(sel, NOTE_PASSWORD)
+            btn = page.locator(next_sel).first
+            if btn.is_visible(timeout=1500):
+                btn.click()
+                print(f"「次へ」ボタンクリック")
+                page.wait_for_timeout(1500)
                 break
         except Exception:
             continue
 
-    # ログインボタンクリック
-    page.click('button[type="submit"]')
-    page.wait_for_timeout(3000)
+    # --- パスワード入力 ---
+    password_filled = False
+    for sel in ['input[type="password"]', 'input[name="password"]']:
+        try:
+            loc = page.locator(sel).first
+            if loc.is_visible(timeout=4000):
+                loc.fill(NOTE_PASSWORD)
+                print(f"パスワード入力完了: {sel}")
+                password_filled = True
+                break
+        except Exception:
+            continue
 
-    # ログイン成功確認
-    if "login" in page.url:
-        raise RuntimeError("ログインに失敗しました。NOTE_EMAIL / NOTE_PASSWORD を確認してください。")
+    if not password_filled:
+        page.screenshot(path="note_login_error.png")
+        raise RuntimeError("パスワード入力欄が見つかりませんでした（note_login_error.png を確認）")
+
+    # --- ログインボタンクリック（複数セレクタ + Enterキーフォールバック）---
+    login_clicked = False
+    for sel in [
+        'button[type="submit"]',
+        'button:has-text("ログイン")',
+        'button:has-text("Sign in")',
+        'button:has-text("続ける")',
+        'button:has-text("送信")',
+        'input[type="submit"]',
+    ]:
+        try:
+            btn = page.locator(sel).first
+            if btn.is_visible(timeout=3000):
+                btn.click()
+                print(f"ログインボタンクリック: {sel}")
+                login_clicked = True
+                break
+        except Exception:
+            continue
+
+    if not login_clicked:
+        # フォールバック: Enterキーで送信
+        page.keyboard.press("Enter")
+        print("ログインボタン未検出 → Enterキーで送信")
+
+    # --- ログイン完了待機（URLが /login 以外になる） ---
+    try:
+        page.wait_for_url(lambda url: "login" not in url and "note.com" in url, timeout=15000)
+    except PlaywrightTimeoutError:
+        page.screenshot(path="note_login_error.png")
+        raise RuntimeError(
+            "ログインに失敗しました（note_login_error.png を確認）。"
+            "NOTE_EMAIL / NOTE_PASSWORD が正しいか確認してください。"
+        )
 
     print(f"ログイン成功: {page.url}")
 
@@ -97,26 +158,25 @@ def fill_title(page: Page, title: str) -> None:
         'input[placeholder*="タイトル"]',
         'input[placeholder="記事タイトル"]',
         'input[name="title"]',
+        'textarea[placeholder*="タイトル"]',
     ]:
         try:
-            loc = page.locator(sel)
-            if loc.count() > 0:
+            loc = page.locator(sel).first
+            if loc.is_visible(timeout=3000):
                 loc.fill(title)
                 print(f"タイトル入力完了: {title[:30]}...")
                 return
         except Exception:
             continue
 
-    # フォールバック: 最初のinputに入力
+    # フォールバック
     page.fill("input:first-of-type", title)
-    print(f"タイトル入力完了（フォールバック）: {title[:30]}...")
+    print(f"タイトル入力（フォールバック）: {title[:30]}...")
 
 
 def fill_body(page: Page, body: str) -> None:
     """記事本文をエディタに入力する（ProseMirrorエディタ対応）。"""
-    # コンテンツエリアをクリック
-    editor_sel = 'div[contenteditable="true"]'
-    page.click(editor_sel)
+    page.click('div[contenteditable="true"]')
     page.wait_for_timeout(500)
 
     # execCommand でテキストを挿入（ProseMirrorと互換性あり）
@@ -125,7 +185,7 @@ def fill_body(page: Page, body: str) -> None:
         f"""
         (function() {{
             const editors = document.querySelectorAll('div[contenteditable="true"]');
-            // タイトルエディタを除いた本文エディタを選択（通常は2番目以降）
+            // 本文エディタは通常2番目以降（1番目はタイトル）
             const editor = editors.length > 1 ? editors[editors.length - 1] : editors[0];
             if (!editor) return;
             editor.focus();
@@ -140,12 +200,10 @@ def fill_body(page: Page, body: str) -> None:
 
 def fill_tags(page: Page, tags: list[str]) -> None:
     """ハッシュタグを入力する（最大5件）。"""
-    tag_selectors = [
+    for sel in [
         'input[placeholder*="タグ"]',
         'input[placeholder*="ハッシュタグ"]',
-        '[data-placeholder*="タグ"]',
-    ]
-    for sel in tag_selectors:
+    ]:
         try:
             loc = page.locator(sel).first
             if loc.is_visible(timeout=3000):
@@ -164,12 +222,11 @@ def fill_tags(page: Page, tags: list[str]) -> None:
 def publish(page: Page) -> str:
     """記事を公開して投稿後のURLを返す。"""
     # 公開設定ボタンをクリック
-    publish_btn_selectors = [
+    for sel in [
         'button:has-text("公開設定")',
         'button:has-text("公開")',
         '[data-type="publish"]',
-    ]
-    for sel in publish_btn_selectors:
+    ]:
         try:
             btn = page.locator(sel).first
             if btn.is_visible(timeout=3000):
@@ -182,12 +239,11 @@ def publish(page: Page) -> str:
     page.wait_for_timeout(2000)
 
     # 「公開する」確認ボタン（モーダル内）
-    confirm_selectors = [
+    for sel in [
         'button:has-text("公開する")',
-        '[data-type="confirm-publish"]',
         'button:has-text("投稿する")',
-    ]
-    for sel in confirm_selectors:
+        '[data-type="confirm-publish"]',
+    ]:
         try:
             btn = page.locator(sel).last
             if btn.is_visible(timeout=3000):
@@ -197,7 +253,6 @@ def publish(page: Page) -> str:
         except Exception:
             continue
 
-    # 公開完了を待機（URLが記事URLに変わる）
     page.wait_for_timeout(4000)
     note_url = page.url
     print(f"投稿URL: {note_url}")
@@ -237,7 +292,6 @@ def post_to_note(title: str, body: str, tags: list[str]) -> str:
             note_url = publish(page)
 
         except PlaywrightTimeoutError as e:
-            # デバッグ用スクリーンショット保存
             page.screenshot(path="note_post_error.png")
             raise RuntimeError(f"タイムアウトエラー（note_post_error.png を確認）: {e}") from e
         finally:
