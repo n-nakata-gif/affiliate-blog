@@ -1,4 +1,405 @@
 {
-  "updated_at": "2026-05-18T19:29:33.002705+09:00",
-  "issues": []
+  "updated_at": "2026-05-25T01:40:54.614224+09:00",
+  "issues": [
+    {
+      "type": "bad_title",
+      "file": "best-coffee-grinder-2024.md",
+      "length": 24,
+      "issue": "短すぎ",
+      "title": "コーヒーグラインダーおすすめ5選【2024年版】",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "business_20260426.md",
+      "length": 27,
+      "issue": "短すぎ",
+      "title": "フリーランス確定申告2026｜インボイス対応7ステップ",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "business_20260427.md",
+      "length": 24,
+      "issue": "短すぎ",
+      "title": "副業の住民税で会社に知られにくくする5つの手続き",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "business_20260428.md",
+      "length": 27,
+      "issue": "短すぎ",
+      "title": "集中力が続くデスク環境の作り方｜投資して良かった10選",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "business_20260429.md",
+      "length": 24,
+      "issue": "短すぎ",
+      "title": "副業の住民税で会社バレを防ぐ方法【2026年版】",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "business_20260501.md",
+      "length": 24,
+      "issue": "短すぎ",
+      "title": "生成AI使い分け術｜作業時間を半減させた実例3選",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "business_20260505.md",
+      "length": 25,
+      "issue": "短すぎ",
+      "title": "AI時代に伸びる副業7選｜月5万円の現実的な選び方",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "business_20260506.md",
+      "length": 25,
+      "issue": "短すぎ",
+      "title": "生成AI副業の始め方｜需要が伸びる5仕事と初案件術",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "business_20260508.md",
+      "length": 21,
+      "issue": "短すぎ",
+      "title": "マイクロ起業を月3万円から始める5ステップ",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "business_20260513.md",
+      "length": 22,
+      "issue": "短すぎ",
+      "title": "テレワーク快適アイテム10選【2026年版】",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "business_20260518.md",
+      "length": 24,
+      "issue": "短すぎ",
+      "title": "テレワーク環境グッズ10選｜疲れ・集中問題を解決",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "gadget_20260429.md",
+      "length": 25,
+      "issue": "短すぎ",
+      "title": "ロボット掃除機おすすめ｜ルンバvs格安モデルを比較",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "gadget_20260430.md",
+      "length": 26,
+      "issue": "短すぎ",
+      "title": "Switchアクセサリーおすすめ7選【快適度が激変】",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "gadget_20260504.md",
+      "length": 24,
+      "issue": "短すぎ",
+      "title": "モバイルバッテリーおすすめ｜容量・重さ・急速充電",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "gadget_20260507.md",
+      "length": 28,
+      "issue": "短すぎ",
+      "title": "スマートホーム入門｜Alexa初心者向けおすすめ機器3選",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "gadget_20260511.md",
+      "length": 31,
+      "issue": "短すぎ",
+      "title": "Claude Code完全ガイド｜使い方・設定・他AIとの違い",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "gadget_20260517.md",
+      "length": 24,
+      "issue": "短すぎ",
+      "title": "キャンプスピーカーおすすめ8選【防水・防塵対応】",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "gadget_20260518.md",
+      "length": 30,
+      "issue": "短すぎ",
+      "title": "キャンプBluetooth スピーカー10選【2026年版】",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "gourmet_20260426.md",
+      "length": 27,
+      "issue": "短すぎ",
+      "title": "東京 記念日ディナー5選【予算1〜4万円・2026年】",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "gourmet_20260427.md",
+      "length": 21,
+      "issue": "短すぎ",
+      "title": "旬の食材レシピ4選｜栄養価と保存方法も解説",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "gourmet_20260428.md",
+      "length": 25,
+      "issue": "短すぎ",
+      "title": "東京グルメおすすめ5選｜特別な日の本格料理スポット",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "gourmet_20260429.md",
+      "length": 24,
+      "issue": "短すぎ",
+      "title": "旬の食材レシピ｜保存・栄養・下ごしらえ完全ガイド",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "gourmet_20260503.md",
+      "length": 25,
+      "issue": "短すぎ",
+      "title": "旬の食材レシピ12選｜保存・下ごしらえの完全ガイド",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "gourmet_20260506.md",
+      "length": 24,
+      "issue": "短すぎ",
+      "title": "甘くないプロテイン5選｜女性向け飲みやすさで比較",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "gourmet_20260510.md",
+      "length": 25,
+      "issue": "短すぎ",
+      "title": "プロテインおすすめ10選｜初心者向け選び方・飲み方",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "gourmet_20260511.md",
+      "length": 24,
+      "issue": "短すぎ",
+      "title": "プロテイン初心者おすすめ10選｜味・コスパで選ぶ",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "gourmet_20260514.md",
+      "length": 25,
+      "issue": "短すぎ",
+      "title": "プロテイン選び方ガイド｜種類・目的・失敗しない3点",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "gourmet_20260518.md",
+      "length": 26,
+      "issue": "短すぎ",
+      "title": "プロテインおすすめ10選【飲みやすさ重視・2026】",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "gourmet_20260521.md",
+      "length": 30,
+      "issue": "短すぎ",
+      "title": "キャンプ飯レシピおすすめ10選！BBQ以外のアウトドアグルメ",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "investment_20260426.md",
+      "length": 26,
+      "issue": "短すぎ",
+      "title": "新NISA始め方｜月1万円から始める3ステップガイド",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "investment_20260427.md",
+      "length": 24,
+      "issue": "短すぎ",
+      "title": "インデックス投資の始め方3ステップ｜月1万円から",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "investment_20260428.md",
+      "length": 26,
+      "issue": "短すぎ",
+      "title": "新NISA始め方3ステップ｜後悔しない口座・商品選び",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "investment_20260429.md",
+      "length": 27,
+      "issue": "短すぎ",
+      "title": "インデックス投資の始め方｜月3万円から続ける5ステップ",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "investment_20260506.md",
+      "length": 24,
+      "issue": "短すぎ",
+      "title": "楽天証券NISA始め方ガイド｜口座開設5ステップ",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "investment_20260515.md",
+      "length": 28,
+      "issue": "短すぎ",
+      "title": "新NISA初心者おすすめ2026｜最初に買う投資信託5本",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "investment_20260518.md",
+      "length": 25,
+      "issue": "短すぎ",
+      "title": "資産運用 初心者おすすめ2026｜最初の3つの方法",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "investment_20260522.md",
+      "length": 21,
+      "issue": "短すぎ",
+      "title": "資産運用初心者おすすめ2026|最初の3選",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "remote-work-desk-setup.md",
+      "length": 22,
+      "issue": "短すぎ",
+      "title": "テレワークデスク環境おすすめ10選【快適化】",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "travel_20260426.md",
+      "length": 25,
+      "issue": "短すぎ",
+      "title": "国内旅行おすすめ10選【費用・穴場・2026年版】",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "travel_20260427.md",
+      "length": 24,
+      "issue": "短すぎ",
+      "title": "格安旅行のコツ7選｜交通費・宿泊費を半額にする術",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "travel_20260428.md",
+      "length": 25,
+      "issue": "短すぎ",
+      "title": "国内旅行おすすめ10選｜四季別の穴場スポットと費用",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "travel_20260429.md",
+      "length": 24,
+      "issue": "短すぎ",
+      "title": "旅行費用削減テクニック｜予算を抑えて満喫する方法",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "travel_20260502.md",
+      "length": 28,
+      "issue": "短すぎ",
+      "title": "国内旅行おすすめ10選【四季・費用・穴場ガイド2026】",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "travel_20260506.md",
+      "length": 23,
+      "issue": "短すぎ",
+      "title": "九州温泉×女性一人旅4選｜費用と安心宿の選び方",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "travel_20260509.md",
+      "length": 24,
+      "issue": "短すぎ",
+      "title": "国内旅行を格安にする7つのコツ｜宿・交通・グルメ",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "travel_20260512.md",
+      "length": 25,
+      "issue": "短すぎ",
+      "title": "国内旅行おすすめ10選｜今行くべきエリアをタイプ別",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "travel_20260516.md",
+      "length": 23,
+      "issue": "短すぎ",
+      "title": "国内旅行を安くするコツ7選｜交通費・宿を半額に",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "travel_20260518.md",
+      "length": 25,
+      "issue": "短すぎ",
+      "title": "国内旅行おすすめ15選｜旅スタイル別に選び方も解説",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "travel_20260519.md",
+      "length": 25,
+      "issue": "短すぎ",
+      "title": "国内旅行おすすめ15選｜季節・目的・スタイル別比較",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "travel_20260523.md",
+      "length": 22,
+      "issue": "短すぎ",
+      "title": "2026夏の国内旅行おすすめ10選【属性別】",
+      "status": "done"
+    }
+  ]
 }
