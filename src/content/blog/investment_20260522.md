@@ -6,8 +6,9 @@ tags: ["投資", "資産運用", "NISA"]
 heroImage: "/thumbnails/investment_20260522.png"
 ---
 
-※本記事はPRを含みます  
-（2026年5月時点の情報です）
+# 【2026年版】資産運用 初心者おすすめ｜最初に選ぶべき3選を比較
+
+<div style="background:#fff8e1;border-left:4px solid #f59e0b;padding:10px 16px;margin:1rem 0;border-radius:0 6px 6px 0;font-size:0.9em;color:#555;">📢 <strong style="color:#333;">本記事はPR・広告を含みます。</strong>（2026年5月時点の情報です）</div>
 
 <div style="background:#eff6ff;border-left:4px solid #2563eb;padding:10px 16px;margin:1rem 0;border-radius:0 6px 6px 0;font-size:0.9em;">
 📋 <strong>資産運用・投資手法を比較表付きで詳しく解説した記事はこちら →</strong>
