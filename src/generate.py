@@ -752,6 +752,8 @@ _TRAVEL_LINKS = [
     {"name": "Yahoo!ショッピング（旅行グッズ）", "url": _vc_url("https://shopping.yahoo.co.jp/search?p=%E6%97%85%E8%A1%8C+%E3%82%B0%E3%83%83%E3%82%BA"), "desc": "旅行グッズ・スーツケースをお得に",  "logo": _GF.format("shopping.yahoo.co.jp"), "a8net": True},
     {"name": "NAVITIME Travel（新幹線）", "url": "https://px.a8.net/svt/ejp?a8mat=4B3UZ9+7B5M5U+4R8G+BWVTE",  "desc": "新幹線・特急チケットを窓口不要・自宅にお届け", "logo": _GF.format("navitime.co.jp"),   "a8net": True},
     {"name": "スカイレンタカー",       "url": "https://px.a8.net/svt/ejp?a8mat=4B3UZ9+7CXWZ6+2AIA+626XU",  "desc": "沖縄・九州・北海道の格安レンタカー予約",      "logo": _GF.format("skyrentacar.jp"),   "a8net": True},
+    {"name": "VELTRA（海外・国内ツアー）", "url": "https://h.accesstrade.net/sp/cc?rk=0100py4y00os2v",        "desc": "世界200都市以上の現地ツアー・体験を予約",      "logo": _GF.format("veltra.com"),       "accesstrade": True},
+    {"name": "IHG ホテルズ & リゾーツ",  "url": "https://h.accesstrade.net/sp/cc?rk=0100mmn400os2v",        "desc": "インターコンチネンタル等の高級ホテルを公式最安値で", "logo": _GF.format("ihg.com"),     "accesstrade": True},
     {"name": "skyticket",              "url": "https://skyticket.jp",                                         "desc": "格安航空券・新幹線・ホテル比較",               "logo": _GF.format("skyticket.jp")},
 ]
 
@@ -760,6 +762,7 @@ _GOURMET_LINKS = [
     {"name": "一休.comレストラン",            "url": "https://px.a8.net/svt/ejp?a8mat=4B3UZ9+81COS2+1OK+NTRMQ",                                    "desc": "最大53%OFF！高級レストランのタイムセール",          "logo": _GF.format("restaurant.ikyu.com"),  "a8net": True},
     {"name": "ヨシケイ（お試しミールキット）", "url": "https://px.a8.net/svt/ejp?a8mat=4B3UZ9+8C2HO2+1QM6+HZAGY",                                   "desc": "栄養士の献立で簡単バランスごはん・5日間お試し",    "logo": _GF.format("yoshikei.co.jp"),       "a8net": True},
     {"name": "宅麺.com",                      "url": "https://px.a8.net/svt/ejp?a8mat=4B3UZ9+82JJZM+2CYM+60OXE",                                   "desc": "有名ラーメン店の味をそのままご自宅にお取り寄せ",   "logo": _GF.format("takumen.com"),          "a8net": True},
+    {"name": "ベルーナグルメ",                "url": "https://h.accesstrade.net/sp/cc?rk=0100pm2x00os2v",                                              "desc": "魚介・肉・スイーツなど本格派のお取り寄せグルメ",   "logo": _GF.format("belluna-gourmet.com"), "accesstrade": True},
     {"name": "楽天市場（食品・グルメ）",      "url": "https://search.rakuten.co.jp/search/mall/%E9%A3%9F%E5%93%81+%E3%82%B0%E3%83%AB%E3%83%A1/",   "desc": "楽天ポイントでお得に食品・グルメを購入",           "logo": _GF.format("rakuten.co.jp"),        "rakuten": True},
     {"name": "Yahoo!ショッピング（お取り寄せ）", "url": _vc_url("https://shopping.yahoo.co.jp/search?p=%E3%81%8A%E5%8F%96%E3%82%8A%E5%AF%84%E3%81%9B+%E3%82%B0%E3%83%AB%E3%83%A1"), "desc": "お取り寄せグルメをYahoo!ショッピングで", "logo": _GF.format("shopping.yahoo.co.jp"), "a8net": True},
     {"name": "Oisix（オイシックス）",         "url": "https://www.oisix.com",                                                                       "desc": "有機野菜・安心食材のお試しセット",                "logo": _GF.format("oisix.com")},
@@ -769,6 +772,7 @@ _BUSINESS_LINKS = [
     {"name": "Amazon（副業・ビジネス書）",       "url": "https://www.amazon.co.jp/s?k=%E5%89%AF%E6%A5%AD+%E3%83%93%E3%82%B8%E3%83%8D%E3%82%B9&tag=nexigen22-22", "desc": "副業・ビジネス関連書籍をAmazonで",  "logo": _GF.format("amazon.co.jp")},
     {"name": "楽天市場（ビジネス書）",           "url": "https://search.rakuten.co.jp/search/mall/%E3%83%93%E3%82%B8%E3%83%8D%E3%82%B9%E6%9C%AC+%E5%89%AF%E6%A5%AD/", "desc": "楽天ポイントでビジネス書をお得に", "rakuten": True, "logo": _GF.format("rakuten.co.jp")},
     {"name": "ここなら（スキル売買）",           "url": "https://px.a8.net/svt/ejp?a8mat=4B3UZ9+95U5WY+2PEO+OECDE", "desc": "TVCMで話題！スキルを副業で売り買いするなら", "logo": _GF.format("coconala.com"), "a8net": True},
+    {"name": "税理士ドットコム",                "url": "https://h.accesstrade.net/sp/cc?rk=0100nplx00os2v", "desc": "全国の税理士を無料で探せる・初回相談無料", "logo": _GF.format("zeiri4.com"), "accesstrade": True},
     {"name": "クラウドワークス",                "url": "https://crowdworks.jp",           "desc": "副業・フリーランス案件を探す",            "logo": _GF.format("crowdworks.jp")},
     {"name": "ランサーズ",                      "url": "https://www.lancers.jp",          "desc": "スキルを活かした副業マッチング",          "logo": _GF.format("lancers.jp")},
     {"name": "ストアカ",                        "url": "https://www.street-academy.com",  "desc": "ビジネス・副業スキルを学ぶ",              "logo": _GF.format("street-academy.com")},
@@ -797,6 +801,8 @@ _MATSUI_IDECO_BANNER_HTML = (
 
 _INVESTMENT_LINKS = [
     {"name": "松井証券 iDeCo",            "url": _MATSUI_IDECO_TEXT_URL,           "desc": "節税しながら老後資金を積み立て。手数料無料のiDeCo",  "logo": _GF.format("matsui.co.jp"),       "a8net": True},
+    {"name": "DMM株",                     "url": "https://h.accesstrade.net/sp/cc?rk=0100mkk200os2v", "desc": "国内手数料最安水準・米国株も取引手数料0円のネット証券", "logo": _GF.format("kabu.dmm.com"), "accesstrade": True},
+    {"name": "松井証券（株式）",          "url": "https://h.accesstrade.net/sp/cc?rk=01000t2p00os2v", "desc": "1日50万円まで手数料無料・使いやすいスマホアプリ",  "logo": _GF.format("matsui.co.jp"), "accesstrade": True},
     {"name": "Amazon（投資・資産運用書）", "url": "https://www.amazon.co.jp/s?k=%E6%8A%95%E8%B3%87+%E8%B3%87%E7%94%A3%E9%81%8B%E7%94%A8&tag=nexigen22-22", "desc": "投資・お金の本をAmazonで",    "logo": _GF.format("amazon.co.jp")},
     {"name": "SBI証券",                   "url": "https://www.sbisec.co.jp",       "desc": "新NISA・つみたて投資ならSBI証券",           "logo": _GF.format("sbisec.co.jp")},
     {"name": "楽天証券",                  "url": "https://www.rakuten-sec.co.jp",  "desc": "楽天ポイントで投資デビュー",  "rakuten": True, "logo": _GF.format("rakuten-sec.co.jp")},
@@ -1081,7 +1087,7 @@ def build_affiliate_section(genre: str, keyword: str, products: list, amazon_pro
             if link.get("rakuten") and rakuten_aff_id:
                 url = make_rakuten_affiliate_url(url, rakuten_aff_id, a8mat)
             # rel="sponsored" は実際にアフィリエイト提携済みのリンクのみに付与
-            is_affiliate = link.get("rakuten") or link.get("a8net") or "tag=nexigen22-22" in url or "px.a8.net" in url
+            is_affiliate = link.get("rakuten") or link.get("a8net") or link.get("accesstrade") or "tag=nexigen22-22" in url or "px.a8.net" in url or "h.accesstrade.net" in url
             rel = "noopener sponsored" if is_affiliate else "noopener"
             logo = link.get("logo", "")
             logo_html = (
