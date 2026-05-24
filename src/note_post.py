@@ -166,17 +166,41 @@ def upload_cover_image(page: Page, cover_path: str) -> bool:
 
     print(f"カバー画像アップロード試行: {cover_path}")
     page.evaluate("window.scrollTo(0, 0)")
-    page.wait_for_timeout(500)
+    page.wait_for_timeout(1000)
+
+    # 診断: エディタページ上の要素一覧をログに出力
+    try:
+        elems = page.evaluate("""
+        () => {
+            const sel = 'button, [role="button"], label, input[type="file"], ' +
+                        '[class*="cover"], [class*="Cover"], [class*="thumb"], [class*="Thumb"], ' +
+                        '[class*="header"], [class*="Header"], [class*="image"], [class*="Image"]';
+            return Array.from(document.querySelectorAll(sel)).slice(0, 30).map(e => ({
+                tag: e.tagName,
+                text: e.textContent.trim().substring(0, 30),
+                cls: e.className.substring(0, 60),
+                type: e.getAttribute('type') || '',
+                accept: e.getAttribute('accept') || '',
+                visible: e.offsetParent !== null,
+            }));
+        }
+        """)
+        print(f"[cover診断] エディタ要素: {json.dumps(elems, ensure_ascii=False)[:800]}")
+    except Exception as e:
+        print(f"[cover診断] 要素取得エラー: {e}")
 
     # 方法1: カバー画像エリアをクリックしてファイル選択ダイアログを開く
     for sel in [
         '[data-name="cover"]',
         '.p-articleEditor__cover',
         'button:has-text("カバー画像")',
+        'button:has-text("サムネイル")',
         '[class*="coverImage"]',
         '[class*="cover-image"]',
-        '[class*="cover"]',
+        '[aria-label*="カバー"]',
+        '[aria-label*="サムネイル"]',
         'label:has-text("カバー")',
+        'label:has-text("サムネイル")',
     ]:
         try:
             loc = page.locator(sel).first
@@ -193,6 +217,7 @@ def upload_cover_image(page: Page, cover_path: str) -> bool:
     # 方法2: 隠し file input に直接セット
     try:
         count = page.locator('input[type="file"]').count()
+        print(f"[cover診断] file input 数: {count}")
         for i in range(count):
             inp = page.locator('input[type="file"]').nth(i)
             try:
@@ -200,8 +225,8 @@ def upload_cover_image(page: Page, cover_path: str) -> bool:
                 page.wait_for_timeout(2000)
                 print(f"カバー画像アップロード成功 (file input #{i})")
                 return True
-            except Exception:
-                continue
+            except Exception as e:
+                print(f"[cover] input#{i} 失敗: {e}")
     except Exception:
         pass
 
@@ -505,6 +530,21 @@ def publish(page: Page) -> str:
     page.wait_for_timeout(5000)
     final_url = page.url
     print(f"最終URL: {final_url}")
+
+    # note.com の実際の公開URLを取得する
+    # 公開後は /like_reaction_setting などにリダイレクトされる場合があるため
+    # editor.note.com のノートIDを使って公開URLを構築する
+    import re
+    note_id_match = re.search(r'/notes/(n[a-z0-9]+)/', final_url)
+    if not note_id_match:
+        # publish ページのURLからもIDを探す
+        note_id_match = re.search(r'/notes/(n[a-z0-9]+)', final_url)
+    if note_id_match:
+        note_id = note_id_match.group(1)
+        public_url = f"https://note.com/novlify/n/{note_id}"
+        print(f"公開URL: {public_url}")
+        return public_url
+
     return final_url
 
 
