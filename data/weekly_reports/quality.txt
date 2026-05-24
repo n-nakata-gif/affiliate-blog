@@ -1,6 +1,56 @@
-Novlify 品質チェック 2026/05/18  総記事 42本 / 要対応 0件
+Novlify 品質チェック 2026/05/25  総記事 52本 / 要対応 50件
 
-✅ 問題なし
+■ タイトル文字数異常（32〜60字）50件
+  best-coffee-grinder-2024.md  24字（短すぎ）
+  business_20260426.md  27字（短すぎ）
+  business_20260427.md  24字（短すぎ）
+  business_20260428.md  27字（短すぎ）
+  business_20260429.md  24字（短すぎ）
+  business_20260501.md  24字（短すぎ）
+  business_20260505.md  25字（短すぎ）
+  business_20260506.md  25字（短すぎ）
+  business_20260508.md  21字（短すぎ）
+  business_20260513.md  22字（短すぎ）
+  business_20260518.md  24字（短すぎ）
+  gadget_20260429.md  25字（短すぎ）
+  gadget_20260430.md  26字（短すぎ）
+  gadget_20260504.md  24字（短すぎ）
+  gadget_20260507.md  28字（短すぎ）
+  gadget_20260511.md  31字（短すぎ）
+  gadget_20260517.md  24字（短すぎ）
+  gadget_20260518.md  30字（短すぎ）
+  gourmet_20260426.md  27字（短すぎ）
+  gourmet_20260427.md  21字（短すぎ）
+  gourmet_20260428.md  25字（短すぎ）
+  gourmet_20260429.md  24字（短すぎ）
+  gourmet_20260503.md  25字（短すぎ）
+  gourmet_20260506.md  24字（短すぎ）
+  gourmet_20260510.md  25字（短すぎ）
+  gourmet_20260511.md  24字（短すぎ）
+  gourmet_20260514.md  25字（短すぎ）
+  gourmet_20260518.md  26字（短すぎ）
+  gourmet_20260521.md  30字（短すぎ）
+  investment_20260426.md  26字（短すぎ）
+  investment_20260427.md  24字（短すぎ）
+  investment_20260428.md  26字（短すぎ）
+  investment_20260429.md  27字（短すぎ）
+  investment_20260506.md  24字（短すぎ）
+  investment_20260515.md  28字（短すぎ）
+  investment_20260518.md  25字（短すぎ）
+  investment_20260522.md  21字（短すぎ）
+  remote-work-desk-setup.md  22字（短すぎ）
+  travel_20260426.md  25字（短すぎ）
+  travel_20260427.md  24字（短すぎ）
+  travel_20260428.md  25字（短すぎ）
+  travel_20260429.md  24字（短すぎ）
+  travel_20260502.md  28字（短すぎ）
+  travel_20260506.md  23字（短すぎ）
+  travel_20260509.md  24字（短すぎ）
+  travel_20260512.md  25字（短すぎ）
+  travel_20260516.md  23字（短すぎ）
+  travel_20260518.md  25字（短すぎ）
+  travel_20260519.md  25字（短すぎ）
+  travel_20260523.md  22字（短すぎ）
 
 ── 来週追加予定のチェック ──
 リンク切れ / アフィリエイト有無 / 画像有無 / h2数 / description長 / 鮮度
