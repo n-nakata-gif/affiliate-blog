@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -166,37 +167,155 @@ def upload_cover_image(page: Page, cover_path: str) -> bool:
 
     print(f"カバー画像アップロード試行: {cover_path}")
     page.evaluate("window.scrollTo(0, 0)")
-    page.wait_for_timeout(1000)
+    page.wait_for_timeout(1500)
 
-    # 診断: エディタページ上の要素一覧をログに出力
+    # ── 現在URL & note_id 取得 ──
+    current_url = page.url
+    print(f"[cover] 現在URL: {current_url}")
+    note_id_match = re.search(r'/notes/(n[a-z0-9]+)', current_url)
+    note_id = note_id_match.group(1) if note_id_match else None
+    print(f"[cover] note_id: {note_id}")
+
+    # ── 方法1: page.request API 経由でアップロード（最も確実） ──
+    # Playwright の request context はブラウザと同じ Cookie を持つ
+    if note_id:
+        try:
+            with open(cover_path, "rb") as f:
+                image_bytes = f.read()
+
+            # CSRF トークンを取得（note.com は Rails 製のため必要な場合あり）
+            csrf_token = None
+            try:
+                csrf_token = page.evaluate("""
+                () => {
+                    const meta = document.querySelector('meta[name="csrf-token"]');
+                    if (meta) return meta.getAttribute('content');
+                    // cookie から xsrf-token を探す
+                    const m = document.cookie.match(/(?:^|; )(?:X-XSRF-TOKEN|xsrf-token|csrf[-_]token)=([^;]+)/i);
+                    return m ? decodeURIComponent(m[1]) : null;
+                }
+                """)
+                if csrf_token:
+                    print(f"[cover API] CSRF token: {csrf_token[:20]}...")
+            except Exception:
+                pass
+
+            extra_headers: dict = {}
+            if csrf_token:
+                extra_headers["X-CSRF-Token"] = csrf_token
+
+            api_targets = [
+                (f"https://note.com/api/v2/text_notes/{note_id}/eyecatch",        "eyecatch"),
+                (f"https://note.com/api/v1/text_notes/{note_id}/eyecatch",        "eyecatch"),
+                (f"https://note.com/api/v2/notes/{note_id}/eyecatch",             "eyecatch"),
+                (f"https://editor.note.com/api/v2/text_notes/{note_id}/eyecatch", "eyecatch"),
+                (f"https://note.com/api/v2/text_notes/{note_id}/eyecatch",        "file"),
+                (f"https://note.com/api/v2/text_notes/{note_id}/eyecatch",        "image"),
+            ]
+            for endpoint, field_name in api_targets:
+                try:
+                    response = page.request.post(
+                        endpoint,
+                        headers=extra_headers,
+                        multipart={
+                            field_name: {
+                                "name": "cover.png",
+                                "mimeType": "image/png",
+                                "buffer": image_bytes,
+                            }
+                        },
+                    )
+                    body_preview = ""
+                    try:
+                        body_preview = response.text()[:120]
+                    except Exception:
+                        pass
+                    print(f"[cover API] {endpoint} [{field_name}]: {response.status} {body_preview}")
+                    if response.ok:
+                        print(f"✅ カバー画像APIアップロード成功: {endpoint}")
+                        page.wait_for_timeout(1500)
+                        return True
+                except Exception as e:
+                    print(f"[cover API] エラー ({endpoint}): {e}")
+        except Exception as e:
+            print(f"[cover] APIアップロード全体エラー: {e}")
+
+    # ── 方法2: 全 input（hidden 含む）を検索 ──
     try:
-        elems = page.evaluate("""
-        () => {
-            const sel = 'button, [role="button"], label, input[type="file"], ' +
-                        '[class*="cover"], [class*="Cover"], [class*="thumb"], [class*="Thumb"], ' +
-                        '[class*="header"], [class*="Header"], [class*="image"], [class*="Image"]';
-            return Array.from(document.querySelectorAll(sel)).slice(0, 30).map(e => ({
-                tag: e.tagName,
-                text: e.textContent.trim().substring(0, 30),
-                cls: e.className.substring(0, 60),
-                type: e.getAttribute('type') || '',
-                accept: e.getAttribute('accept') || '',
-                visible: e.offsetParent !== null,
-            }));
-        }
+        all_inputs = page.evaluate("""
+        () => Array.from(document.querySelectorAll('input')).map((el, i) => ({
+            index: i,
+            type: el.type,
+            accept: el.accept || '',
+            id: el.id || '',
+            name: el.name || '',
+            cls: el.className.substring(0, 60),
+        }))
         """)
-        print(f"[cover診断] エディタ要素: {json.dumps(elems, ensure_ascii=False)[:800]}")
-    except Exception as e:
-        print(f"[cover診断] 要素取得エラー: {e}")
+        print(f"[cover] 全input: {json.dumps(all_inputs, ensure_ascii=False)[:600]}")
 
-    # 方法1: 既知のセレクタ（テキスト・属性ベース）
+        for inp_info in all_inputs:
+            if inp_info.get("type") == "file":
+                idx = inp_info["index"]
+                try:
+                    loc = page.locator("input[type='file']").nth(idx)
+                    loc.set_input_files(cover_path)
+                    page.wait_for_timeout(2000)
+                    print(f"✅ カバー画像アップロード成功 (hidden file input #{idx})")
+                    return True
+                except Exception as e:
+                    print(f"[cover] file input #{idx} 失敗: {e}")
+    except Exception as e:
+        print(f"[cover] input検索エラー: {e}")
+
+    # ── 方法3: ページ上部をマウス走査してホバー効果を誘発 ──
+    try:
+        for y in [30, 60, 90, 120, 150, 180]:
+            page.mouse.move(320, y)
+            page.wait_for_timeout(150)
+            page.mouse.move(640, y)
+            page.wait_for_timeout(150)
+            page.mouse.move(960, y)
+            page.wait_for_timeout(150)
+        page.wait_for_timeout(500)
+
+        # ホバー後に file input が出現したか確認
+        file_count = page.locator("input[type='file']").count()
+        print(f"[cover ホバー後] file input数: {file_count}")
+        for i in range(file_count):
+            try:
+                page.locator("input[type='file']").nth(i).set_input_files(cover_path)
+                page.wait_for_timeout(2000)
+                print(f"✅ カバー画像アップロード成功 (ホバー後 file input #{i})")
+                return True
+            except Exception as e:
+                print(f"[cover] ホバー後 file input #{i} 失敗: {e}")
+    except Exception as e:
+        print(f"[cover] ホバー試行エラー: {e}")
+
+    # ── 方法4: ページ上部を各y座標でクリック → file chooser 待ち ──
+    for y in [40, 70, 100, 130, 160, 190]:
+        try:
+            with page.expect_file_chooser(timeout=2000) as fc_info:
+                page.mouse.click(640, y)
+            fc_info.value.set_files(cover_path)
+            page.wait_for_timeout(2000)
+            print(f"✅ カバー画像アップロード成功 (y={y}クリック)")
+            return True
+        except Exception:
+            pass
+
+    # ── 方法5: 既知セレクタ ──
     for sel in [
         '[data-name="cover"]',
         '.p-articleEditor__cover',
-        'button:has-text("カバー画像")',
-        'button:has-text("サムネイル")',
         '[class*="coverImage"]',
         '[class*="cover-image"]',
+        '[class*="eyecatch"]',
+        '[class*="Eyecatch"]',
+        '[class*="thumbnail"]',
+        'button:has-text("カバー画像")',
+        'button:has-text("サムネイル")',
         '[aria-label*="カバー"]',
         '[aria-label*="サムネイル"]',
         'label:has-text("カバー")',
@@ -204,67 +323,42 @@ def upload_cover_image(page: Page, cover_path: str) -> bool:
     ]:
         try:
             loc = page.locator(sel).first
-            if loc.is_visible(timeout=1000):
+            if loc.is_visible(timeout=800):
                 with page.expect_file_chooser(timeout=4000) as fc_info:
                     loc.click()
                 fc_info.value.set_files(cover_path)
                 page.wait_for_timeout(3000)
-                print(f"カバー画像アップロード成功 ({sel})")
+                print(f"✅ カバー画像アップロード成功 ({sel})")
                 return True
         except Exception:
             continue
 
-    # 方法2: styled-components ボタン（診断で確認されたPDqMaクラス）を全部試す
+    # ── 方法6: 全ボタンを試す（クラス名付きログ付き） ──
     try:
-        styled_btns = page.locator('button').all()
-        print(f"[cover] ボタン総数: {len(styled_btns)}")
-        for i, btn in enumerate(styled_btns[:8]):  # 最初の8ボタンを試す
+        btns = page.locator("button").all()
+        print(f"[cover] ボタン総数: {len(btns)}")
+        for i, btn in enumerate(btns[:15]):
             try:
-                if not btn.is_visible(timeout=500):
+                if not btn.is_visible(timeout=300):
                     continue
-                with page.expect_file_chooser(timeout=2000) as fc_info:
+                cls  = btn.get_attribute("class") or ""
+                text = (btn.text_content() or "").strip()
+                print(f"[cover] button #{i}: cls={cls[:40]!r}, text={text[:20]!r}")
+                with page.expect_file_chooser(timeout=1500) as fc_info:
                     btn.click()
-                fc = fc_info.value
-                fc.set_files(cover_path)
+                fc_info.value.set_files(cover_path)
                 page.wait_for_timeout(2000)
-                print(f"カバー画像アップロード成功 (button #{i})")
+                print(f"✅ カバー画像アップロード成功 (button #{i})")
                 return True
             except Exception:
                 continue
     except Exception as e:
         print(f"[cover] ボタン試行エラー: {e}")
 
-    # 方法3: タイトル入力フィールドの上部（カバー画像エリア）をクリック
+    # ── デバッグ用スクリーンショット ──
     try:
-        for title_sel in ['[placeholder*="タイトル"]', 'input[name="title"]']:
-            title_el = page.locator(title_sel).first
-            if title_el.is_visible(timeout=1000):
-                box = title_el.bounding_box()
-                if box:
-                    cx = box["x"] + box["width"] // 2
-                    cy = box["y"] - 80  # タイトルの80px上
-                    with page.expect_file_chooser(timeout=3000) as fc_info:
-                        page.mouse.click(cx, cy)
-                    fc_info.value.set_files(cover_path)
-                    page.wait_for_timeout(2000)
-                    print("カバー画像アップロード成功（座標クリック）")
-                    return True
-    except Exception as e:
-        print(f"[cover] 座標クリック失敗: {e}")
-
-    # 方法4: 隠し file input に直接セット
-    try:
-        count = page.locator('input[type="file"]').count()
-        print(f"[cover] file input 数: {count}")
-        for i in range(count):
-            inp = page.locator('input[type="file"]').nth(i)
-            try:
-                inp.set_input_files(cover_path)
-                page.wait_for_timeout(2000)
-                print(f"カバー画像アップロード成功 (file input #{i})")
-                return True
-            except Exception as e:
-                print(f"[cover] input#{i} 失敗: {e}")
+        page.screenshot(path="note_cover_debug.png")
+        print("[cover] デバッグスクリーンショット保存: note_cover_debug.png")
     except Exception:
         pass
 
@@ -572,7 +666,6 @@ def publish(page: Page) -> str:
     # note.com の実際の公開URLを取得する
     # 公開後は /like_reaction_setting などにリダイレクトされる場合があるため
     # editor.note.com のノートIDを使って公開URLを構築する
-    import re
     note_id_match = re.search(r'/notes/(n[a-z0-9]+)/', final_url)
     if not note_id_match:
         # publish ページのURLからもIDを探す
@@ -619,7 +712,16 @@ def post_to_note(title: str, body: str, tags: list[str], cover_path: str = "") -
 
             print("新規記事ページへ移動...")
             page.goto(NOTE_NEW_URL, wait_until="domcontentloaded")
-            page.wait_for_timeout(3000)  # エディタ初期化待ち
+            # editor.note.com へのリダイレクトを待つ（note_id がURLに含まれるまで）
+            try:
+                page.wait_for_url(
+                    lambda url: "editor.note.com" in url or "/notes/n" in url,
+                    timeout=15000,
+                )
+            except Exception:
+                pass
+            page.wait_for_timeout(2000)  # エディタ初期化待ち
+            print(f"エディタURL: {page.url}")
 
             # ① カバー画像アップロード（タイトル入力の前に実施）
             if cover_path:
