@@ -256,30 +256,61 @@ def fill_tags(page: Page, tags: list[str]) -> None:
 
 def publish(page: Page) -> str:
     """記事を公開してURLを返す。"""
-    for sel in ['button:has-text("公開設定")', 'button:has-text("公開")', '[data-type="publish"]']:
+    # STEP1: 「公開設定」ボタンをクリック（エディタ右上）
+    publish_settings_clicked = False
+    for sel in [
+        'button:has-text("公開設定")',
+        'button:has-text("公開")',
+        '[data-type="publish"]',
+        'button[class*="publish"]',
+    ]:
         try:
             btn = page.locator(sel).first
             if btn.is_visible(timeout=3000):
                 btn.click()
-                print("「公開設定」クリック")
+                print(f"「公開設定」クリック: {sel}")
+                publish_settings_clicked = True
                 break
         except Exception:
             continue
 
-    page.wait_for_timeout(2000)
+    if not publish_settings_clicked:
+        print("⚠️ 「公開設定」ボタンが見つかりませんでした")
 
-    for sel in ['button:has-text("公開する")', 'button:has-text("投稿する")', '[data-type="confirm-publish"]']:
+    # 公開設定ページ（/publish/）への遷移を待つ
+    page.wait_for_timeout(3000)
+    print(f"公開設定後URL: {page.url}")
+
+    # STEP2: 「公開する」ボタンをクリック（公開設定モーダル内）
+    publish_clicked = False
+    for sel in [
+        'button:has-text("公開する")',
+        'button:has-text("投稿する")',
+        'button:has-text("公開")',
+        '[data-type="confirm-publish"]',
+        'button[class*="publish"]',
+        'input[type="submit"]',
+    ]:
         try:
+            # 最後に見つかったボタンを使う（モーダル内のボタンを優先）
             btn = page.locator(sel).last
-            if btn.is_visible(timeout=3000):
+            if btn.is_visible(timeout=4000):
                 btn.click()
-                print("「公開する」クリック")
+                print(f"「公開する」クリック: {sel}")
+                publish_clicked = True
                 break
         except Exception:
             continue
 
-    page.wait_for_timeout(4000)
-    return page.url
+    if not publish_clicked:
+        print("⚠️ 「公開する」ボタンが見つかりませんでした。スクリーンショットを保存します。")
+        page.screenshot(path="note_publish_error.png")
+
+    # 公開完了・URLが確定するまで待つ
+    page.wait_for_timeout(5000)
+    final_url = page.url
+    print(f"最終URL: {final_url}")
+    return final_url
 
 
 def post_to_note(title: str, body: str, tags: list[str]) -> str:
