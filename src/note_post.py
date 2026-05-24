@@ -8,7 +8,7 @@ note.comへの記事投稿スクリプト（Playwright使用）。
 NOTE_SESSION_COOKIE の取得方法:
   1. ブラウザで https://note.com にログイン
   2. DevTools → Application → Cookies → https://note.com
-  3. "note_sid" の値をコピー → GitHub Secrets に NOTE_SESSION_COOKIE として保存
+  3. "_note_session" の値をコピー → GitHub Secrets に NOTE_SESSION_COOKIE として保存
 
 必要な環境変数（いずれかのセット）:
   セット1: NOTE_SESSION_COOKIE  ← 推奨・安定
@@ -69,7 +69,7 @@ def authenticate_with_cookie(context: BrowserContext) -> bool:
     print("セッションクッキーで認証中...")
 
     # note.comのクッキーを複数設定（候補名を試す）
-    cookie_names = ["note_sid", "_note_session", "session"]
+    cookie_names = ["_note_session", "note_sid", "session"]
     for name in cookie_names:
         context.add_cookies([{
             "name": name,
