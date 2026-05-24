@@ -31,8 +31,8 @@ const SIDEBAR_LINKS: Record<Genre, SidebarLink[]> = {
   ],
   business: [
     { name: "マネーフォワード クラウド", url: "https://px.a8.net/svt/ejp?a8mat=4B3HQJ+5YCTU+4JGQ+614CY", desc: "会計・確定申告をラクに自動化", isAffiliate: true },
+    { name: "ここなら（スキル売買）", url: "https://px.a8.net/svt/ejp?a8mat=4B3UZ9+95U5WY+2PEO+OECDE", desc: "TVCMで話題！副業にスキルを売り買い", isAffiliate: true },
     { name: "クラウドワークス", url: "https://crowdworks.jp", desc: "副業・フリーランス案件を探す", isAffiliate: false },
-    { name: "Udemy", url: "https://www.udemy.com/ja/", desc: "オンライン講座でスキルアップ", isAffiliate: false },
   ],
   travel: [
     { name: "じゃらんnet", url: "https://px.a8.net/svt/ejp?a8mat=4B3HQI+DYHVCI+14CS+6C9LD", desc: "全国の宿・ホテルをお得に予約", isAffiliate: true },
@@ -40,9 +40,9 @@ const SIDEBAR_LINKS: Record<Genre, SidebarLink[]> = {
     { name: "agoda", url: "https://px.a8.net/svt/ejp?a8mat=4B3HQJ+A36FSI+4X1W+5YRHE", desc: "国内・海外ホテルを最大85%OFF", isAffiliate: true },
   ],
   gourmet: [
-    { name: "ホットペッパーグルメ", url: "https://www.hotpepper.jp", desc: "お得なクーポンでレストラン予約", isAffiliate: false },
-    { name: "一休.comレストラン", url: "https://restaurant.ikyu.com", desc: "高級レストランの特別プラン", isAffiliate: false },
-    { name: "楽天市場（食品・グルメ）", url: "https://search.rakuten.co.jp/search/mall/%E9%A3%9F%E5%93%81+%E3%82%B0%E3%83%AB%E3%83%A1/", desc: "楽天ポイントでお得に食品購入", isAffiliate: false },
+    { name: "一休.comレストラン", url: "https://px.a8.net/svt/ejp?a8mat=4B3UZ9+81COS2+1OK+NTRMQ", desc: "最大53%OFF！高級レストランのタイムセール", isAffiliate: true },
+    { name: "ヨシケイ（お試しミールキット）", url: "https://px.a8.net/svt/ejp?a8mat=4B3UZ9+8C2HO2+1QM6+HZAGY", desc: "栄養士の献立で簡単ごはん・5日間お試し", isAffiliate: true },
+    { name: "宅麺.com", url: "https://px.a8.net/svt/ejp?a8mat=4B3UZ9+82JJZM+2CYM+60OXE", desc: "有名ラーメン店の味をご自宅にお取り寄せ", isAffiliate: true },
   ],
   gadget: [
     { name: "Amazon", url: "https://www.amazon.co.jp/?tag=nexigen22-22", desc: "最新ガジェットをお得に購入", isAffiliate: true },
@@ -58,7 +58,7 @@ const MID_CTA: Record<Genre, MidCta> = {
   investment: { text: "💰 投資デビューするなら、まずは口座開設から。iDeCoで節税しながら老後資金を積み立てよう。", url: "https://px.a8.net/svt/ejp?a8mat=4B3HQF+EFRFW2+3XCC+BXIYQ", btnText: "松井証券 iDeCoを無料で始める →" },
   business:   { text: "📊 副業・フリーランスの会計をかんたんに。確定申告もクラウドで自動化しよう。", url: "https://px.a8.net/svt/ejp?a8mat=4B3HQJ+5YCTU+4JGQ+614CY", btnText: "マネーフォワードを無料で試す →" },
   travel:     { text: "✈️ 旅行費用をもっとお得に。今すぐ宿を比較して早割プランを探そう。", url: "https://px.a8.net/svt/ejp?a8mat=4B3HQI+DYHVCI+14CS+6C9LD", btnText: "じゃらんnetで宿を探す →" },
-  gourmet:    { text: "🍽️ 美食をもっとお得に楽しもう。今すぐクーポンを探してみよう。", url: "https://www.hotpepper.jp", btnText: "ホットペッパーでクーポンを探す →" },
+  gourmet:    { text: "🍽️ 美食をもっとお得に楽しもう。高級レストランが最大53%OFF、今すぐチェック！", url: "https://px.a8.net/svt/ejp?a8mat=4B3UZ9+81COS2+1OK+NTRMQ", btnText: "一休.comレストランでお得プランを探す →" },
   gadget:     { text: "🛒 ガジェットをお得に購入するなら。今すぐ最安値をチェックしよう。", url: "https://www.amazon.co.jp/?tag=nexigen22-22", btnText: "Amazonでガジェットを探す →" },
 };
 const currentMidCta = MID_CTA[genre];
