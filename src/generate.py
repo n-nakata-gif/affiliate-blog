@@ -749,6 +749,12 @@ def _vc_prog(pid: str) -> str:
     """ValueCommerce 通常プログラム用トラッキングURL（PID指定）"""
     return f"https://ck.jp.ap.valuecommerce.com/servlet/referral?sid={_VC_SID}&pid={pid}"
 
+_MOSHIMO_AID = "5579374"
+
+def _moshimo(p_id: str) -> str:
+    """もしもアフィリエイト トラッキングURL（promotion_id指定）"""
+    return f"https://af.moshimo.com/af/c/click?a_id={_MOSHIMO_AID}&p_id={p_id}"
+
 _TRAVEL_LINKS = [
     {"name": "じゃらんnet",         "url": "https://px.a8.net/svt/ejp?a8mat=4B3HQI+DYHVCI+14CS+6C9LD",    "desc": "全国の宿・ホテルをお得に予約",          "logo": _GF.format("jalan.net"),    "a8net": True},
     {"name": "楽天トラベル",        "url": "https://travel.rakuten.co.jp",                                  "desc": "楽天ポイントで宿・航空券をお得に",      "rakuten": True, "logo": _GF.format("travel.rakuten.co.jp")},
@@ -777,6 +783,9 @@ _GOURMET_LINKS = [
     {"name": "JTBショッピング（旅のお土産）",  "url": _vc_prog("892618886"),                                   "desc": "全国の旅行お土産・ご当地グルメをお取り寄せ",      "logo": _GF.format("jtbshoppingshop.jp"), "valuecommerce": True},
     {"name": "坂ノ途中（有機野菜定期宅配）",  "url": _vc_prog("892618890"),                                   "desc": "農薬・化学肥料不使用の有機野菜を毎週お届け",      "logo": _GF.format("on-the-slope.com"),  "valuecommerce": True},
     {"name": "Oisix（オイシックス）",         "url": "https://www.oisix.com",                                 "desc": "有機野菜・安心食材のお試しセット",                "logo": _GF.format("oisix.com")},
+    {"name": "山内鮮魚店",                    "url": _moshimo("1397"),                                         "desc": "創業60年・リピート率70%以上の海鮮グルメ通販",     "logo": _GF.format("yamauchi-seafood.co.jp"), "moshimo": True},
+    {"name": "ローストビーフたわら屋",         "url": _moshimo("785"),                                          "desc": "ギフト・家庭用の絶品ローストビーフ専門店",        "logo": _GF.format("tawara-ya.co.jp"),     "moshimo": True},
+    {"name": "saketaku（日本酒定期便）",       "url": _moshimo("1279"),                                         "desc": "プロ厳選の希少な日本酒が毎月届く定期サービス",    "logo": _GF.format("saketaku.com"),        "moshimo": True},
 ]
 
 _BUSINESS_LINKS = [
@@ -790,6 +799,11 @@ _BUSINESS_LINKS = [
     {"name": "Udemy",                           "url": "https://www.udemy.com/ja/",       "desc": "オンライン講座でスキルアップ",             "logo": _GF.format("udemy.com")},
     {"name": "マネーフォワード クラウド会計",   "url": "https://px.a8.net/svt/ejp?a8mat=4B3HQJ+5YCTU+4JGQ+614CY", "desc": "会計事務所オススメNo.1の会計ソフト",  "logo": _GF.format("moneyforward.com")},
     {"name": "マネーフォワード クラウド確定申告", "url": "https://px.a8.net/svt/ejp?a8mat=4B3HQJ+4620I+4JGQ+BXB8Z", "desc": "確定申告を自動化・ラクに完了",        "logo": _GF.format("moneyforward.com")},
+    {"name": "ConoHa WING",                     "url": _moshimo("2312"),                                             "desc": "国内最速・初期費用無料のレンタルサーバー。WordPressも簡単設定", "logo": _GF.format("conoha.jp"),            "moshimo": True},
+    {"name": "フジ子さん",                       "url": _moshimo("1472"),                                             "desc": "必要なときだけ頼めるオンラインアシスタント・月額不要",       "logo": _GF.format("fujikoSan.com"),        "moshimo": True},
+    {"name": "お名前.com レンタルサーバー",       "url": _moshimo("110"),                                              "desc": "ドメイン取得と一緒に使える定番レンタルサーバー",            "logo": _GF.format("onamae.com"),           "moshimo": True},
+    {"name": "ロリポップ!レンタルサーバー",       "url": _moshimo("16"),                                               "desc": "月額99円〜の格安高性能サーバー・WordPressも対応",          "logo": _GF.format("lolipop.jp"),           "moshimo": True},
+    {"name": "弥生シリーズ（会計・申告）",        "url": _moshimo("914"),                                              "desc": "青色申告・会計・給与ソフト。1年間無料体験あり",           "logo": _GF.format("yayoi-kk.co.jp"),       "moshimo": True},
 ]
 
 # 松井証券 iDeCo アフィリエイト（A8.net）
@@ -819,6 +833,7 @@ _INVESTMENT_LINKS = [
     {"name": "楽天証券",                  "url": "https://www.rakuten-sec.co.jp",  "desc": "楽天ポイントで投資デビュー",  "rakuten": True, "logo": _GF.format("rakuten-sec.co.jp")},
     {"name": "マネーフォワード ME",       "url": "https://moneyforward.com",       "desc": "資産・家計を一括管理",                       "logo": _GF.format("moneyforward.com")},
     {"name": "ウェルスナビ",              "url": "https://www.wealthnavi.com",     "desc": "おまかせロボアドバイザー投資",               "logo": _GF.format("wealthnavi.com")},
+    {"name": "IOSマネーセミナー",         "url": _moshimo("1715"),                 "desc": "初心者向け無料資産形成セミナー・参加報酬あり",  "logo": _GF.format("ios-co.jp"),           "moshimo": True},
 ]
 
 _GADGET_LINKS = [
@@ -829,6 +844,8 @@ _GADGET_LINKS = [
     {"name": "楽天市場（家電・ガジェット）",  "url": "https://search.rakuten.co.jp/search/mall/%E3%82%AC%E3%82%B8%E3%82%A7%E3%83%83%E3%83%88+%E5%AE%B6%E9%9B%BB/", "desc": "楽天ポイントでお得にガジェット購入", "rakuten": True, "logo": _GF.format("rakuten.co.jp")},
     {"name": "ヨドバシカメラ",               "url": "https://www.yodobashi.com",                    "desc": "家電・ガジェットをポイント還元で",        "logo": _GF.format("yodobashi.com")},
     {"name": "価格.com",                     "url": "https://kakaku.com",                           "desc": "最安値・スペック比較で賢く購入",          "logo": _GF.format("kakaku.com")},
+    {"name": "ソースネクスト",               "url": _moshimo("1105"),                               "desc": "ZERO・翻訳ソフト等の定番PCソフトが10%以上還元", "logo": _GF.format("sourcenext.com"),      "moshimo": True},
+    {"name": "DXRacer（ゲーミングチェア）",  "url": _moshimo("2338"),                               "desc": "プロゲーマー愛用のゲーミングチェア専門ブランド",  "logo": _GF.format("dxracer.com"),         "moshimo": True},
 ]
 
 
@@ -1100,7 +1117,7 @@ def build_affiliate_section(genre: str, keyword: str, products: list, amazon_pro
             if link.get("rakuten") and rakuten_aff_id:
                 url = make_rakuten_affiliate_url(url, rakuten_aff_id, a8mat)
             # rel="sponsored" は実際にアフィリエイト提携済みのリンクのみに付与
-            is_affiliate = link.get("rakuten") or link.get("a8net") or link.get("accesstrade") or link.get("valuecommerce") or "tag=nexigen22-22" in url or "px.a8.net" in url or "h.accesstrade.net" in url or "valuecommerce.com" in url
+            is_affiliate = link.get("rakuten") or link.get("a8net") or link.get("accesstrade") or link.get("valuecommerce") or link.get("moshimo") or "tag=nexigen22-22" in url or "px.a8.net" in url or "h.accesstrade.net" in url or "valuecommerce.com" in url or "af.moshimo.com" in url
             rel = "noopener sponsored" if is_affiliate else "noopener"
             logo = link.get("logo", "")
             logo_html = (
