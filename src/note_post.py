@@ -62,41 +62,54 @@ def get_next_draft() -> tuple[Path, dict] | tuple[None, None]:
 
 
 def authenticate_with_cookie(context: BrowserContext) -> bool:
-    """セッションクッキーで認証する。成功した場合 True を返す。"""
+    """セッションクッキーで認証する。成功した場合 True を返す。
+
+    確認方法: /notes/new に直接アクセスしてログインページへリダイレクトされなければ認証済み。
+    """
     if not NOTE_SESSION_COOKIE:
         return False
 
     print("セッションクッキーで認証中...")
 
-    # note.comのクッキーを複数設定（候補名を試す）
-    cookie_names = ["_note_session", "note_sid", "session"]
-    for name in cookie_names:
-        context.add_cookies([{
-            "name": name,
-            "value": NOTE_SESSION_COOKIE,
-            "domain": ".note.com",
-            "path": "/",
-            "secure": True,
-        }])
+    # domainは .note.com と note.com の両方を設定（ブラウザによって扱いが異なるため）
+    for domain in [".note.com", "note.com"]:
+        for name in ["_note_session", "note_sid"]:
+            try:
+                context.add_cookies([{
+                    "name": name,
+                    "value": NOTE_SESSION_COOKIE,
+                    "domain": domain,
+                    "path": "/",
+                    "secure": True,
+                    "httpOnly": True,
+                }])
+            except Exception:
+                pass
 
     page = context.new_page()
     try:
-        page.goto(NOTE_HOME_URL, wait_until="domcontentloaded")
+        # /notes/new に直接アクセス → ログインページにリダイレクトされなければ認証済み
+        page.goto(NOTE_NEW_URL, wait_until="domcontentloaded", timeout=20000)
         page.wait_for_timeout(2000)
 
-        # ログイン状態確認（ログインボタンがなければ成功）
-        login_btn_visible = page.locator('a[href*="login"], button:has-text("ログイン")').is_visible(timeout=3000)
-        if not login_btn_visible:
-            print("クッキー認証成功")
-            page.close()
-            return True
-        else:
-            print("クッキーが無効です。メール/パスワードでログインを試みます...")
+        current_url = page.url
+        print(f"クッキー確認後URL: {current_url}")
+
+        if "login" in current_url:
+            print("クッキーが無効です（ログインページにリダイレクト）。メール/パスワードを試みます...")
             page.close()
             return False
+
+        print("クッキー認証成功")
+        page.close()
+        return True
+
     except Exception as e:
         print(f"クッキー認証エラー: {e}")
-        page.close()
+        try:
+            page.close()
+        except Exception:
+            pass
         return False
 
 
