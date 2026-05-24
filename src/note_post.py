@@ -71,9 +71,10 @@ def authenticate_with_cookie(context: BrowserContext) -> bool:
 
     print("セッションクッキーで認証中...")
 
+    # note.com は _note_session_v5 を使用（curlで確認済み）
     # domainは .note.com と note.com の両方を設定（ブラウザによって扱いが異なるため）
     for domain in [".note.com", "note.com"]:
-        for name in ["_note_session", "note_sid"]:
+        for name in ["_note_session_v5", "_note_session", "note_sid"]:
             try:
                 context.add_cookies([{
                     "name": name,
