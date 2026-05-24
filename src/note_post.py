@@ -18,11 +18,194 @@ from __future__ import annotations
 
 import json
 import os
+import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
 from playwright.sync_api import BrowserContext, Page, sync_playwright, TimeoutError as PlaywrightTimeoutError
+
+# ────────────────────────────────────────────
+#  カバー画像生成
+# ────────────────────────────────────────────
+
+NOTE_COVERS_DIR = Path("data/note_covers")
+
+
+def _find_japanese_font() -> str | None:
+    """利用可能な日本語フォントのパスを返す。"""
+    candidates = [
+        # Ubuntu (GitHub Actions) – apt install fonts-noto-cjk 後
+        "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc",
+        "/usr/share/fonts/opentype/noto/NotoSansCJKjp-Bold.otf",
+        "/usr/share/fonts/noto-cjk/NotoSansCJK-Bold.ttc",
+        "/usr/share/fonts/truetype/noto/NotoSansCJK-Bold.ttc",
+        "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+        "/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc",
+        # macOS
+        "/System/Library/Fonts/ヒラギノ角ゴシック W6.ttc",
+        "/System/Library/Fonts/ヒラギノ角ゴシック W3.ttc",
+        "/System/Library/Fonts/Supplemental/Arial Unicode MS.ttf",
+    ]
+    for path in candidates:
+        if os.path.exists(path):
+            return path
+    # fc-list でフォールバック検索
+    try:
+        result = subprocess.run(
+            ["fc-list", ":lang=ja", "--format=%{file}\n"],
+            capture_output=True, text=True, timeout=5,
+        )
+        for line in result.stdout.strip().split("\n"):
+            p = line.strip()
+            if p and os.path.exists(p):
+                return p
+    except Exception:
+        pass
+    return None
+
+
+def _wrap_text(draw, text: str, font, max_width: int) -> list[str]:
+    """テキストを指定ピクセル幅で折り返す（最大3行）。"""
+    lines: list[str] = []
+    current = ""
+    for ch in text:
+        test = current + ch
+        bbox = draw.textbbox((0, 0), test, font=font)
+        if bbox[2] - bbox[0] > max_width and current:
+            lines.append(current)
+            current = ch
+            if len(lines) >= 3:
+                break
+        else:
+            current = test
+    if current and len(lines) < 3:
+        lines.append(current)
+    return lines
+
+
+def generate_cover_image(title: str, tags: list[str], output_path: str) -> str:
+    """カバー画像（1280×670px）を生成して output_path に保存する。"""
+    try:
+        from PIL import Image, ImageDraw, ImageFont
+    except ImportError:
+        raise RuntimeError("Pillow が必要です: pip install Pillow")
+
+    W, H = 1280, 670
+    img = Image.new("RGB", (W, H))
+    draw = ImageDraw.Draw(img)
+
+    # ── 背景グラデーション（ダークネイビー → ダークブルー）──
+    for y in range(H):
+        ratio = y / H
+        r = int(10 + (6  - 10) * ratio)
+        g = int(18 + (25 - 18) * ratio)
+        b = int(38 +(58 - 38) * ratio)
+        draw.rectangle([(0, y), (W, y + 1)], fill=(r, g, b))
+
+    # ── 左アクセントバー ──
+    CYAN = (0, 188, 255)
+    draw.rectangle([(0, 0), (7, H)], fill=CYAN)
+
+    # ── 右上の装飾円弧 ──
+    for i in range(5):
+        sz = 180 + i * 90
+        draw.arc(
+            [(W - sz + 60, -sz + 60), (W + sz + 60, sz + 60)],
+            start=140, end=220,
+            fill=(255, 255, 255),
+            width=max(1, 3 - i),
+        )
+
+    # ── フォント ──
+    font_path = _find_japanese_font()
+    try:
+        if font_path:
+            title_font  = ImageFont.truetype(font_path, 64)
+            tag_font    = ImageFont.truetype(font_path, 26)
+            brand_font  = ImageFont.truetype(font_path, 22)
+        else:
+            title_font = tag_font = brand_font = ImageFont.load_default()
+    except Exception:
+        title_font = tag_font = brand_font = ImageFont.load_default()
+
+    # ── タイトルのラッピングと描画 ──
+    lines     = _wrap_text(draw, title, title_font, W - 120)
+    line_h    = 82
+    total_h   = len(lines) * line_h
+    start_y   = (H - total_h) // 2 - 50
+
+    for i, line in enumerate(lines):
+        y = start_y + i * line_h
+        draw.text((42, y + 3), line, font=title_font, fill=(0, 0, 0))       # シャドウ
+        draw.text((40, y),     line, font=title_font, fill=(255, 255, 255))  # 本体
+
+    # ── 区切り線 ──
+    sep_y = H - 92
+    draw.rectangle([(40, sep_y), (W - 40, sep_y + 1)], fill=(60, 100, 160))
+
+    # ── タグ ──
+    if tags:
+        tag_text = "  ".join(f"#{t}" for t in tags[:3])
+        draw.text((40, H - 78), tag_text, font=tag_font, fill=CYAN)
+
+    # ── ブランド ──
+    draw.text((40, H - 46), "Novlify 編集部", font=brand_font, fill=(160, 190, 220))
+
+    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+    img.save(output_path, "PNG", optimize=True)
+    print(f"カバー画像生成完了: {output_path}")
+    return output_path
+
+
+def upload_cover_image(page: Page, cover_path: str) -> bool:
+    """カバー画像をアップロードする。成功したら True を返す。"""
+    if not cover_path or not Path(cover_path).exists():
+        print("カバー画像ファイルが見つかりません（スキップ）")
+        return False
+
+    print(f"カバー画像アップロード試行: {cover_path}")
+    page.evaluate("window.scrollTo(0, 0)")
+    page.wait_for_timeout(500)
+
+    # 方法1: カバー画像エリアをクリックしてファイル選択ダイアログを開く
+    for sel in [
+        '[data-name="cover"]',
+        '.p-articleEditor__cover',
+        'button:has-text("カバー画像")',
+        '[class*="coverImage"]',
+        '[class*="cover-image"]',
+        '[class*="cover"]',
+        'label:has-text("カバー")',
+    ]:
+        try:
+            loc = page.locator(sel).first
+            if loc.is_visible(timeout=1500):
+                with page.expect_file_chooser(timeout=5000) as fc_info:
+                    loc.click()
+                fc_info.value.set_files(cover_path)
+                page.wait_for_timeout(3000)
+                print(f"カバー画像アップロード成功 ({sel})")
+                return True
+        except Exception:
+            continue
+
+    # 方法2: 隠し file input に直接セット
+    try:
+        count = page.locator('input[type="file"]').count()
+        for i in range(count):
+            inp = page.locator('input[type="file"]').nth(i)
+            try:
+                inp.set_input_files(cover_path)
+                page.wait_for_timeout(2000)
+                print(f"カバー画像アップロード成功 (file input #{i})")
+                return True
+            except Exception:
+                continue
+    except Exception:
+        pass
+
+    print("⚠️ カバー画像アップロードのセレクタが見つかりませんでした（スキップ）")
 
 NOTE_DRAFTS_DIR = Path("data/note_drafts")
 NOTE_POSTED_FILE = Path("data/note_posted.json")
@@ -325,7 +508,7 @@ def publish(page: Page) -> str:
     return final_url
 
 
-def post_to_note(title: str, body: str, tags: list[str]) -> str:
+def post_to_note(title: str, body: str, tags: list[str], cover_path: str = "") -> str:
     """Playwrightを使ってnote.comに記事を投稿し、URLを返す。"""
     with sync_playwright() as pw:
         browser = pw.chromium.launch(
@@ -358,7 +541,12 @@ def post_to_note(title: str, body: str, tags: list[str]) -> str:
 
             print("新規記事ページへ移動...")
             page.goto(NOTE_NEW_URL, wait_until="domcontentloaded")
-            page.wait_for_timeout(2000)
+            page.wait_for_timeout(3000)  # エディタ初期化待ち
+
+            # ① カバー画像アップロード（タイトル入力の前に実施）
+            if cover_path:
+                upload_cover_image(page, cover_path)
+                page.wait_for_timeout(1000)
 
             fill_title(page, title)
             page.wait_for_timeout(500)
@@ -393,11 +581,25 @@ def main() -> None:
     print(f"投稿するドラフト: {stem}")
     print(f"タイトル: {draft_data['title']}")
 
+    # カバー画像を自動生成
+    NOTE_COVERS_DIR.mkdir(parents=True, exist_ok=True)
+    cover_path = str(NOTE_COVERS_DIR / f"{stem}.png")
+    try:
+        generate_cover_image(
+            title=draft_data["title"],
+            tags=draft_data.get("tags", []),
+            output_path=cover_path,
+        )
+    except Exception as e:
+        print(f"⚠️ カバー画像生成失敗（スキップ）: {e}")
+        cover_path = ""
+
     try:
         note_url = post_to_note(
             title=draft_data["title"],
             body=draft_data["body"],
             tags=draft_data.get("tags", []),
+            cover_path=cover_path,
         )
     except Exception as e:
         print(f"ERROR: 投稿に失敗しました: {e}")
