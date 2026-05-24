@@ -287,9 +287,68 @@ _BODY_SECTIONS = {
 
 # ── トピック読み込み ──────────────────────────────────────────
 
+CONTENT_DIR = Path("src/content/blog")
+
 def load_topics() -> list:
     with open(TOPICS_PATH, "r", encoding="utf-8") as f:
         return json.load(f)
+
+
+def _get_recent_article_titles(genre: str, n: int = 30) -> list[str]:
+    """src/content/blog/ から最近の記事タイトルを取得（カニバリ検知用）"""
+    titles = []
+    if not CONTENT_DIR.exists():
+        return titles
+    pattern = f"{genre}_*.md"
+    files = sorted(CONTENT_DIR.glob(pattern), reverse=True)[:n]
+    title_re = re.compile(r'^title:\s*["\']?(.+?)["\']?\s*$', re.MULTILINE)
+    for f in files:
+        try:
+            text = f.read_text(encoding="utf-8")[:500]
+            m = title_re.search(text)
+            if m:
+                titles.append(m.group(1).strip())
+        except Exception:
+            pass
+    return titles
+
+
+def _topic_overlaps_recent(title: str, recent_titles: list[str]) -> bool:
+    """トピックタイトルが既存記事と重複するか判定（日本語対応）
+
+    戦略:
+    1. タイトルから4文字以上の固有名詞候補を抽出
+    2. その語が既存タイトル本文に部分文字列として含まれるか確認
+    3. 1語でも一致すれば「重複あり」と判定
+    """
+    # 汎用語（SEO的には重複カウントしない語）
+    generic = {"おすすめ", "比較", "選び方", "解説", "完全", "ガイド", "まとめ", "初心者",
+               "向け", "方法", "コツ", "ランキング", "人気", "最新", "2026", "2025",
+               "10選", "5選", "7選", "3選", "15選", "20選", "一覧", "入門", "基本"}
+
+    def extract_nouns(t: str) -> list[str]:
+        """記号除去後に4文字以上の語句を抽出（スペース区切り＋連続日本語塊）"""
+        t = re.sub(r'[【】「」『』（）\[\]・｜—\-：:?？!！、。,.【】]', ' ', t)
+        t = re.sub(r'\s+', ' ', t).strip()
+        chunks = re.split(r'\s+', t)
+        nouns = []
+        for chunk in chunks:
+            if len(chunk) >= 4 and chunk not in generic:
+                nouns.append(chunk)
+            # 長いチャンクから部分文字列を追加（4〜6文字）
+            if len(chunk) >= 6:
+                for start in range(0, min(len(chunk) - 3, 8)):
+                    sub = chunk[start:start+4]
+                    if sub not in generic and not re.match(r'[\d年月]', sub):
+                        nouns.append(sub)
+        return list(set(nouns))
+
+    cand_nouns = extract_nouns(title)
+    for rt in recent_titles:
+        for noun in cand_nouns:
+            if noun in rt:
+                return True
+    return False
 
 
 def load_and_consume_suggestion(genre: str, gh_token: str) -> dict | None:
@@ -348,14 +407,31 @@ def select_topic(topics: list, date_str: str, genre: str, gh_token: str = "") ->
             print(f"[keyword_suggest] テーマ採用: {suggestion['title']}")
             return suggestion
 
-    # ② フォールバック: topics.json
+    # ② フォールバック: topics.json（カニバリ検知付き）
     if not topics:
         raise ValueError(f"{TOPICS_PATH} が空です")
     filtered = [t for t in topics if t.get("genre", "business") == genre]
     if not filtered:
         filtered = topics
-    idx = int(date_str) % len(filtered)
-    t = filtered[idx]
+
+    recent_titles = _get_recent_article_titles(genre, n=30)
+    base_idx = int(date_str) % len(filtered)
+
+    # カニバリ回避: 最大 len(filtered) 回シフトして重複しないトピックを探す
+    for offset in range(len(filtered)):
+        idx = (base_idx + offset) % len(filtered)
+        t = filtered[idx]
+        title = t if isinstance(t, str) else t.get("title", "")
+        if recent_titles and _topic_overlaps_recent(title, recent_titles):
+            print(f"[anti-cannibalize] 類似記事あり・スキップ: {title[:40]}")
+            continue
+        if isinstance(t, str):
+            return {"title": t, "genre": genre, "tags": GENRE_CONFIG[genre]["default_tags"]}
+        return t
+
+    # 全トピックが重複 → 最初の候補をそのまま返す（フォールバック）
+    print("[anti-cannibalize] 全トピックが重複判定 → 先頭候補で続行")
+    t = filtered[base_idx]
     if isinstance(t, str):
         return {"title": t, "genre": genre, "tags": GENRE_CONFIG[genre]["default_tags"]}
     return t
