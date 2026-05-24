@@ -189,7 +189,7 @@ def upload_cover_image(page: Page, cover_path: str) -> bool:
     except Exception as e:
         print(f"[cover診断] 要素取得エラー: {e}")
 
-    # 方法1: カバー画像エリアをクリックしてファイル選択ダイアログを開く
+    # 方法1: 既知のセレクタ（テキスト・属性ベース）
     for sel in [
         '[data-name="cover"]',
         '.p-articleEditor__cover',
@@ -204,8 +204,8 @@ def upload_cover_image(page: Page, cover_path: str) -> bool:
     ]:
         try:
             loc = page.locator(sel).first
-            if loc.is_visible(timeout=1500):
-                with page.expect_file_chooser(timeout=5000) as fc_info:
+            if loc.is_visible(timeout=1000):
+                with page.expect_file_chooser(timeout=4000) as fc_info:
                     loc.click()
                 fc_info.value.set_files(cover_path)
                 page.wait_for_timeout(3000)
@@ -214,10 +214,48 @@ def upload_cover_image(page: Page, cover_path: str) -> bool:
         except Exception:
             continue
 
-    # 方法2: 隠し file input に直接セット
+    # 方法2: styled-components ボタン（診断で確認されたPDqMaクラス）を全部試す
+    try:
+        styled_btns = page.locator('button').all()
+        print(f"[cover] ボタン総数: {len(styled_btns)}")
+        for i, btn in enumerate(styled_btns[:8]):  # 最初の8ボタンを試す
+            try:
+                if not btn.is_visible(timeout=500):
+                    continue
+                with page.expect_file_chooser(timeout=2000) as fc_info:
+                    btn.click()
+                fc = fc_info.value
+                fc.set_files(cover_path)
+                page.wait_for_timeout(2000)
+                print(f"カバー画像アップロード成功 (button #{i})")
+                return True
+            except Exception:
+                continue
+    except Exception as e:
+        print(f"[cover] ボタン試行エラー: {e}")
+
+    # 方法3: タイトル入力フィールドの上部（カバー画像エリア）をクリック
+    try:
+        for title_sel in ['[placeholder*="タイトル"]', 'input[name="title"]']:
+            title_el = page.locator(title_sel).first
+            if title_el.is_visible(timeout=1000):
+                box = title_el.bounding_box()
+                if box:
+                    cx = box["x"] + box["width"] // 2
+                    cy = box["y"] - 80  # タイトルの80px上
+                    with page.expect_file_chooser(timeout=3000) as fc_info:
+                        page.mouse.click(cx, cy)
+                    fc_info.value.set_files(cover_path)
+                    page.wait_for_timeout(2000)
+                    print("カバー画像アップロード成功（座標クリック）")
+                    return True
+    except Exception as e:
+        print(f"[cover] 座標クリック失敗: {e}")
+
+    # 方法4: 隠し file input に直接セット
     try:
         count = page.locator('input[type="file"]').count()
-        print(f"[cover診断] file input 数: {count}")
+        print(f"[cover] file input 数: {count}")
         for i in range(count):
             inp = page.locator('input[type="file"]').nth(i)
             try:
