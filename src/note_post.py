@@ -278,8 +278,19 @@ def publish(page: Page) -> str:
         print("⚠️ 「公開設定」ボタンが見つかりませんでした")
 
     # 公開設定ページ（/publish/）への遷移を待つ
-    page.wait_for_timeout(3000)
+    page.wait_for_timeout(4000)
     print(f"公開設定後URL: {page.url}")
+
+    # 診断：ページ上のボタン一覧をログに出力
+    try:
+        buttons = page.evaluate("""
+        () => Array.from(document.querySelectorAll('button, [role="button"], a[class*="button"]'))
+            .map(b => b.textContent.trim().replace(/\\s+/g, ' ').substring(0, 60))
+            .filter(t => t.length > 0)
+        """)
+        print(f"ページ上のボタン一覧: {buttons}")
+    except Exception as e:
+        print(f"ボタン一覧取得エラー: {e}")
 
     # STEP2: 「公開する」ボタンをクリック（公開設定モーダル内）
     publish_clicked = False
@@ -290,6 +301,7 @@ def publish(page: Page) -> str:
         '[data-type="confirm-publish"]',
         'button[class*="publish"]',
         'input[type="submit"]',
+        'button[type="submit"]',
     ]:
         try:
             # 最後に見つかったボタンを使う（モーダル内のボタンを優先）
