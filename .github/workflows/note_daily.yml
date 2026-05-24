@@ -38,8 +38,9 @@ jobs:
 
       - name: Post to note.com
         env:
-          NOTE_EMAIL:    ${{ secrets.NOTE_EMAIL }}
-          NOTE_PASSWORD: ${{ secrets.NOTE_PASSWORD }}
+          NOTE_SESSION_COOKIE: ${{ secrets.NOTE_SESSION_COOKIE }}
+          NOTE_EMAIL:          ${{ secrets.NOTE_EMAIL }}
+          NOTE_PASSWORD:       ${{ secrets.NOTE_PASSWORD }}
         run: python src/note_post.py
 
       - name: Commit updated tracker
