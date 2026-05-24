@@ -148,6 +148,8 @@ TOPIXや先進国株、新興国株のインデックスもあります。組み
 
 <figure style="margin:1.5rem 0;text-align:center;"><img src="https://images.unsplash.com/photo-1613843433065-819a04a47a09?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w5MzQxODZ8MHwxfHNlYXJjaHwxMnx8Y3J5cHRvY3VycmVuY3klMjBiaXRjb2luJTIwZGlnaXRhbCUyMGZpbmFuY2V8ZW58MXwwfHx8MTc3NzczMDMxNnww&ixlib=rb-4.1.0&q=80&w=1080" alt="家計管理のメモ" style="width:100%;max-width:800px;height:auto;border-radius:8px;" loading="lazy"></figure>
 
+<div style="text-align:center;margin:1.5rem 0;"><p style="font-size:0.9rem;font-weight:bold;color:#1a1a1a;margin-bottom:10px;">💰 iDeCoで節税しながら老後資金を積み立てよう</p><a href="https://px.a8.net/svt/ejp?a8mat=4B3HQF+EFRFW2+3XCC+BYT9D" rel="nofollow sponsored" target="_blank"><img border="0" width="300" height="250" alt="松井証券ではじめるiDeCo" loading="lazy" src="https://www24.a8.net/svt/bgt?aid=260503431873&wid=001&eno=01&mid=s00000018318002010000&mc=1" style="border-radius:8px;max-width:100%;"></a><img border="0" width="1" height="1" src="https://www19.a8.net/0.gif?a8mat=4B3HQF+EFRFW2+3XCC+BYT9D" alt=""></div>
+
 ## まとめ：小さな一歩から始めてみよう
 
 インデックス投資は、特別な才能や大きな資金がなくても始められる、誠実な資産形成の方法の一つです。
