@@ -533,6 +533,51 @@ def login_with_credentials(page: Page) -> None:
     print(f"ログイン成功: {page.url}")
 
 
+def dismiss_modals(page: Page) -> None:
+    """ReactModalPortal など、エディタを覆うモーダルを閉じる。"""
+    for attempt in range(4):
+        try:
+            # ReactModalPortal（react-modal）または dialog/role=dialog を検索
+            modal_sel = ".ReactModalPortal, [role='dialog'], [aria-modal='true']"
+            if page.locator(modal_sel).count() == 0:
+                break
+
+            visible = any(
+                page.locator(modal_sel).nth(i).is_visible(timeout=300)
+                for i in range(page.locator(modal_sel).count())
+            )
+            if not visible:
+                break
+
+            print(f"[modal] モーダル検出 (試行{attempt + 1}) → 閉じます")
+
+            # ① Escape キーで閉じる
+            page.keyboard.press("Escape")
+            page.wait_for_timeout(600)
+
+            # ② 閉じるボタンを探してクリック
+            for close_sel in [
+                'button:has-text("閉じる")',
+                'button:has-text("あとで")',
+                'button:has-text("キャンセル")',
+                'button:has-text("スキップ")',
+                '[aria-label="Close"]',
+                '[aria-label="閉じる"]',
+                '.ReactModalPortal button',
+            ]:
+                try:
+                    btn = page.locator(close_sel).first
+                    if btn.is_visible(timeout=400):
+                        btn.click()
+                        page.wait_for_timeout(500)
+                        print(f"[modal] 閉じボタンクリック: {close_sel}")
+                        break
+                except Exception:
+                    continue
+        except Exception:
+            break
+
+
 def fill_title(page: Page, title: str) -> None:
     """記事タイトルを入力する。"""
     for sel in [
@@ -556,7 +601,18 @@ def fill_title(page: Page, title: str) -> None:
 
 def fill_body(page: Page, body: str) -> None:
     """記事本文をエディタに入力する（ProseMirrorエディタ対応）。"""
-    page.click('div[contenteditable="true"]')
+    # モーダルが残っていれば閉じる（カバー画像アップロード時に開いた場合など）
+    dismiss_modals(page)
+    page.wait_for_timeout(500)
+
+    # JS でフォーカス（page.click はモーダルのポインターイベント干渉を受けるため回避）
+    page.evaluate("""
+    () => {
+        const editors = document.querySelectorAll('div[contenteditable="true"]');
+        const editor = editors.length > 1 ? editors[editors.length - 1] : editors[0];
+        if (editor) editor.focus();
+    }
+    """)
     page.wait_for_timeout(500)
 
     safe_body = body.replace("\\", "\\\\").replace("`", "\\`").replace("${", "\\${")
@@ -727,6 +783,11 @@ def post_to_note(title: str, body: str, tags: list[str], cover_path: str = "") -
             if cover_path:
                 upload_cover_image(page, cover_path)
                 page.wait_for_timeout(1000)
+
+            # カバー画像アップロードでボタン総当たりしたため
+            # モーダルが開いていることがある → 必ず閉じる
+            dismiss_modals(page)
+            page.wait_for_timeout(500)
 
             fill_title(page, title)
             page.wait_for_timeout(500)
