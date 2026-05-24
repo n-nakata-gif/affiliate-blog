@@ -743,6 +743,12 @@ def _vc_url(yahoo_url: str) -> str:
     """ValueCommerce MyLink形式でYahoo!ショッピングURLにトラッキングを付与"""
     return _VC_BASE + "&vc_url=" + urllib.parse.quote(yahoo_url, safe="")
 
+_VC_SID = "3769965"
+
+def _vc_prog(pid: str) -> str:
+    """ValueCommerce 通常プログラム用トラッキングURL（PID指定）"""
+    return f"https://ck.jp.ap.valuecommerce.com/servlet/referral?sid={_VC_SID}&pid={pid}"
+
 _TRAVEL_LINKS = [
     {"name": "じゃらんnet",         "url": "https://px.a8.net/svt/ejp?a8mat=4B3HQI+DYHVCI+14CS+6C9LD",    "desc": "全国の宿・ホテルをお得に予約",          "logo": _GF.format("jalan.net"),    "a8net": True},
     {"name": "楽天トラベル",        "url": "https://travel.rakuten.co.jp",                                  "desc": "楽天ポイントで宿・航空券をお得に",      "rakuten": True, "logo": _GF.format("travel.rakuten.co.jp")},
@@ -754,6 +760,9 @@ _TRAVEL_LINKS = [
     {"name": "スカイレンタカー",       "url": "https://px.a8.net/svt/ejp?a8mat=4B3UZ9+7CXWZ6+2AIA+626XU",  "desc": "沖縄・九州・北海道の格安レンタカー予約",      "logo": _GF.format("skyrentacar.jp"),   "a8net": True},
     {"name": "VELTRA（海外・国内ツアー）", "url": "https://h.accesstrade.net/sp/cc?rk=0100py4y00os2v",        "desc": "世界200都市以上の現地ツアー・体験を予約",      "logo": _GF.format("veltra.com"),       "accesstrade": True},
     {"name": "IHG ホテルズ & リゾーツ",  "url": "https://h.accesstrade.net/sp/cc?rk=0100mmn400os2v",        "desc": "インターコンチネンタル等の高級ホテルを公式最安値で", "logo": _GF.format("ihg.com"),     "accesstrade": True},
+    {"name": "アールワイレンタル",        "url": _vc_prog("892618881"),                                       "desc": "リモワ・サムソナビ等の高級スーツケースをレンタル", "logo": _GF.format("ry-rental.com"),   "valuecommerce": True},
+    {"name": "ヤフートラベル（JALパック）","url": _vc_prog("892618887"),                                       "desc": "JAL航空券＋宿泊をセットでお得に予約",           "logo": _GF.format("travel.yahoo.co.jp"), "valuecommerce": True},
+    {"name": "オリオンツアー",            "url": _vc_prog("892618889"),                                       "desc": "JALで行く格安国内旅行・承認率96%の信頼性",      "logo": _GF.format("orion-tour.co.jp"), "valuecommerce": True},
     {"name": "skyticket",              "url": "https://skyticket.jp",                                         "desc": "格安航空券・新幹線・ホテル比較",               "logo": _GF.format("skyticket.jp")},
 ]
 
@@ -765,7 +774,9 @@ _GOURMET_LINKS = [
     {"name": "ベルーナグルメ",                "url": "https://h.accesstrade.net/sp/cc?rk=0100pm2x00os2v",                                              "desc": "魚介・肉・スイーツなど本格派のお取り寄せグルメ",   "logo": _GF.format("belluna-gourmet.com"), "accesstrade": True},
     {"name": "楽天市場（食品・グルメ）",      "url": "https://search.rakuten.co.jp/search/mall/%E9%A3%9F%E5%93%81+%E3%82%B0%E3%83%AB%E3%83%A1/",   "desc": "楽天ポイントでお得に食品・グルメを購入",           "logo": _GF.format("rakuten.co.jp"),        "rakuten": True},
     {"name": "Yahoo!ショッピング（お取り寄せ）", "url": _vc_url("https://shopping.yahoo.co.jp/search?p=%E3%81%8A%E5%8F%96%E3%82%8A%E5%AF%84%E3%81%9B+%E3%82%B0%E3%83%AB%E3%83%A1"), "desc": "お取り寄せグルメをYahoo!ショッピングで", "logo": _GF.format("shopping.yahoo.co.jp"), "a8net": True},
-    {"name": "Oisix（オイシックス）",         "url": "https://www.oisix.com",                                                                       "desc": "有機野菜・安心食材のお試しセット",                "logo": _GF.format("oisix.com")},
+    {"name": "JTBショッピング（旅のお土産）",  "url": _vc_prog("892618886"),                                   "desc": "全国の旅行お土産・ご当地グルメをお取り寄せ",      "logo": _GF.format("jtbshoppingshop.jp"), "valuecommerce": True},
+    {"name": "坂ノ途中（有機野菜定期宅配）",  "url": _vc_prog("892618890"),                                   "desc": "農薬・化学肥料不使用の有機野菜を毎週お届け",      "logo": _GF.format("on-the-slope.com"),  "valuecommerce": True},
+    {"name": "Oisix（オイシックス）",         "url": "https://www.oisix.com",                                 "desc": "有機野菜・安心食材のお試しセット",                "logo": _GF.format("oisix.com")},
 ]
 
 _BUSINESS_LINKS = [
@@ -812,6 +823,8 @@ _INVESTMENT_LINKS = [
 
 _GADGET_LINKS = [
     {"name": "Amazon",                        "url": "https://www.amazon.co.jp/?tag=nexigen22-22",   "desc": "最新ガジェットをお得に購入",              "logo": _GF.format("amazon.co.jp")},
+    {"name": "Lenovo（レノボ）公式",          "url": _vc_prog("892618885"),                          "desc": "ThinkPad・IdeaPadをカスタマイズして購入", "logo": _GF.format("lenovo.com"),          "valuecommerce": True},
+    {"name": "GOM Lab（動画・録画ソフト）",   "url": _vc_prog("892618888"),                          "desc": "GOM Player/GOM Cam等の定番動画ソフト",   "logo": _GF.format("gomlab.com"),          "valuecommerce": True},
     {"name": "Yahoo!ショッピング（ガジェット）", "url": _vc_url("https://shopping.yahoo.co.jp/search?p=%E3%82%AC%E3%82%B8%E3%82%A7%E3%83%83%E3%83%88+%E5%AE%B6%E9%9B%BB"), "desc": "PayPayポイントでお得にガジェット購入", "logo": _GF.format("shopping.yahoo.co.jp"), "a8net": True},
     {"name": "楽天市場（家電・ガジェット）",  "url": "https://search.rakuten.co.jp/search/mall/%E3%82%AC%E3%82%B8%E3%82%A7%E3%83%83%E3%83%88+%E5%AE%B6%E9%9B%BB/", "desc": "楽天ポイントでお得にガジェット購入", "rakuten": True, "logo": _GF.format("rakuten.co.jp")},
     {"name": "ヨドバシカメラ",               "url": "https://www.yodobashi.com",                    "desc": "家電・ガジェットをポイント還元で",        "logo": _GF.format("yodobashi.com")},
@@ -1087,7 +1100,7 @@ def build_affiliate_section(genre: str, keyword: str, products: list, amazon_pro
             if link.get("rakuten") and rakuten_aff_id:
                 url = make_rakuten_affiliate_url(url, rakuten_aff_id, a8mat)
             # rel="sponsored" は実際にアフィリエイト提携済みのリンクのみに付与
-            is_affiliate = link.get("rakuten") or link.get("a8net") or link.get("accesstrade") or "tag=nexigen22-22" in url or "px.a8.net" in url or "h.accesstrade.net" in url
+            is_affiliate = link.get("rakuten") or link.get("a8net") or link.get("accesstrade") or link.get("valuecommerce") or "tag=nexigen22-22" in url or "px.a8.net" in url or "h.accesstrade.net" in url or "valuecommerce.com" in url
             rel = "noopener sponsored" if is_affiliate else "noopener"
             logo = link.get("logo", "")
             logo_html = (
