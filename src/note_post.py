@@ -333,34 +333,38 @@ def upload_cover_image(page: Page, cover_path: str) -> bool:
         except Exception:
             continue
 
-    # ── 方法6: 全ボタンを試す（クラス名付きログ付き） ──
+    # ── 方法6: ページ上部の styled-components ボタン（カバー専用と思われるもの）のみ試す ──
+    # 注意: 全ボタン総当たりは「変更履歴」等のナビゲーションボタンを誤クリックするため禁止
+    # 代わりに、ページ最上部（y<300）かつテキストなしのボタンのみを対象とする
     try:
         btns = page.locator("button").all()
-        print(f"[cover] ボタン総数: {len(btns)}")
-        for i, btn in enumerate(btns[:15]):
+        top_cover_btns = []
+        for btn in btns:
             try:
-                if not btn.is_visible(timeout=300):
+                if not btn.is_visible(timeout=200):
                     continue
-                cls  = btn.get_attribute("class") or ""
                 text = (btn.text_content() or "").strip()
-                print(f"[cover] button #{i}: cls={cls[:40]!r}, text={text[:20]!r}")
+                if text:          # テキストありボタンはナビゲーション系 → スキップ
+                    continue
+                box = btn.bounding_box()
+                if box and box["y"] < 300:  # ページ上部のみ
+                    top_cover_btns.append(btn)
+            except Exception:
+                continue
+
+        print(f"[cover] 上部テキストなしボタン数: {len(top_cover_btns)}")
+        for i, btn in enumerate(top_cover_btns[:6]):
+            try:
                 with page.expect_file_chooser(timeout=1500) as fc_info:
                     btn.click()
                 fc_info.value.set_files(cover_path)
                 page.wait_for_timeout(2000)
-                print(f"✅ カバー画像アップロード成功 (button #{i})")
+                print(f"✅ カバー画像アップロード成功 (上部ボタン #{i})")
                 return True
             except Exception:
                 continue
     except Exception as e:
-        print(f"[cover] ボタン試行エラー: {e}")
-
-    # ── デバッグ用スクリーンショット ──
-    try:
-        page.screenshot(path="note_cover_debug.png")
-        print("[cover] デバッグスクリーンショット保存: note_cover_debug.png")
-    except Exception:
-        pass
+        print(f"[cover] 上部ボタン試行エラー: {e}")
 
     print("⚠️ カバー画像アップロードのセレクタが見つかりませんでした（スキップ）")
 
@@ -779,12 +783,20 @@ def post_to_note(title: str, body: str, tags: list[str], cover_path: str = "") -
             page.wait_for_timeout(2000)  # エディタ初期化待ち
             print(f"エディタURL: {page.url}")
 
+            # エディタURLを記録（カバー画像アップロードで誤ナビゲーションした場合に備える）
+            editor_url = page.url
+
             # ① カバー画像アップロード（タイトル入力の前に実施）
             if cover_path:
                 upload_cover_image(page, cover_path)
                 page.wait_for_timeout(1000)
 
-            # カバー画像アップロードでボタン総当たりしたため
+            # カバー画像アップロードで誤ってページが移動していたらエディタに戻る
+            if page.url != editor_url:
+                print(f"[警告] ページが移動しました ({page.url}) → エディタに戻ります")
+                page.goto(editor_url, wait_until="domcontentloaded")
+                page.wait_for_timeout(2000)
+
             # モーダルが開いていることがある → 必ず閉じる
             dismiss_modals(page)
             page.wait_for_timeout(500)
