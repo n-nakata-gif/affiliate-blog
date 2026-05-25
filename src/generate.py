@@ -904,6 +904,7 @@ _INVESTMENT_LINKS = [
     {"name": "松井証券 iDeCo",            "url": _MATSUI_IDECO_TEXT_URL,           "desc": "節税しながら老後資金を積み立て。手数料無料のiDeCo",  "logo": _GF.format("matsui.co.jp"),       "a8net": True},
     {"name": "DMM株",                     "url": "https://h.accesstrade.net/sp/cc?rk=0100mkk200os2v", "desc": "国内手数料最安水準・米国株も取引手数料0円のネット証券", "logo": _GF.format("kabu.dmm.com"), "accesstrade": True},
     {"name": "松井証券（株式）",          "url": "https://h.accesstrade.net/sp/cc?rk=01000t2p00os2v", "desc": "1日50万円まで手数料無料・使いやすいスマホアプリ",  "logo": _GF.format("matsui.co.jp"), "accesstrade": True},
+    {"name": "マネックス証券",            "url": "https://h.accesstrade.net/sp/cc?rk=0100q1bu00os2v", "desc": "米国株・日本株・NISA対応。業界最低水準の手数料",  "logo": _GF.format("monex.co.jp"),  "accesstrade": True},
     {"name": "Amazon（投資・資産運用書）", "url": "https://www.amazon.co.jp/s?k=%E6%8A%95%E8%B3%87+%E8%B3%87%E7%94%A3%E9%81%8B%E7%94%A8&tag=nexigen22-22", "desc": "投資・お金の本をAmazonで",    "logo": _GF.format("amazon.co.jp")},
     {"name": "SBI証券",                   "url": "https://www.sbisec.co.jp",       "desc": "新NISA・つみたて投資ならSBI証券",           "logo": _GF.format("sbisec.co.jp")},
     {"name": "楽天証券",                  "url": "https://www.rakuten-sec.co.jp",  "desc": "楽天ポイントで投資デビュー",  "rakuten": True, "logo": _GF.format("rakuten-sec.co.jp")},
