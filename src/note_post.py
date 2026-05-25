@@ -85,6 +85,70 @@ def _wrap_text(draw, text: str, font, max_width: int) -> list[str]:
     return lines
 
 
+_THEMES = {
+    "ai": {
+        "bg1": (8, 20, 50), "bg2": (15, 40, 80),
+        "accent": (0, 200, 255), "badge_bg": (0, 150, 200),
+        "circle": (0, 100, 180), "tag_color": (100, 220, 255),
+    },
+    "zaitaku": {
+        "bg1": (5, 30, 25), "bg2": (10, 55, 45),
+        "accent": (0, 210, 150), "badge_bg": (0, 160, 110),
+        "circle": (0, 100, 75), "tag_color": (80, 230, 180),
+    },
+    "income": {
+        "bg1": (25, 15, 5), "bg2": (50, 30, 10),
+        "accent": (255, 190, 0), "badge_bg": (200, 140, 0),
+        "circle": (140, 90, 0), "tag_color": (255, 210, 80),
+    },
+    "default": {
+        "bg1": (20, 10, 45), "bg2": (40, 20, 80),
+        "accent": (160, 100, 255), "badge_bg": (110, 60, 210),
+        "circle": (80, 40, 160), "tag_color": (190, 140, 255),
+    },
+}
+
+_THEME_RULES = [
+    # (テーマキー, タイトルキーワードリスト, タグキーワードリスト)
+    # 「在宅」単体は「在宅副業」でも引っかかるため、複合語のみ対象
+    ("ai",      ["AI", "ChatGPT", "GPT", "自動化"],                         ["AI", "ChatGPT", "GPT"]),
+    ("zaitaku", ["テレワーク", "在宅ワーク", "リモートワーク", "在宅勤務"],  ["テレワーク", "在宅ワーク", "リモートワーク"]),
+    ("income",  ["稼ぐ", "収入", "月5万", "月3万", "収益", "在宅副業"],     ["稼ぐ", "収入", "月5万", "月3万", "収益"]),
+]
+
+
+def _pick_theme(title: str, tags: list[str]) -> dict:
+    """タイトルを優先してカラーテーマを選択する。"""
+    tag_str = " ".join(tags)
+    # タイトルで先にマッチ
+    for key, title_kws, _ in _THEME_RULES:
+        if any(k in title for k in title_kws):
+            return _THEMES[key]
+    # タイトルでマッチしなければタグで判定
+    for key, _, tag_kws in _THEME_RULES:
+        if any(k in tag_str for k in tag_kws):
+            return _THEMES[key]
+    return _THEMES["default"]
+
+
+def _get_category_label(title: str, tags: list[str]) -> str:
+    """記事のカテゴリラベルを返す。"""
+    tag_str = " ".join(tags)
+    rules = [
+        ("AI活用",      ["AI", "ChatGPT", "GPT"],                                     ["AI", "ChatGPT", "GPT"]),
+        ("在宅ワーク",   ["テレワーク", "在宅ワーク", "リモートワーク", "在宅勤務"],   ["テレワーク", "在宅ワーク", "リモートワーク"]),
+        ("副業・収入UP", ["稼ぐ", "収入", "月5万", "月3万", "在宅副業"],               ["稼ぐ", "収入", "月5万", "収益"]),
+        ("初心者ガイド", ["初心者", "はじめて", "入門"],                                ["初心者", "はじめて", "入門"]),
+    ]
+    for label, title_kws, tag_kws in rules:
+        if any(k in title for k in title_kws):
+            return label
+    for label, _, tag_kws in rules:
+        if any(k in tag_str for k in tag_kws):
+            return label
+    return "Novlify 厳選"
+
+
 def generate_cover_image(title: str, tags: list[str], output_path: str) -> str:
     """カバー画像（1280×670px）を生成して output_path に保存する。"""
     try:
@@ -93,65 +157,110 @@ def generate_cover_image(title: str, tags: list[str], output_path: str) -> str:
         raise RuntimeError("Pillow が必要です: pip install Pillow")
 
     W, H = 1280, 670
+    theme = _pick_theme(title, tags)
+
     img = Image.new("RGB", (W, H))
     draw = ImageDraw.Draw(img)
 
-    # ── 背景グラデーション（ダークネイビー → ダークブルー）──
+    # ── 背景グラデーション（上→下）──
+    bg1, bg2 = theme["bg1"], theme["bg2"]
     for y in range(H):
         ratio = y / H
-        r = int(10 + (6  - 10) * ratio)
-        g = int(18 + (25 - 18) * ratio)
-        b = int(38 +(58 - 38) * ratio)
+        r = int(bg1[0] + (bg2[0] - bg1[0]) * ratio)
+        g = int(bg1[1] + (bg2[1] - bg1[1]) * ratio)
+        b = int(bg1[2] + (bg2[2] - bg1[2]) * ratio)
         draw.rectangle([(0, y), (W, y + 1)], fill=(r, g, b))
 
-    # ── 左アクセントバー ──
-    CYAN = (0, 188, 255)
-    draw.rectangle([(0, 0), (7, H)], fill=CYAN)
-
-    # ── 右上の装飾円弧 ──
-    for i in range(5):
-        sz = 180 + i * 90
-        draw.arc(
-            [(W - sz + 60, -sz + 60), (W + sz + 60, sz + 60)],
-            start=140, end=220,
-            fill=(255, 255, 255),
-            width=max(1, 3 - i),
+    # ── 右側の装飾: 大きな同心円（テーマカラーで半透明）──
+    cx, cy = 1060, 280
+    for i, (radius, alpha) in enumerate([(280, 0.18), (210, 0.14), (150, 0.20), (100, 0.28)]):
+        circle_color = theme["circle"]
+        blend = tuple(
+            int(circle_color[j] * alpha + bg1[j] * (1 - alpha))
+            for j in range(3)
         )
+        draw.ellipse([(cx - radius, cy - radius), (cx + radius, cy + radius)], fill=blend)
+
+    # ── 右下の装飾: 小さな点パターン ──
+    accent = theme["accent"]
+    for row in range(4):
+        for col in range(5):
+            px = W - 160 + col * 22
+            py = H - 90 + row * 20
+            dot_alpha = 0.25
+            dot_color = tuple(int(accent[j] * dot_alpha + bg2[j] * (1 - dot_alpha)) for j in range(3))
+            draw.ellipse([(px - 3, py - 3), (px + 3, py + 3)], fill=dot_color)
+
+    # ── 左アクセントバー ──
+    draw.rectangle([(0, 0), (8, H)], fill=accent)
 
     # ── フォント ──
     font_path = _find_japanese_font()
     try:
         if font_path:
-            title_font  = ImageFont.truetype(font_path, 64)
+            title_font  = ImageFont.truetype(font_path, 62)
+            badge_font  = ImageFont.truetype(font_path, 24)
             tag_font    = ImageFont.truetype(font_path, 26)
             brand_font  = ImageFont.truetype(font_path, 22)
         else:
-            title_font = tag_font = brand_font = ImageFont.load_default()
+            title_font = badge_font = tag_font = brand_font = ImageFont.load_default()
     except Exception:
-        title_font = tag_font = brand_font = ImageFont.load_default()
+        title_font = badge_font = tag_font = brand_font = ImageFont.load_default()
+
+    # ── カテゴリバッジ（タイトル上部の角丸ラベル）──
+    category = _get_category_label(title, tags)
+    badge_x, badge_y = 40, 60
+    try:
+        badge_bbox = draw.textbbox((0, 0), category, font=badge_font)
+        bw = badge_bbox[2] - badge_bbox[0] + 28
+        bh = badge_bbox[3] - badge_bbox[1] + 14
+        # 角丸矩形（ラジウス8）
+        r8 = 8
+        badge_bg = theme["badge_bg"]
+        draw.rounded_rectangle(
+            [(badge_x, badge_y), (badge_x + bw, badge_y + bh)],
+            radius=r8, fill=badge_bg,
+        )
+        draw.text((badge_x + 14, badge_y + 7), category, font=badge_font, fill=(255, 255, 255))
+        title_start_y = badge_y + bh + 24
+    except Exception:
+        title_start_y = 100
 
     # ── タイトルのラッピングと描画 ──
-    lines     = _wrap_text(draw, title, title_font, W - 120)
-    line_h    = 82
-    total_h   = len(lines) * line_h
-    start_y   = (H - total_h) // 2 - 50
+    title_max_w = int(W * 0.72)  # 右の円と被らないよう72%幅
+    lines   = _wrap_text(draw, title, title_font, title_max_w)
+    line_h  = 80
+    total_title_h = len(lines) * line_h
+
+    # バッジ下端〜下部区切り線の間で縦中央揃え
+    content_top    = title_start_y
+    content_bottom = H - 95  # sep_y
+    center_y = (content_top + content_bottom) // 2
+    title_y0 = center_y - total_title_h // 2
 
     for i, line in enumerate(lines):
-        y = start_y + i * line_h
-        draw.text((42, y + 3), line, font=title_font, fill=(0, 0, 0))       # シャドウ
-        draw.text((40, y),     line, font=title_font, fill=(255, 255, 255))  # 本体
+        y = title_y0 + i * line_h
+        # テキストシャドウ
+        draw.text((42, y + 3), line, font=title_font, fill=(0, 0, 0))
+        draw.text((40, y),     line, font=title_font, fill=(255, 255, 255))
 
-    # ── 区切り線 ──
-    sep_y = H - 92
-    draw.rectangle([(40, sep_y), (W - 40, sep_y + 1)], fill=(60, 100, 160))
+    # ── 下部アクセントライン ──
+    sep_y = H - 95
+    draw.rectangle([(40, sep_y), (W - 40, sep_y + 2)], fill=accent)
 
     # ── タグ ──
     if tags:
         tag_text = "  ".join(f"#{t}" for t in tags[:3])
-        draw.text((40, H - 78), tag_text, font=tag_font, fill=CYAN)
+        draw.text((40, sep_y + 12), tag_text, font=tag_font, fill=theme["tag_color"])
 
-    # ── ブランド ──
-    draw.text((40, H - 46), "Novlify 編集部", font=brand_font, fill=(160, 190, 220))
+    # ── ブランド（右寄せ）──
+    brand = "Novlify 編集部"
+    try:
+        bb = draw.textbbox((0, 0), brand, font=brand_font)
+        bw = bb[2] - bb[0]
+        draw.text((W - bw - 40, sep_y + 14), brand, font=brand_font, fill=(180, 200, 220))
+    except Exception:
+        draw.text((W - 200, sep_y + 14), brand, font=brand_font, fill=(180, 200, 220))
 
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
     img.save(output_path, "PNG", optimize=True)
