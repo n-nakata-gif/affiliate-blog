@@ -404,8 +404,12 @@ def select_topic(topics: list, date_str: str, genre: str, gh_token: str = "") ->
     if gh_token:
         suggestion = load_and_consume_suggestion(genre, gh_token)
         if suggestion:
-            print(f"[keyword_suggest] テーマ採用: {suggestion['title']}")
-            return suggestion
+            recent_titles = _get_recent_article_titles(genre, n=30)
+            if recent_titles and _topic_overlaps_recent(suggestion["title"], recent_titles):
+                print(f"[anti-cannibalize] キーワード提案が既存記事と重複 → スキップ: {suggestion['title'][:40]}")
+            else:
+                print(f"[keyword_suggest] テーマ採用: {suggestion['title']}")
+                return suggestion
 
     # ② フォールバック: topics.json（カニバリ検知付き）
     if not topics:
