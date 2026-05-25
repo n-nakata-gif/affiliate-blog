@@ -163,69 +163,89 @@ def _click_cover_upload_menu(page: Page) -> bool:
     """カバー画像エリアをクリック → メニュー → 「画像をアップロード」まで進める。
     `#note-editor-eyecatch-input` が出現したら True を返す。
     """
+    if page.locator("#note-editor-eyecatch-input").count() > 0:
+        return True
+
     editor_url = page.url
 
-    # ① ページ上部のボタン一覧をログ出力（デバッグ用）
+    # ── カバーボタン候補を探す（ナビゲーションボタンを除外） ──
+    # ログで判明したナビゲーションボタンクラス: sc-c210b9dd-0
+    # カバーボタンクラス: sc-131cded0-2 (y≈101)
     btns = page.locator("button").all()
-    print(f"[cover 2step] ボタン総数: {len(btns)}")
-    top_candidates = []
+    cover_btn = None
     for btn in btns:
         try:
             if not btn.is_visible(timeout=200):
                 continue
             text = (btn.text_content() or "").strip()
+            if text:
+                continue  # テキストありはツールバー → スキップ
+            cls = btn.get_attribute("class") or ""
+            if "sc-c210b9dd-0" in cls:
+                continue  # 既知のナビゲーションボタン → スキップ
             box = btn.bounding_box()
-            if box and box["y"] < 300:
-                top_candidates.append((btn, text, box))
-                print(f"[cover 2step]   y={box['y']:.0f} text={text[:20]!r} cls={btn.get_attribute('class') or ''[:30]}")
+            if not box or not (60 <= box["y"] <= 220):
+                continue
+            cover_btn = btn
+            print(f"[cover] カバーボタン候補: y={box['y']:.0f} cls={cls[:60]}")
+            break
         except Exception:
             continue
 
-    # ② テキストなしのボタンをクリック（上から順に試す）
-    clicked = False
-    for btn, text, box in top_candidates:
-        if text:
-            continue  # テキストありはツールバー系 → スキップ
-        if box["y"] >= 250:
-            continue
-        try:
-            print(f"[cover 2step] クリック試行: y={box['y']:.0f}")
-            btn.click()
-            page.wait_for_timeout(700)
+    if cover_btn is None:
+        print("[cover] カバーボタンが見つかりませんでした")
+        return False
 
-            # ナビゲーションが発生したら戻って次を試す
+    # ── 複数の方法でクリックを試みる ──
+    methods = ["hover+click", "dispatch", "force", "js"]
+    for method in methods:
+        try:
+            if method == "hover+click":
+                cover_btn.hover(timeout=3000)
+                page.wait_for_timeout(300)
+                cover_btn.click(timeout=5000)
+            elif method == "dispatch":
+                cover_btn.dispatch_event("click")
+            elif method == "force":
+                cover_btn.click(force=True, timeout=5000)
+            elif method == "js":
+                handle = cover_btn.element_handle()
+                if handle:
+                    page.evaluate(
+                        "(el) => { el.dispatchEvent(new MouseEvent('mouseenter', {bubbles:true})); "
+                        "el.dispatchEvent(new MouseEvent('click', {bubbles:true})); }",
+                        handle,
+                    )
+
+            page.wait_for_timeout(1200)
+
             if page.url != editor_url:
-                print(f"[cover 2step] ナビゲーション検出({page.url}) → 戻ります")
-                page.go_back()
-                page.wait_for_timeout(1000)
+                print(f"[cover] ナビゲーション検出({method}) → エディタに戻ります")
+                page.goto(editor_url, wait_until="domcontentloaded")
+                page.wait_for_timeout(2000)
                 continue
 
-            # メニューが開いたか確認
             if page.locator('button:has-text("画像をアップロード")').count() > 0:
-                print("[cover 2step] メニュー開きました")
-                clicked = True
+                print(f"[cover] メニュー開きました ({method})")
                 break
+
+            print(f"[cover] {method}: メニュー未表示")
         except Exception as e:
-            print(f"[cover 2step] クリックエラー: {e}")
-            continue
+            print(f"[cover] {method} エラー: {e}")
 
-    if not clicked:
-        print("[cover 2step] カバーボタンが見つかりませんでした")
-
-    # ③ 「画像をアップロード」ボタンをクリック
+    # ── 「画像をアップロード」ボタンをクリック ──
     try:
         up_btn = page.locator('button:has-text("画像をアップロード")').first
         visible = up_btn.is_visible(timeout=2000)
-        print(f"[cover 2step] 画像をアップロードボタン: visible={visible}")
+        print(f"[cover] 画像をアップロードボタン: visible={visible}")
         if visible:
             up_btn.click()
-            page.wait_for_timeout(800)
+            page.wait_for_timeout(1000)
     except Exception as e:
-        print(f"[cover 2step] アップロードボタンエラー: {e}")
+        print(f"[cover] アップロードボタンエラー: {e}")
 
-    # ④ #note-editor-eyecatch-input が出現したか確認
     count = page.locator("#note-editor-eyecatch-input").count()
-    print(f"[cover 2step] eyecatch-input 数: {count}")
+    print(f"[cover] eyecatch-input 数: {count}")
     return count > 0
 
 
