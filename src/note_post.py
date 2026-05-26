@@ -339,8 +339,72 @@ def _open_cover_menu(page: Page) -> bool:
     return False
 
 
-def upload_cover_image(page: Page, cover_path: str) -> bool:
-    """カバー画像をアップロードする。成功したら True を返す。"""
+def _inject_file_via_datatransfer(page: "Page", cover_path: str) -> bool:
+    """
+    DataTransfer API を使って #note-editor-eyecatch-input にファイルをセットし、
+    React の change イベントを発火して CropModal を開く。
+
+    【背景】
+    note.com のエディタは React 17+ を使用しており、
+    set_input_files() + dispatchEvent('change') だけでは React の
+    onChange ハンドラが発火しない（synthetic event ≠ native event）。
+    DataTransfer を使って inp.files プロパティを直接上書きしてから
+    change イベントを発火することで、React が正しく認識する。
+    """
+    import base64 as _b64
+
+    with open(cover_path, "rb") as f:
+        b64_data = _b64.b64encode(f.read()).decode("utf-8")
+
+    result = page.evaluate(
+        """
+        (b64) => {
+            const inp = document.getElementById('note-editor-eyecatch-input');
+            if (!inp) { console.log('[cover-dt] input not found'); return false; }
+
+            // base64 → Uint8Array → Blob → File
+            const bin = atob(b64);
+            const arr = new Uint8Array(bin.length);
+            for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+            const blob = new Blob([arr], { type: 'image/png' });
+            const file = new File([blob], 'cover.png', { type: 'image/png', lastModified: Date.now() });
+
+            // DataTransfer で FileList を作成して files プロパティを上書き
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            Object.defineProperty(inp, 'files', { value: dt.files, writable: true, configurable: true });
+
+            // React の synthetic event デリゲーションをトリガー
+            inp.dispatchEvent(new Event('change', { bubbles: true }));
+            inp.dispatchEvent(new Event('input',  { bubbles: true }));
+
+            console.log('[cover-dt] dispatched change/input events, file=' + file.name + ' size=' + file.size);
+            return true;
+        }
+        """,
+        b64_data,
+    )
+    return bool(result)
+
+
+def upload_cover_image(page: "Page", cover_path: str) -> bool:
+    """カバー画像をアップロードする。成功したら True を返す。
+
+    【フロー】
+    1. カバーメニューを開く（hover+click）
+    2. 「画像をアップロード」ボタンをクリックして hidden input を DOM に追加
+    3. DataTransfer API でファイルをセット → CropModal が開く
+    4. CropModal の「保存」ボタンをクリック → CDN アップロード実行
+    5. CropModal が閉じたら成功
+
+    【根拠】
+    Chrome MCP での実機調査により:
+    - set_input_files() + dispatchEvent() は React onChange を発火しない
+    - DataTransfer + Object.defineProperty + dispatchEvent('change') は
+      CropModal を正しく開くことを確認済み
+    - note.com の cover upload API: POST https://note.com/api/v1/image_upload/note_eyecatch
+    - note.com の note API: GET/PUT https://note.com/api/v3/notes/{id}
+    """
     if not cover_path or not Path(cover_path).exists():
         print("カバー画像ファイルが見つかりません（スキップ）")
         return False
@@ -349,105 +413,111 @@ def upload_cover_image(page: Page, cover_path: str) -> bool:
     page.evaluate("window.scrollTo(0, 0)")
     page.wait_for_timeout(1500)
 
+    # ── ブラウザコンソールを Python stdout に転送 ──
+    def _console_handler(msg: object) -> None:
+        if "[cover" in (msg.text or ""):
+            print(f"[browser] {msg.text}")
+    page.on("console", _console_handler)
+
     # ── ステップ1: カバーメニューを開く ──
-    menu_opened = _open_cover_menu(page)
-    if not menu_opened:
+    if not _open_cover_menu(page):
         print("[cover] メニューが開けませんでした（スキップ）")
         return False
 
-    # ── ステップ2: expect_file_chooser でファイルを渡す（最も確実な方法） ──
-    # "画像をアップロード" クリック → ブラウザのファイル選択ダイアログを Playwright がインターセプト
-    # → React の onChange が正常に発火してCDNへアップロードされる
+    # ── ステップ2: 「画像をアップロード」クリックして input を DOM に追加 ──
     try:
-        with page.expect_file_chooser(timeout=8000) as fc_info:
-            page.locator('button:has-text("画像をアップロード")').first.click()
-        fc_info.value.set_files(cover_path)
-        print("[cover] file_chooser でファイルをセット — 後続UIを確認中")
+        page.locator('button:has-text("画像をアップロード")').first.click(timeout=5000)
+        page.wait_for_timeout(600)
+        print("[cover] 「画像をアップロード」クリック済み")
+    except Exception as e:
+        print(f"[cover] 「画像をアップロード」クリックエラー: {e}")
+        return False
 
-        # ファイル設定後に出現するボタンを監視（最大20秒、2秒ずつ）
-        for attempt in range(10):
-            page.wait_for_timeout(2000)
+    # ── ステップ3: DataTransfer でファイルをセット → CropModal をトリガー ──
+    if not _inject_file_via_datatransfer(page, cover_path):
+        print("[cover] DataTransfer ファイルセット失敗（input が見つからない）")
+        return False
+    print("[cover] DataTransfer ファイルセット完了 → CropModal を待機中...")
 
-            # 確認/設定ボタンが出たらクリック
-            confirmed = False
-            for sel in [
-                'button:has-text("設定する")',
-                'button:has-text("保存する")',
-                'button:has-text("完了")',
-                'button:has-text("OK")',
-                'button:has-text("適用")',
-                'button:has-text("クロップ")',
-                'button:has-text("トリミング")',
-            ]:
-                try:
-                    btn = page.locator(sel).first
-                    if btn.is_visible(timeout=400):
-                        btn.click()
-                        print(f"[cover] 確認ボタンクリック: {sel}")
-                        page.wait_for_timeout(1500)
-                        confirmed = True
-                        break
-                except Exception:
-                    pass
-
-            # 現在表示中のボタン一覧をログ（デバッグ）
-            try:
-                visible_btns = []
-                for b in page.locator("button").all():
-                    try:
-                        t = (b.text_content() or "").strip()
-                        if t and b.is_visible(timeout=100):
-                            visible_btns.append(t)
-                    except Exception:
-                        pass
-                print(f"[cover] attempt={attempt+1} buttons={visible_btns[:12]}")
-            except Exception:
-                pass
-
-            if confirmed:
-                page.wait_for_timeout(2000)
+    # ── ステップ4: CropModal が出現するまで待つ（最大8秒） ──
+    crop_appeared = False
+    for attempt in range(8):
+        page.wait_for_timeout(1000)
+        try:
+            visible = page.evaluate(
+                "() => { const m = document.querySelector('.CropModal__overlay'); "
+                "return !!(m && getComputedStyle(m).display !== 'none'); }"
+            )
+            if visible:
+                crop_appeared = True
+                print(f"[cover] CropModal 出現 (attempt={attempt + 1})")
                 break
+        except Exception:
+            pass
+        # ボタン一覧をデバッグ出力
+        try:
+            btns = [
+                (b.text_content() or "").strip()
+                for b in page.locator("button").all()
+                if b.is_visible(timeout=100)
+            ]
+            print(f"[cover] attempt={attempt + 1} 表示ボタン={[t for t in btns if t][:10]}")
+        except Exception:
+            pass
 
-            # カバープレビュー画像が出現したら成功
+    if not crop_appeared:
+        print("[cover] CropModal が出現しませんでした")
+        return False
+
+    # ── ステップ5: CropModal の「保存」ボタンをクリック ──
+    page.wait_for_timeout(800)
+    try:
+        # .CropModal__overlay 内の「保存」
+        save_sel = ".CropModal__overlay button"
+        save_btn = None
+        for btn in page.locator(save_sel).all():
             try:
-                cover_imgs = page.locator("img[src*='assets.st-hatena'], img[src*='d2l930lkaq70xe'], img[src*='notecdn']").count()
-                if cover_imgs > 0:
-                    print(f"[cover] カバープレビュー検出 ({cover_imgs}枚)")
+                if (btn.text_content() or "").strip() == "保存" and btn.is_visible(timeout=300):
+                    save_btn = btn
                     break
             except Exception:
                 pass
-
-        print("✅ カバー画像アップロード成功（file_chooser）")
-        return True
+        if save_btn is None:
+            # フォールバック: テキストで探す
+            save_btn = page.locator('button:has-text("保存")').last
+        save_btn.click(timeout=5000)
+        print("[cover] CropModal「保存」クリック")
     except Exception as e:
-        print(f"[cover] file_chooser エラー: {e} → set_input_files にフォールバック")
+        print(f"[cover] 「保存」クリックエラー: {e}")
+        # モーダルを閉じてスキップ
+        try:
+            page.locator('.CropModal__overlay button:has-text("キャンセル")').first.click()
+        except Exception:
+            pass
+        return False
 
-    # ── フォールバック: set_input_files + React イベント強制発火 ──
+    # ── ステップ6: CropModal が閉じるまで待つ（最大15秒）＝アップロード完了 ──
+    for attempt in range(15):
+        page.wait_for_timeout(1000)
+        try:
+            still_open = page.evaluate(
+                "() => { const m = document.querySelector('.CropModal__overlay'); "
+                "return !!(m && getComputedStyle(m).display !== 'none'); }"
+            )
+            if not still_open:
+                print(f"[cover] CropModal 閉じました (attempt={attempt + 1})")
+                page.wait_for_timeout(1000)
+                print("✅ カバー画像アップロード成功（DataTransfer + CropModal）")
+                return True
+        except Exception:
+            pass
+
+    # タイムアウト: CropModal が閉じなかった
+    print("⚠️ CropModal が閉じませんでした → 強制キャンセルしてスキップ")
     try:
-        up_btn = page.locator('button:has-text("画像をアップロード")').first
-        if up_btn.is_visible(timeout=2000):
-            up_btn.click()
-            page.wait_for_timeout(800)
-
-        eyecatch = page.locator("#note-editor-eyecatch-input")
-        if eyecatch.count() > 0:
-            eyecatch.set_input_files(cover_path)
-            handle = eyecatch.element_handle()
-            if handle:
-                page.evaluate(
-                    "(el) => { "
-                    "  el.dispatchEvent(new Event('input',  {bubbles: true})); "
-                    "  el.dispatchEvent(new Event('change', {bubbles: true})); "
-                    "}",
-                    handle,
-                )
-            page.wait_for_timeout(8000)
-            print("✅ カバー画像アップロード成功（set_input_files fallback）")
-            return True
-    except Exception as e:
-        print(f"[cover] フォールバックエラー: {e}")
-
-    print("⚠️ カバー画像アップロード失敗（スキップ）")
+        page.locator('.CropModal__overlay button:has-text("キャンセル")').first.click()
+    except Exception:
+        pass
     return False
 
 NOTE_DRAFTS_DIR = Path("data/note_drafts")
