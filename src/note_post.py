@@ -362,9 +362,61 @@ def upload_cover_image(page: Page, cover_path: str) -> bool:
         with page.expect_file_chooser(timeout=8000) as fc_info:
             page.locator('button:has-text("画像をアップロード")').first.click()
         fc_info.value.set_files(cover_path)
-        print("[cover] file_chooser でファイルをセット")
-        # CDN へのアップロード完了を待つ（ネットワーク遅延考慮）
-        page.wait_for_timeout(8000)
+        print("[cover] file_chooser でファイルをセット — 後続UIを確認中")
+
+        # ファイル設定後に出現するボタンを監視（最大20秒、2秒ずつ）
+        for attempt in range(10):
+            page.wait_for_timeout(2000)
+
+            # 確認/設定ボタンが出たらクリック
+            confirmed = False
+            for sel in [
+                'button:has-text("設定する")',
+                'button:has-text("保存する")',
+                'button:has-text("完了")',
+                'button:has-text("OK")',
+                'button:has-text("適用")',
+                'button:has-text("クロップ")',
+                'button:has-text("トリミング")',
+            ]:
+                try:
+                    btn = page.locator(sel).first
+                    if btn.is_visible(timeout=400):
+                        btn.click()
+                        print(f"[cover] 確認ボタンクリック: {sel}")
+                        page.wait_for_timeout(1500)
+                        confirmed = True
+                        break
+                except Exception:
+                    pass
+
+            # 現在表示中のボタン一覧をログ（デバッグ）
+            try:
+                visible_btns = []
+                for b in page.locator("button").all():
+                    try:
+                        t = (b.text_content() or "").strip()
+                        if t and b.is_visible(timeout=100):
+                            visible_btns.append(t)
+                    except Exception:
+                        pass
+                print(f"[cover] attempt={attempt+1} buttons={visible_btns[:12]}")
+            except Exception:
+                pass
+
+            if confirmed:
+                page.wait_for_timeout(2000)
+                break
+
+            # カバープレビュー画像が出現したら成功
+            try:
+                cover_imgs = page.locator("img[src*='assets.st-hatena'], img[src*='d2l930lkaq70xe'], img[src*='notecdn']").count()
+                if cover_imgs > 0:
+                    print(f"[cover] カバープレビュー検出 ({cover_imgs}枚)")
+                    break
+            except Exception:
+                pass
+
         print("✅ カバー画像アップロード成功（file_chooser）")
         return True
     except Exception as e:
