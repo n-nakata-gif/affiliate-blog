@@ -268,18 +268,13 @@ def generate_cover_image(title: str, tags: list[str], output_path: str) -> str:
     return output_path
 
 
-def _click_cover_upload_menu(page: Page) -> bool:
-    """カバー画像エリアをクリック → メニュー → 「画像をアップロード」まで進める。
-    `#note-editor-eyecatch-input` が出現したら True を返す。
+def _open_cover_menu(page: Page) -> bool:
+    """カバーエリアをホバー→クリックしてサブメニューを開く。
+    「画像をアップロード」ボタンが現れたら True を返す（ボタンはまだクリックしない）。
     """
-    if page.locator("#note-editor-eyecatch-input").count() > 0:
-        return True
-
     editor_url = page.url
 
     # ── カバーボタン候補を探す（ナビゲーションボタンを除外） ──
-    # ログで判明したナビゲーションボタンクラス: sc-c210b9dd-0
-    # カバーボタンクラス: sc-131cded0-2 (y≈101)
     btns = page.locator("button").all()
     cover_btn = None
     for btn in btns:
@@ -288,7 +283,7 @@ def _click_cover_upload_menu(page: Page) -> bool:
                 continue
             text = (btn.text_content() or "").strip()
             if text:
-                continue  # テキストありはツールバー → スキップ
+                continue
             cls = btn.get_attribute("class") or ""
             if "sc-c210b9dd-0" in cls:
                 continue  # 既知のナビゲーションボタン → スキップ
@@ -306,8 +301,7 @@ def _click_cover_upload_menu(page: Page) -> bool:
         return False
 
     # ── 複数の方法でクリックを試みる ──
-    methods = ["hover+click", "dispatch", "force", "js"]
-    for method in methods:
+    for method in ["hover+click", "dispatch", "force", "js"]:
         try:
             if method == "hover+click":
                 cover_btn.hover(timeout=3000)
@@ -336,26 +330,13 @@ def _click_cover_upload_menu(page: Page) -> bool:
 
             if page.locator('button:has-text("画像をアップロード")').count() > 0:
                 print(f"[cover] メニュー開きました ({method})")
-                break
+                return True
 
             print(f"[cover] {method}: メニュー未表示")
         except Exception as e:
             print(f"[cover] {method} エラー: {e}")
 
-    # ── 「画像をアップロード」ボタンをクリック ──
-    try:
-        up_btn = page.locator('button:has-text("画像をアップロード")').first
-        visible = up_btn.is_visible(timeout=2000)
-        print(f"[cover] 画像をアップロードボタン: visible={visible}")
-        if visible:
-            up_btn.click()
-            page.wait_for_timeout(1000)
-    except Exception as e:
-        print(f"[cover] アップロードボタンエラー: {e}")
-
-    count = page.locator("#note-editor-eyecatch-input").count()
-    print(f"[cover] eyecatch-input 数: {count}")
-    return count > 0
+    return False
 
 
 def upload_cover_image(page: Page, cover_path: str) -> bool:
@@ -368,47 +349,54 @@ def upload_cover_image(page: Page, cover_path: str) -> bool:
     page.evaluate("window.scrollTo(0, 0)")
     page.wait_for_timeout(1500)
 
-    # ── 方法1: 2ステップUI（実際のnote.comの動作に基づく） ──
-    # カバーエリアボタン → 「画像をアップロード」→ #note-editor-eyecatch-input
-    try:
-        input_appeared = _click_cover_upload_menu(page)
-        if input_appeared:
-            eyecatch = page.locator("#note-editor-eyecatch-input")
-            eyecatch.set_input_files(cover_path)
-            page.wait_for_timeout(3000)
-            print("✅ カバー画像アップロード成功（2ステップUI）")
-            return True
-        else:
-            print("[cover 2step] eyecatch-input が出現しませんでした")
-    except Exception as e:
-        print(f"[cover 2step] エラー: {e}")
+    # ── ステップ1: カバーメニューを開く ──
+    menu_opened = _open_cover_menu(page)
+    if not menu_opened:
+        print("[cover] メニューが開けませんでした（スキップ）")
+        return False
 
-    # ── 方法2: #note-editor-eyecatch-input が既に存在する場合 ──
+    # ── ステップ2: expect_file_chooser でファイルを渡す（最も確実な方法） ──
+    # "画像をアップロード" クリック → ブラウザのファイル選択ダイアログを Playwright がインターセプト
+    # → React の onChange が正常に発火してCDNへアップロードされる
     try:
+        with page.expect_file_chooser(timeout=8000) as fc_info:
+            page.locator('button:has-text("画像をアップロード")').first.click()
+        fc_info.value.set_files(cover_path)
+        print("[cover] file_chooser でファイルをセット")
+        # CDN へのアップロード完了を待つ（ネットワーク遅延考慮）
+        page.wait_for_timeout(8000)
+        print("✅ カバー画像アップロード成功（file_chooser）")
+        return True
+    except Exception as e:
+        print(f"[cover] file_chooser エラー: {e} → set_input_files にフォールバック")
+
+    # ── フォールバック: set_input_files + React イベント強制発火 ──
+    try:
+        up_btn = page.locator('button:has-text("画像をアップロード")').first
+        if up_btn.is_visible(timeout=2000):
+            up_btn.click()
+            page.wait_for_timeout(800)
+
         eyecatch = page.locator("#note-editor-eyecatch-input")
         if eyecatch.count() > 0:
             eyecatch.set_input_files(cover_path)
-            page.wait_for_timeout(3000)
-            print("✅ カバー画像アップロード成功（eyecatch-input 直接）")
+            handle = eyecatch.element_handle()
+            if handle:
+                page.evaluate(
+                    "(el) => { "
+                    "  el.dispatchEvent(new Event('input',  {bubbles: true})); "
+                    "  el.dispatchEvent(new Event('change', {bubbles: true})); "
+                    "}",
+                    handle,
+                )
+            page.wait_for_timeout(8000)
+            print("✅ カバー画像アップロード成功（set_input_files fallback）")
             return True
     except Exception as e:
-        print(f"[cover direct] エラー: {e}")
+        print(f"[cover] フォールバックエラー: {e}")
 
-    # ── 方法3: フォールバック（input[type=file][accept*=image]を全検索） ──
-    try:
-        file_count = page.locator("input[type='file']").count()
-        for i in range(file_count):
-            try:
-                page.locator("input[type='file']").nth(i).set_input_files(cover_path)
-                page.wait_for_timeout(2000)
-                print(f"✅ カバー画像アップロード成功 (file input #{i})")
-                return True
-            except Exception:
-                pass
-    except Exception:
-        pass
-
-    print("⚠️ カバー画像アップロードのセレクタが見つかりませんでした（スキップ）")
+    print("⚠️ カバー画像アップロード失敗（スキップ）")
+    return False
 
 NOTE_DRAFTS_DIR = Path("data/note_drafts")
 NOTE_POSTED_FILE = Path("data/note_posted.json")
