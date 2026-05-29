@@ -755,37 +755,192 @@ def fill_title(page: Page, title: str) -> None:
     print(f"タイトル入力（フォールバック）: {title[:30]}...")
 
 
+def _md_inline_to_html(text: str) -> str:
+    """インライン Markdown（リンク・太字）を HTML に変換する。"""
+    import html as _html
+
+    # 先に HTML エスケープ（< > & を無害化）
+    text = _html.escape(text)
+    # リンク [テキスト](URL) → <a href="URL">テキスト</a>
+    # ※ エスケープ後なので () 内の URL に & が含まれても &amp; で安全
+    text = re.sub(
+        r"\[([^\]]+)\]\((https?://[^\s)]+)\)",
+        r'<a href="\2">\1</a>',
+        text,
+    )
+    # 太字 **テキスト** → <strong>テキスト</strong>
+    text = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", text)
+    return text
+
+
+def markdown_to_html(body: str) -> str:
+    """記事本文の Markdown を note.com 互換の HTML に変換する。
+
+    対応記法: ## / ### 見出し, **太字**, - 箇条書き, 1. 番号リスト,
+              --- 区切り線, [テキスト](URL) リンク。
+
+    note.com の ProseMirror エディタは paste イベント経由の HTML を
+    正しくノード化する（見出し・太字・箇条書き・クリック可能なリンク）。
+    execCommand('insertText') では Markdown 記法がそのまま生テキストとして
+    表示されてしまうため、この変換が必須。
+    """
+    lines = body.split("\n")
+    parts: list[str] = []
+    ul_buffer: list[str] = []
+    ol_buffer: list[str] = []
+
+    def flush_ul() -> None:
+        if ul_buffer:
+            items = "".join(f"<li>{_md_inline_to_html(it)}</li>" for it in ul_buffer)
+            parts.append(f"<ul>{items}</ul>")
+            ul_buffer.clear()
+
+    def flush_ol() -> None:
+        if ol_buffer:
+            items = "".join(f"<li>{_md_inline_to_html(it)}</li>" for it in ol_buffer)
+            parts.append(f"<ol>{items}</ol>")
+            ol_buffer.clear()
+
+    def flush_lists() -> None:
+        flush_ul()
+        flush_ol()
+
+    for raw in lines:
+        stripped = raw.strip()
+
+        # 空行 → リストを確定
+        if not stripped:
+            flush_lists()
+            continue
+
+        # 区切り線 ---
+        if stripped in ("---", "***", "___"):
+            flush_lists()
+            parts.append("<hr>")
+            continue
+
+        # 見出し ## / ###
+        m = re.match(r"^(#{1,6})\s+(.*)$", stripped)
+        if m:
+            flush_lists()
+            level = len(m.group(1))
+            tag = "h2" if level <= 2 else "h3"
+            parts.append(f"<{tag}>{_md_inline_to_html(m.group(2))}</{tag}>")
+            continue
+
+        # 番号リスト 1. 2. 3.
+        m = re.match(r"^\d+\.\s+(.*)$", stripped)
+        if m:
+            flush_ul()
+            ol_buffer.append(m.group(1))
+            continue
+
+        # 箇条書き - / *
+        m = re.match(r"^[-*]\s+(.*)$", stripped)
+        if m:
+            flush_ol()
+            ul_buffer.append(m.group(1))
+            continue
+
+        # 通常段落
+        flush_lists()
+        parts.append(f"<p>{_md_inline_to_html(stripped)}</p>")
+
+    flush_lists()
+    return "".join(parts)
+
+
+def _markdown_to_plain(body: str) -> str:
+    """Markdown を素の読めるテキストに変換する（paste の text/plain フォールバック用）。"""
+    text = re.sub(r"^#{1,6}\s+", "", body, flags=re.MULTILINE)  # 見出し記号除去
+    text = re.sub(r"\*\*([^*]+)\*\*", r"\1", text)              # 太字記号除去
+    text = re.sub(r"\[([^\]]+)\]\((https?://[^\s)]+)\)", r"\1 \2", text)  # リンク→テキスト URL
+    text = re.sub(r"^[-*]\s+", "・", text, flags=re.MULTILINE)  # 箇条書き→・
+    text = re.sub(r"^(---|\*\*\*|___)$", "", text, flags=re.MULTILINE)   # 区切り線除去
+    return text
+
+
 def fill_body(page: Page, body: str) -> None:
-    """記事本文をエディタに入力する（ProseMirrorエディタ対応）。"""
+    """記事本文をエディタに入力する（ProseMirror + HTML paste 方式）。
+
+    Markdown を HTML に変換し、paste イベントで流し込むことで
+    見出し・太字・箇条書き・クリック可能なリンク（収益の導線）を
+    正しくレンダリングする。
+    """
     # モーダルが残っていれば閉じる（カバー画像アップロード時に開いた場合など）
     dismiss_modals(page)
     page.wait_for_timeout(500)
 
-    # JS でフォーカス（page.click はモーダルのポインターイベント干渉を受けるため回避）
-    page.evaluate("""
-    () => {
-        const editors = document.querySelectorAll('div[contenteditable="true"]');
-        const editor = editors.length > 1 ? editors[editors.length - 1] : editors[0];
-        if (editor) editor.focus();
-    }
-    """)
-    page.wait_for_timeout(500)
+    body_html = markdown_to_html(body)
+    body_plain = _markdown_to_plain(body)
 
-    safe_body = body.replace("\\", "\\\\").replace("`", "\\`").replace("${", "\\${")
-    page.evaluate(
-        f"""
-        (function() {{
-            const editors = document.querySelectorAll('div[contenteditable="true"]');
-            const editor = editors.length > 1 ? editors[editors.length - 1] : editors[0];
-            if (!editor) return;
+    result = page.evaluate(
+        """
+        ({html, plain}) => {
+            const editor = document.querySelector('div.ProseMirror[contenteditable="true"]')
+                || document.querySelectorAll('div[contenteditable="true"]')[0];
+            if (!editor) return 'no-editor';
+
             editor.focus();
-            document.execCommand('selectAll', false, null);
-            document.execCommand('insertText', false, `{safe_body}`);
-        }})();
+            // カーソルをエディタ先頭に置く
+            const sel = window.getSelection();
+            const range = document.createRange();
+            range.selectNodeContents(editor);
+            range.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(range);
+
+            // HTML を paste イベントで流し込む（ProseMirror が正しくノード化）
+            const dt = new DataTransfer();
+            dt.setData('text/html', html);
+            dt.setData('text/plain', plain);
+            const ev = new ClipboardEvent('paste', {bubbles: true, cancelable: true, clipboardData: dt});
+            editor.dispatchEvent(ev);
+
+            return 'pasted';
+        }
+        """,
+        {"html": body_html, "plain": body_plain},
+    )
+    page.wait_for_timeout(1200)
+
+    # ── ペースト結果を検証（リンク・見出しが生成されたか）──
+    check = page.evaluate(
+        """
+        () => {
+            const editor = document.querySelector('div.ProseMirror[contenteditable="true"]')
+                || document.querySelectorAll('div[contenteditable="true"]')[0];
+            if (!editor) return {ok:false, links:0, headings:0, len:0};
+            return {
+                ok: true,
+                links: editor.querySelectorAll('a').length,
+                headings: editor.querySelectorAll('h2,h3').length,
+                len: (editor.innerText || '').length
+            };
+        }
         """
     )
-    page.wait_for_timeout(1000)
-    print(f"本文入力完了（{len(body)}字）")
+    print(f"[body] paste結果={result} 検証={check}")
+
+    # ── フォールバック: ペーストが効かなかった場合は execCommand で素テキスト投入 ──
+    if not check or check.get("len", 0) < 50:
+        print("[body] ペースト失敗 → execCommand フォールバック（素テキスト）")
+        safe_body = body_plain.replace("\\", "\\\\").replace("`", "\\`").replace("${", "\\${")
+        page.evaluate(
+            f"""
+            (function() {{
+                const editor = document.querySelector('div.ProseMirror[contenteditable="true"]')
+                    || document.querySelectorAll('div[contenteditable="true"]')[0];
+                if (!editor) return;
+                editor.focus();
+                document.execCommand('selectAll', false, null);
+                document.execCommand('insertText', false, `{safe_body}`);
+            }})();
+            """
+        )
+        page.wait_for_timeout(1000)
+
+    print(f"本文入力完了（{len(body)}字 / リンク{check.get('links', 0) if check else 0}本・見出し{check.get('headings', 0) if check else 0}個）")
 
 
 def fill_tags(page: Page, tags: list[str]) -> None:
