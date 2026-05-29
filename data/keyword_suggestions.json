@@ -3,14 +3,7 @@
   "suggestions": [
     {
       "genre": "business",
-      "themes": [
-        {
-          "title": "副業で稼ぐためのロードマップ2026｜会社員が最初にやるべきこと",
-          "target_keyword": "副業 始め方 2026 会社員",
-          "reason": "AI副業記事の内部リンク先として機能し、ビジネスジャンルの回遊率向上を狙う。",
-          "priority": "medium"
-        }
-      ]
+      "themes": []
     },
     {
       "genre": "gadget",
