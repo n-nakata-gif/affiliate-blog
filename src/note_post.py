@@ -1050,14 +1050,17 @@ def fill_tags(page: Page, tags: list[str]) -> None:
 
 
 def publish(page: Page) -> str:
-    """記事を公開してURLを返す。"""
-    # STEP1: 「公開に進む」/「公開設定」ボタンをクリック（エディタ右上）
+    """記事を公開（または更新）してURLを返す。
+
+    新規記事:   公開に進む → /publish/ → 公開する
+    既存記事:   公開に進む → /publish/ → 更新する
+    成功サイン: 「記事をシェアしてみましょう」ダイアログ出現。
+    """
+    # STEP1: 「公開に進む」ボタンをクリック（エディタ右上）
     publish_settings_clicked = False
     for sel in [
         'button:has-text("公開に進む")',
         'button:has-text("公開設定")',
-        'button:has-text("更新する")',
-        'button:has-text("公開")',
         '[data-type="publish"]',
         'button[class*="publish"]',
     ]:
@@ -1065,59 +1068,100 @@ def publish(page: Page) -> str:
             btn = page.locator(sel).first
             if btn.is_visible(timeout=3000):
                 btn.click()
-                print(f"「公開設定」クリック: {sel}")
+                print(f"「公開に進む」クリック: {sel}")
                 publish_settings_clicked = True
                 break
         except Exception:
             continue
 
     if not publish_settings_clicked:
-        print("⚠️ 「公開設定」ボタンが見つかりませんでした")
+        print("⚠️ 「公開に進む」ボタンが見つかりませんでした")
 
-    # 公開設定ページ（/publish/）への遷移を待つ
-    page.wait_for_timeout(4000)
+    # 公開設定ページ（/publish/）への遷移を待つ（最大12秒ポーリング）
+    for _ in range(12):
+        page.wait_for_timeout(1000)
+        if "/publish/" in page.url:
+            break
     print(f"公開設定後URL: {page.url}")
+    page.wait_for_timeout(1500)  # ボタン描画待ち
 
-    # 診断：ページ上のボタン一覧をログに出力
-    try:
-        buttons = page.evaluate("""
-        () => Array.from(document.querySelectorAll('button, [role="button"], a[class*="button"]'))
-            .map(b => b.textContent.trim().replace(/\\s+/g, ' ').substring(0, 60))
-            .filter(t => t.length > 0)
-        """)
-        print(f"ページ上のボタン一覧: {buttons}")
-    except Exception as e:
-        print(f"ボタン一覧取得エラー: {e}")
-
-    # STEP2: 「公開する」/「更新する」ボタンをクリック（公開設定モーダル内）
+    # STEP2: 「更新する」/「公開する」ボタンを厳密一致で探してクリック
+    #   ※ :has-text は部分一致で誤爆するため、テキスト完全一致を優先。
+    #   ※ クリックが効かない場合に備え最大3回リトライし、毎回成功サインを確認。
     publish_clicked = False
-    for sel in [
-        'button:has-text("公開する")',
-        'button:has-text("更新する")',
-        'button:has-text("投稿する")',
-        'button:has-text("公開")',
-        '[data-type="confirm-publish"]',
-        'button[class*="publish"]',
-        'input[type="submit"]',
-        'button[type="submit"]',
-    ]:
+    success = False
+    final_button_labels = ["更新する", "公開する", "投稿する"]
+
+    for attempt in range(3):
+        # 完全一致でボタンを探す
+        target = None
         try:
-            # 最後に見つかったボタンを使う（モーダル内のボタンを優先）
-            btn = page.locator(sel).last
-            if btn.is_visible(timeout=4000):
-                btn.click()
-                print(f"「公開する」クリック: {sel}")
-                publish_clicked = True
-                break
+            for label in final_button_labels:
+                loc = page.get_by_role("button", name=label, exact=True)
+                if loc.count() > 0 and loc.first.is_visible(timeout=1500):
+                    target = (label, loc.first)
+                    break
         except Exception:
+            target = None
+
+        if target is None:
+            # フォールバック: 部分一致
+            for label in final_button_labels:
+                try:
+                    loc = page.locator(f'button:has-text("{label}")').last
+                    if loc.is_visible(timeout=1500):
+                        target = (label, loc)
+                        break
+                except Exception:
+                    continue
+
+        if target is None:
+            print(f"[publish] 確定ボタン未検出（試行{attempt + 1}）")
+            page.wait_for_timeout(1500)
             continue
 
-    if not publish_clicked:
-        print("⚠️ 「公開する」ボタンが見つかりませんでした。スクリーンショットを保存します。")
-        page.screenshot(path="note_publish_error.png")
+        label, btn = target
+        try:
+            btn.click(timeout=4000)
+            publish_clicked = True
+            print(f"「{label}」クリック（試行{attempt + 1}）")
+        except Exception as e:
+            print(f"[publish] クリックエラー（試行{attempt + 1}）: {e}")
+            page.wait_for_timeout(1500)
+            continue
 
-    # 公開完了・URLが確定するまで待つ
-    page.wait_for_timeout(5000)
+        # 成功サイン（シェアダイアログ or /publish/ から離脱）を最大10秒待つ
+        for _ in range(10):
+            page.wait_for_timeout(1000)
+            try:
+                shared = page.evaluate(
+                    """() => {
+                        const txt = document.body.innerText || '';
+                        return txt.includes('シェアしてみましょう') || txt.includes('記事を公開しました')
+                            || txt.includes('公開しました');
+                    }"""
+                )
+            except Exception:
+                shared = False
+            if shared or "/publish/" not in page.url:
+                success = True
+                break
+        if success:
+            print(f"✅ 公開/更新の成功を確認（試行{attempt + 1}）")
+            break
+        print(f"[publish] 成功サイン未確認（試行{attempt + 1}）→ リトライ")
+
+    if not publish_clicked:
+        print("⚠️ 確定ボタンが押せませんでした")
+        try:
+            page.screenshot(path="note_publish_error.png")
+        except Exception:
+            pass
+    elif not success:
+        print("⚠️ クリックはしたが成功サインを確認できませんでした")
+
+    # 反映確定のため少し待つ
+    page.wait_for_timeout(3000)
     final_url = page.url
     print(f"最終URL: {final_url}")
 
