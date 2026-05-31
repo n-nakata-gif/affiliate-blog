@@ -874,6 +874,51 @@ def fill_body(page: Page, body: str) -> None:
     body_html = markdown_to_html(body)
     body_plain = _markdown_to_plain(body)
 
+    # ── ステップ1: 既存本文を全削除（再編集時に必須／新規時は無害） ──
+    # ※ クリアと貼り付けを同じ evaluate で行うと、ProseMirror の削除が
+    #    貼り付け前に確定せず本文が二重化するため、必ず分離して実行する。
+    editor_loc = page.locator('div.ProseMirror[contenteditable="true"]').first
+    try:
+        editor_loc.click(timeout=5000)
+    except Exception:
+        pass
+    page.wait_for_timeout(300)
+
+    cleared_len = -1
+    for clear_attempt in range(3):
+        # キーボードで全選択→削除（ProseMirror に最も確実）
+        page.keyboard.press("Control+a")
+        page.wait_for_timeout(150)
+        page.keyboard.press("Delete")
+        page.wait_for_timeout(400)
+        cleared_len = page.evaluate(
+            """
+            () => {
+                const editor = document.querySelector('div.ProseMirror[contenteditable="true"]')
+                    || document.querySelectorAll('div[contenteditable="true"]')[0];
+                return editor ? (editor.innerText || '').trim().length : -1;
+            }
+            """
+        )
+        if cleared_len <= 1:
+            break
+        # JS フォールバック（execCommand）
+        page.evaluate(
+            """
+            () => {
+                const editor = document.querySelector('div.ProseMirror[contenteditable="true"]')
+                    || document.querySelectorAll('div[contenteditable="true"]')[0];
+                if (!editor) return;
+                editor.focus();
+                document.execCommand('selectAll', false, null);
+                document.execCommand('delete', false, null);
+            }
+            """
+        )
+        page.wait_for_timeout(400)
+    print(f"[body] 本文クリア完了（残り文字数={cleared_len}）")
+
+    # ── ステップ2: HTML を paste イベントで流し込む ──
     result = page.evaluate(
         """
         ({html, plain}) => {
@@ -882,10 +927,6 @@ def fill_body(page: Page, body: str) -> None:
             if (!editor) return 'no-editor';
 
             editor.focus();
-            // 既存本文を全削除（再編集時に必須／新規時は無害）
-            document.execCommand('selectAll', false, null);
-            document.execCommand('delete', false, null);
-
             // カーソルをエディタ先頭に置く
             const sel = window.getSelection();
             const range = document.createRange();
@@ -908,23 +949,66 @@ def fill_body(page: Page, body: str) -> None:
     )
     page.wait_for_timeout(1200)
 
-    # ── ペースト結果を検証（リンク・見出しが生成されたか）──
-    check = page.evaluate(
-        """
-        () => {
-            const editor = document.querySelector('div.ProseMirror[contenteditable="true"]')
-                || document.querySelectorAll('div[contenteditable="true"]')[0];
-            if (!editor) return {ok:false, links:0, headings:0, len:0};
-            return {
-                ok: true,
-                links: editor.querySelectorAll('a').length,
-                headings: editor.querySelectorAll('h2,h3').length,
-                len: (editor.innerText || '').length
-            };
-        }
-        """
-    )
+    # ── ペースト結果を検証（リンク・見出しが生成されたか／生Markdownが残っていないか）──
+    def _check_body() -> dict:
+        return page.evaluate(
+            """
+            () => {
+                const editor = document.querySelector('div.ProseMirror[contenteditable="true"]')
+                    || document.querySelectorAll('div[contenteditable="true"]')[0];
+                if (!editor) return {ok:false, links:0, headings:0, len:0, rawMd:false};
+                const t = editor.innerText || '';
+                return {
+                    ok: true,
+                    links: editor.querySelectorAll('a').length,
+                    headings: editor.querySelectorAll('h2,h3').length,
+                    len: t.length,
+                    rawMd: t.includes('## ') || t.includes('](http')
+                };
+            }
+            """
+        )
+
+    check = _check_body()
     print(f"[body] paste結果={result} 検証={check}")
+
+    # ── 生Markdownが残っている＝クリア失敗で二重化 → クリア＆再ペーストでやり直す ──
+    if check.get("rawMd"):
+        print("[body] ⚠️ 生Markdown検出（本文二重化の疑い）→ クリアして再ペースト")
+        try:
+            editor_loc.click(timeout=5000)
+        except Exception:
+            pass
+        for _ in range(3):
+            page.keyboard.press("Control+a")
+            page.wait_for_timeout(150)
+            page.keyboard.press("Delete")
+            page.wait_for_timeout(400)
+            remain = page.evaluate(
+                "() => { const e=document.querySelector('div.ProseMirror[contenteditable=\\\"true\\\"]'); return e?(e.innerText||'').trim().length:-1; }"
+            )
+            if remain <= 1:
+                break
+        page.evaluate(
+            """
+            ({html, plain}) => {
+                const editor = document.querySelector('div.ProseMirror[contenteditable="true"]');
+                if (!editor) return;
+                editor.focus();
+                const sel = window.getSelection();
+                const range = document.createRange();
+                range.selectNodeContents(editor); range.collapse(true);
+                sel.removeAllRanges(); sel.addRange(range);
+                const dt = new DataTransfer();
+                dt.setData('text/html', html); dt.setData('text/plain', plain);
+                editor.dispatchEvent(new ClipboardEvent('paste', {bubbles:true, cancelable:true, clipboardData: dt}));
+            }
+            """,
+            {"html": body_html, "plain": body_plain},
+        )
+        page.wait_for_timeout(1200)
+        check = _check_body()
+        print(f"[body] 再ペースト後 検証={check}")
 
     # ── フォールバック: ペーストが効かなかった場合は execCommand で素テキスト投入 ──
     if not check or check.get("len", 0) < 50:
