@@ -882,6 +882,10 @@ def fill_body(page: Page, body: str) -> None:
             if (!editor) return 'no-editor';
 
             editor.focus();
+            // 既存本文を全削除（再編集時に必須／新規時は無害）
+            document.execCommand('selectAll', false, null);
+            document.execCommand('delete', false, null);
+
             // カーソルをエディタ先頭に置く
             const sel = window.getSelection();
             const range = document.createRange();
@@ -963,10 +967,12 @@ def fill_tags(page: Page, tags: list[str]) -> None:
 
 def publish(page: Page) -> str:
     """記事を公開してURLを返す。"""
-    # STEP1: 「公開設定」ボタンをクリック（エディタ右上）
+    # STEP1: 「公開に進む」/「公開設定」ボタンをクリック（エディタ右上）
     publish_settings_clicked = False
     for sel in [
+        'button:has-text("公開に進む")',
         'button:has-text("公開設定")',
+        'button:has-text("更新する")',
         'button:has-text("公開")',
         '[data-type="publish"]',
         'button[class*="publish"]',
@@ -999,10 +1005,11 @@ def publish(page: Page) -> str:
     except Exception as e:
         print(f"ボタン一覧取得エラー: {e}")
 
-    # STEP2: 「公開する」ボタンをクリック（公開設定モーダル内）
+    # STEP2: 「公開する」/「更新する」ボタンをクリック（公開設定モーダル内）
     publish_clicked = False
     for sel in [
         'button:has-text("公開する")',
+        'button:has-text("更新する")',
         'button:has-text("投稿する")',
         'button:has-text("公開")',
         '[data-type="confirm-publish"]',
@@ -1120,6 +1127,94 @@ def post_to_note(title: str, body: str, tags: list[str], cover_path: str = "") -
 
         except PlaywrightTimeoutError as e:
             page.screenshot(path="note_post_error.png")
+            raise RuntimeError(f"タイムアウトエラー: {e}") from e
+        finally:
+            browser.close()
+
+    return note_url
+
+
+def reedit_note(
+    note_id: str,
+    title: str,
+    body: str,
+    tags: list[str],
+    cover_path: str = "",
+) -> str:
+    """既存の公開済み note 記事を開いて、サムネイル付与＋本文HTML化＋再公開する。
+
+    note_post() とほぼ同じ流れだが、新規作成ではなく既存記事のエディタを開く。
+    fill_body() が既存本文をクリアしてから貼り付けるため、上書きが安全に行える。
+    """
+    editor_url = f"https://editor.note.com/notes/{note_id}/edit/"
+
+    with sync_playwright() as pw:
+        browser = pw.chromium.launch(
+            headless=True,
+            args=["--no-sandbox", "--disable-dev-shm-usage"],
+        )
+        context = browser.new_context(
+            viewport={"width": 1280, "height": 900},
+            locale="ja-JP",
+            timezone_id="Asia/Tokyo",
+            user_agent=(
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/124.0.0.0 Safari/537.36"
+            ),
+        )
+
+        cookie_ok = authenticate_with_cookie(context)
+        page = context.new_page()
+        try:
+            if not cookie_ok:
+                if not NOTE_EMAIL or not NOTE_PASSWORD:
+                    raise RuntimeError(
+                        "NOTE_SESSION_COOKIE または NOTE_EMAIL+NOTE_PASSWORD が必要です"
+                    )
+                login_with_credentials(page)
+
+            print(f"既存記事エディタへ移動: {editor_url}")
+            page.goto(editor_url, wait_until="domcontentloaded", timeout=30000)
+            # ProseMirror エディタが読み込まれるまで待つ
+            try:
+                page.wait_for_selector(
+                    'div.ProseMirror[contenteditable="true"]', timeout=15000
+                )
+            except Exception:
+                pass
+            page.wait_for_timeout(2500)
+            print(f"エディタURL: {page.url}")
+
+            if "editor.note.com" not in page.url:
+                raise RuntimeError(f"エディタを開けませんでした（URL: {page.url}）")
+
+            opened_url = page.url
+
+            # ① カバー画像アップロード（サムネイル付与）
+            if cover_path:
+                upload_cover_image(page, cover_path)
+                page.wait_for_timeout(1000)
+
+            # カバーアップロードで誤ナビゲーションした場合はエディタに戻る
+            if page.url != opened_url and "editor.note.com" not in page.url:
+                print(f"[警告] ページが移動しました ({page.url}) → エディタに戻ります")
+                page.goto(editor_url, wait_until="domcontentloaded")
+                page.wait_for_timeout(2000)
+
+            dismiss_modals(page)
+            page.wait_for_timeout(500)
+
+            # ② 本文を HTML 化して上書き（fill_body が既存本文をクリア）
+            fill_body(page, body)
+            page.wait_for_timeout(500)
+
+            # ③ 再公開（タイトル・タグは既存のものを維持）
+            note_url = publish(page)
+            print(f"再公開URL: {note_url}")
+
+        except PlaywrightTimeoutError as e:
+            page.screenshot(path=f"note_reedit_error_{note_id}.png")
             raise RuntimeError(f"タイムアウトエラー: {e}") from e
         finally:
             browser.close()

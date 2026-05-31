@@ -1,0 +1,56 @@
+name: Note Re-edit (既存記事の修正)
+
+# 公開済み記事にサムネイル付与＋本文HTML化（リンク復活）を行う。
+# 手動実行のみ。limit で処理件数を制限できる（まず1件で検証する運用）。
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: "修正する件数（0=全件、まず1で検証推奨）"
+        required: false
+        default: "1"
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  note-reedit:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install playwright
+          python -m playwright install chromium
+          python -m playwright install-deps chromium
+
+      - name: Install Japanese fonts (for cover image generation)
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y fonts-noto-cjk
+
+      - name: Re-edit published note articles
+        env:
+          NOTE_SESSION_COOKIE: ${{ secrets.NOTE_SESSION_COOKIE }}
+          NOTE_EMAIL:          ${{ secrets.NOTE_EMAIL }}
+          NOTE_PASSWORD:       ${{ secrets.NOTE_PASSWORD }}
+          REEDIT_LIMIT:        ${{ github.event.inputs.limit }}
+        run: python src/note_reedit.py
+
+      - name: Commit re-edit tracker
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/note_drafts/ data/note_reedited.json
+          git diff --staged --quiet || git commit -m "note: re-edit published articles [skip ci]"
+          git pull --rebase && git push
