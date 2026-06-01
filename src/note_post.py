@@ -1213,17 +1213,30 @@ def post_to_note(title: str, body: str, tags: list[str], cover_path: str = "") -
                 login_with_credentials(page)
 
             print("新規記事ページへ移動...")
-            page.goto(NOTE_NEW_URL, wait_until="domcontentloaded")
-            # editor.note.com へのリダイレクトを待つ（note_id がURLに含まれるまで）
-            try:
-                page.wait_for_url(
-                    lambda url: "editor.note.com" in url or "/notes/n" in url,
-                    timeout=15000,
-                )
-            except Exception:
-                pass
+            # 実際のノート（/notes/{id}/edit/）が作られるまで待つ。
+            # ※ 中間ページ "editor.note.com/new" で止まることがあるため、
+            #    note_id を含むURLになるまでリトライする。
+            note_ready = False
+            for attempt in range(3):
+                page.goto(NOTE_NEW_URL, wait_until="domcontentloaded")
+                try:
+                    page.wait_for_url(
+                        lambda url: re.search(r"/notes/n[a-z0-9]+/", url) is not None,
+                        timeout=20000,
+                    )
+                    note_ready = True
+                    break
+                except Exception:
+                    print(f"[新規作成] ノート未生成（試行{attempt + 1}, URL={page.url}）→ リトライ")
+                    page.wait_for_timeout(2000)
+
             page.wait_for_timeout(2000)  # エディタ初期化待ち
             print(f"エディタURL: {page.url}")
+
+            if not note_ready and not re.search(r"/notes/n[a-z0-9]+/", page.url):
+                raise RuntimeError(
+                    f"新規ノートの作成に失敗しました（URL={page.url}）。note.com側の一時的な不調の可能性。"
+                )
 
             # エディタURLを記録（カバー画像アップロードで誤ナビゲーションした場合に備える）
             editor_url = page.url
