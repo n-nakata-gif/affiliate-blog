@@ -1,0 +1,29 @@
+{
+  "_help": "毎週、各ASPの管理画面で確認した報酬額（円）をここに1週ぶん追記します。分からない項目・まだ0円の項目は 0 のままでOK。Noriが数字を伝えれば、責任者（Claude）が代わりに追記します。",
+  "_fields": {
+    "week": "ISO週番号（例 2026-W23）",
+    "date": "記録日 YYYY-MM-DD",
+    "adsense": "Google AdSense 推定収益（円）",
+    "amazon": "Amazonアソシエイト 紹介料（円）",
+    "rakuten": "楽天アフィリエイト 成果報酬（円）",
+    "a8": "A8.net 確定+未確定報酬（円）",
+    "moshimo": "もしもアフィリエイト 報酬（円）",
+    "valuecommerce": "バリューコマース 報酬（円）",
+    "accesstrade": "アクセストレード 報酬（円）",
+    "memo": "気づいたこと（任意）"
+  },
+  "weeks": [
+    {
+      "week": "2026-W23",
+      "date": "2026-06-02",
+      "adsense": 0,
+      "amazon": 0,
+      "rakuten": 0,
+      "a8": 0,
+      "moshimo": 0,
+      "valuecommerce": 0,
+      "accesstrade": 0,
+      "memo": "計測開始。まだ各ASPの数字は未確認"
+    }
+  ]
+}

@@ -17,6 +17,7 @@ const isAutoNoindex = NOINDEX_PATHS.some(
 const noindex = noindexProp || isAutoNoindex;
 
 const adsenseId = import.meta.env.PUBLIC_ADSENSE_ID;
+const ga4Id = import.meta.env.PUBLIC_GA4_ID;
 const _SITE = 'https://novlify.jp';
 const _rawImage = image || '';
 const ogImage = _rawImage
@@ -54,6 +55,34 @@ const ogImage = _rawImage
         src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseId}`}
         crossorigin="anonymous"
       ></script>
+    )}
+
+    {/* Google Analytics 4 — PUBLIC_GA4_ID を設定すると有効化される */}
+    {ga4Id && (
+      <Fragment>
+        <script async src={`https://www.googletagmanager.com/gtag/js?id=${ga4Id}`}></script>
+        <script is:inline define:vars={{ ga4Id }}>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', ga4Id);
+
+          // アフィリエイトリンクのクリックを計測（rel に sponsored を含む a タグ）
+          document.addEventListener('click', function (e) {
+            var a = e.target.closest('a[rel~="sponsored"]');
+            if (!a) return;
+            var href = a.href || '';
+            var domain = '';
+            try { domain = new URL(href).hostname; } catch (_) {}
+            gtag('event', 'affiliate_click', {
+              link_domain: domain,
+              link_url: href,
+              link_text: (a.textContent || '').trim().slice(0, 60),
+              page_path: location.pathname,
+            });
+          });
+        </script>
+      </Fragment>
     )}
     <slot name="head" />
 

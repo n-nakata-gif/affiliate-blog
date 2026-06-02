@@ -18,6 +18,68 @@ from pathlib import Path
 
 JST      = timezone(timedelta(hours=9))
 BLOG_DIR = Path(__file__).parent / "content" / "blog"
+REVENUE_LOG = Path("data/revenue_log.json")
+
+# 手動ログのASPキー → 表示名
+ASP_LABELS = {
+    "adsense": "AdSense",
+    "amazon": "Amazon",
+    "rakuten": "楽天",
+    "a8": "A8.net",
+    "moshimo": "もしも",
+    "valuecommerce": "バリューコマース",
+    "accesstrade": "アクセストレード",
+}
+
+
+def load_revenue_log() -> list[dict]:
+    """手動収益ログを古い順で返す。"""
+    if not REVENUE_LOG.exists():
+        return []
+    try:
+        data = json.loads(REVENUE_LOG.read_text(encoding="utf-8"))
+        return data.get("weeks", [])
+    except Exception as e:
+        print(f"revenue_log 読み込み失敗: {e}")
+        return []
+
+
+def week_total(entry: dict) -> int:
+    """1週ぶんの合計報酬（円）。"""
+    return sum(int(entry.get(k, 0) or 0) for k in ASP_LABELS)
+
+
+def build_revenue_trend(weeks: list[dict], n: int = 6) -> str:
+    """直近n週の収益トレンドをテキストで返す。"""
+    if not weeks:
+        return ""
+    recent = weeks[-n:]
+    lines = [f"■ 収益トレンド（手動記録・直近{len(recent)}週）"]
+    prev = None
+    for e in recent:
+        total = week_total(e)
+        if prev is None:
+            arrow = "  "
+        elif total > prev:
+            arrow = "↑"
+        elif total < prev:
+            arrow = "↓"
+        else:
+            arrow = "→"
+        lines.append(f"  {e.get('week','?')}  ¥{total:,}  {arrow}")
+        prev = total
+
+    # 最新週の内訳
+    latest = recent[-1]
+    breakdown = [f"{ASP_LABELS[k]} ¥{int(latest.get(k,0) or 0):,}"
+                 for k in ASP_LABELS if int(latest.get(k, 0) or 0) > 0]
+    if breakdown:
+        lines.append("  └ 最新週内訳: " + " / ".join(breakdown))
+    else:
+        lines.append("  └ 最新週はまだ全ASP 0円（または未記録）")
+    lines.append("")
+    return "\n".join(lines)
+
 
 DASHBOARD_LINKS = [
     ("AdSense",        "https://adsense.google.com/adsense/"),
@@ -84,8 +146,14 @@ def count_articles_this_week() -> dict:
     return genre_cnt
 
 
-def build_text(adsense: dict | None, genre_cnt: dict, date_str: str) -> str:
+def build_text(adsense: dict | None, genre_cnt: dict, date_str: str,
+               revenue_weeks: list[dict] | None = None) -> str:
     lines = [f"Novlify 収益レポート {date_str}", ""]
+
+    # 手動収益トレンド（最優先で表示）
+    trend = build_revenue_trend(revenue_weeks or [])
+    if trend:
+        lines.append(trend)
 
     # AdSense
     if adsense:
@@ -119,7 +187,11 @@ def send_email(text: str, date_str: str, adsense: dict | None) -> None:
     p = os.environ.get("GMAIL_APP_PASSWORD")
     if not u or not p:
         print("Gmail未設定スキップ"); return
-    earn = f"¥{adsense['earnings']:,.0f}" if adsense else "未連携"
+    # 件名: 手動ログ最新週 + AdSense を合算
+    manual_latest = week_total(load_revenue_log()[-1]) if load_revenue_log() else 0
+    adsense_earn = int(adsense["earnings"]) if adsense else 0
+    grand = manual_latest + adsense_earn
+    earn = f"¥{grand:,}" if grand > 0 else "¥0（計測中）"
     msg = MIMEText(text, "plain", "utf-8")
     msg["Subject"] = f"【Novlify】収益 {earn} | {date_str}"
     msg["From"] = msg["To"] = u
@@ -136,7 +208,8 @@ if __name__ == "__main__":
     adsense  = fetch_adsense(pub_id) if pub_id else None
     if not pub_id: print("ADSENSE_PUBLISHER_ID 未設定")
     genre_cnt = count_articles_this_week()
-    text = build_text(adsense, genre_cnt, date_str)
+    revenue_weeks = load_revenue_log()
+    text = build_text(adsense, genre_cnt, date_str, revenue_weeks)
     print(text)
     if os.environ.get("WEEKLY_BATCH") == "1":
         from pathlib import Path
