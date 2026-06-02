@@ -4,6 +4,7 @@ description: "インデックス投資の始め方を、初心者にもわかり
 pubDate: 2026-04-29
 tags: ["インデックス投資", "資産形成", "長期投資"]
 heroImage: "/thumbnails/investment_20260429.png"
+canonicalUrl: "https://novlify.jp/blog/investment_20260427/"
 rewritten: true
 human_rewritten: true
 ---
