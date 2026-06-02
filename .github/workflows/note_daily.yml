@@ -1,10 +1,12 @@
 name: Note Daily Post
 
+# 【一時停止中】スケジュール実行を無効化。再開する場合はscheduleブロックのコメントを外す。
 # 火・金 21:00 JST（12:00 UTC）に自動実行
-# ビジネス記事をnote向けに変換して投稿する
+# on:
+#   schedule:
+#     - cron: "0 12 * * 2,5"
+#   workflow_dispatch:
 on:
-  schedule:
-    - cron: "0 12 * * 2,5"
   workflow_dispatch:
 
 env:
