@@ -112,6 +112,7 @@ const articleSchema = {
   title={`${post.data.title} | Novlify`}
   description={post.data.description}
   image={ogImageUrl}
+  canonical={(post.data as any).canonicalUrl}
 >
   <Fragment slot="head">
     <script type="application/ld+json" set:html={JSON.stringify(articleSchema)} />

@@ -9,6 +9,11 @@ const blog = defineCollection({
     pubDate: z.date(),
     tags: z.array(z.string()).optional(),
     heroImage: z.string().optional(),
+    // カニバリ解消用：別記事を正規URLに指定したい場合に設定
+    canonicalUrl: z.string().optional(),
+    // 文体リライト済みフラグ（rewrite_human.py 用）
+    rewritten: z.boolean().optional(),
+    human_rewritten: z.boolean().optional(),
   }),
 });
 
