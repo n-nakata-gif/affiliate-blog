@@ -32,6 +32,9 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+          # GA4 測定ID（公開値・秘密情報ではない）。Astroビルド時にHTMLへ埋め込まれる
+          PUBLIC_GA4_ID: G-YJ59ED4QQF
 
       - name: Deploy to Cloudflare Workers
         run: npx wrangler@4 deploy
