@@ -25,14 +25,7 @@
     },
     {
       "genre": "investment",
-      "themes": [
-        {
-          "title": "円安・円高どっちで買う？2026年夏の外貨預金・FX初心者ガイド",
-          "target_keyword": "外貨預金 2026 円安",
-          "reason": "為替変動への関心が高く検索ボリューム増加が見込まれる",
-          "priority": "high"
-        }
-      ]
+      "themes": []
     },
     {
       "genre": "travel",
