@@ -50,15 +50,19 @@ jobs:
 
       - name: キーワード提案
         env:
-          ANTHROPIC_API_KEY:     ${{ secrets.ANTHROPIC_API_KEY }}
-          GSC_SITE_URL:          ${{ secrets.GSC_SITE_URL }}
-          GSC_OAUTH_CREDENTIALS: ${{ secrets.GSC_OAUTH_CREDENTIALS }}
+          ANTHROPIC_API_KEY:        ${{ secrets.ANTHROPIC_API_KEY }}
+          GSC_SITE_URL:             ${{ secrets.GSC_SITE_URL }}
+          GSC_SERVICE_ACCOUNT_JSON: ${{ secrets.GSC_SERVICE_ACCOUNT_JSON }}
+          GA4_SERVICE_ACCOUNT_JSON: ${{ secrets.GA4_SERVICE_ACCOUNT_JSON }}
+          GSC_OAUTH_CREDENTIALS:    ${{ secrets.GSC_OAUTH_CREDENTIALS }}
         run: python src/keyword_suggest.py
 
       - name: 検索順位モニタリング
         env:
-          GSC_SITE_URL:          ${{ secrets.GSC_SITE_URL }}
-          GSC_OAUTH_CREDENTIALS: ${{ secrets.GSC_OAUTH_CREDENTIALS }}
+          GSC_SITE_URL:             ${{ secrets.GSC_SITE_URL }}
+          GSC_SERVICE_ACCOUNT_JSON: ${{ secrets.GSC_SERVICE_ACCOUNT_JSON }}
+          GA4_SERVICE_ACCOUNT_JSON: ${{ secrets.GA4_SERVICE_ACCOUNT_JSON }}
+          GSC_OAUTH_CREDENTIALS:    ${{ secrets.GSC_OAUTH_CREDENTIALS }}
         run: python src/ranking_monitor.py
 
       - name: アフィリエイトなし記事の検出

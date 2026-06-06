@@ -28,7 +28,8 @@ def fetch_search_console_data(site_url: str) -> dict | None:
         from googleapiclient.discovery import build
 
         # ① サービスアカウント認証（永続・推奨）
-        sa_json = os.environ.get("GSC_SERVICE_ACCOUNT_JSON", "")
+        #    専用キーが無ければ GA4 用のサービスアカウントを使い回す
+        sa_json = os.environ.get("GSC_SERVICE_ACCOUNT_JSON", "") or os.environ.get("GA4_SERVICE_ACCOUNT_JSON", "")
         if sa_json:
             import google.oauth2.service_account
             info = json.loads(sa_json)

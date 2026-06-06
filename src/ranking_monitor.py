@@ -36,7 +36,8 @@ def get_gsc_service():
     from googleapiclient.discovery import build
 
     # ① サービスアカウント認証（永続・推奨）
-    sa_json = os.environ.get("GSC_SERVICE_ACCOUNT_JSON", "")
+    #    専用の GSC_SERVICE_ACCOUNT_JSON が無ければ GA4 用のものを使い回す
+    sa_json = os.environ.get("GSC_SERVICE_ACCOUNT_JSON", "") or os.environ.get("GA4_SERVICE_ACCOUNT_JSON", "")
     if sa_json:
         import google.oauth2.service_account
         info = json.loads(sa_json)
