@@ -20,7 +20,9 @@ const isAutoNoindex = NOINDEX_PATHS.some(
 const noindex = noindexProp || isAutoNoindex;
 
 const adsenseId = import.meta.env.PUBLIC_ADSENSE_ID;
-const ga4Id = import.meta.env.PUBLIC_GA4_ID;
+// GA4測定ID。公開値（HTMLに出る前提）なので直書きでフォールバック。
+// 環境変数 PUBLIC_GA4_ID があればそちらを優先（ビルド環境差の影響を受けない）
+const ga4Id = import.meta.env.PUBLIC_GA4_ID || 'G-YJ59ED4QQF';
 const _SITE = 'https://novlify.jp';
 const _rawImage = image || '';
 const ogImage = _rawImage
