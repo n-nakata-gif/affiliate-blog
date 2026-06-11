@@ -1316,6 +1316,84 @@ def build_midpoint_cta(genre: str, rakuten_aff_id: str = "", a8mat: str = "") ->
     )
 
 
+# ── 検索意図マッチCTA（ジャンル×タイトル文脈で高単価サービスへ誘導）──────
+# トラフィック上位記事の手動改善（2026-06）で効果検証中の型を新記事に自動適用する。
+# 文脈に合わない記事には入れない（ミスマッチCTAは信頼を損なうため空文字を返す）。
+
+def _intent_cta_box(headline: str, sub: str, btn_text: str, btn_url: str,
+                    color: str, sub_link: str = "") -> str:
+    return (
+        f'\n<div style="background:linear-gradient(135deg,#fdf9f4,#fefcf9);'
+        f'border:2px solid {color};border-radius:12px;padding:20px 22px;'
+        f'margin:1.8rem 0;text-align:center;">\n'
+        f'<p style="font-size:1rem;font-weight:bold;color:#444;margin:0 0 6px;">{headline}</p>\n'
+        f'<p style="font-size:0.85rem;color:#666;margin:0 0 14px;">{sub}</p>\n'
+        f'<a href="{btn_url}" target="_blank" rel="noopener sponsored" '
+        f'style="display:inline-block;background:{color};color:#fff;padding:13px 30px;'
+        f'border-radius:8px;text-decoration:none;font-weight:bold;font-size:0.95rem;'
+        f'box-shadow:0 2px 10px rgba(0,0,0,0.18);">{btn_text}</a>\n'
+        + (f'<p style="font-size:0.78rem;color:#888;margin:12px 0 0;">{sub_link}</p>\n' if sub_link else '')
+        + '</div>\n'
+    )
+
+
+def build_intent_cta(genre: str, title: str) -> str:
+    """記事タイトルの文脈に合う高単価サービスCTAを返す。合うものが無ければ空文字。"""
+    t = title or ""
+
+    if genre == "travel":
+        # 旅行記事はほぼ全てが「宿予約」に接続できる
+        return _intent_cta_box(
+            "🏨 行き先が決まったら、宿の相場だけ先にチェック",
+            "人気シーズンの宿は2〜3ヶ月前から埋まり始めます。じゃらんなら「エリア×日付」で空室と料金を一覧比較でき、クーポン配布も頻繁です。",
+            "じゃらんで宿の空きを見てみる →",
+            "https://px.a8.net/svt/ejp?a8mat=4B3HQI+DYHVCI+14CS+6C9LD",
+            "#ff8c00",
+            sub_link='記念日や高級旅館狙いなら <a href="https://px.a8.net/svt/ejp?a8mat=4B3HQJ+A2L06Q+1OK+6LHDU" target="_blank" rel="noopener sponsored" style="color:#2e7d52;text-decoration:underline;">一休.com（タイムセールで最大半額）</a> も比較を',
+        )
+
+    if genre == "gourmet" and re.search(r"レストラン|ディナー|ランチ|グルメスポット|外食|名店|記念日|デート", t):
+        return _intent_cta_box(
+            "🍽️ お店選びは「総額が分かるコース予約」が安心です",
+            "一休.comレストランなら席料・サービス料込みの総額表示でコースを比較できます。タイムセールで最大53%OFFになることも。",
+            "一休.comレストランでコースを見てみる →",
+            "https://px.a8.net/svt/ejp?a8mat=4B3UZ9+81COS2+1OK+NTRMQ",
+            "#b08d57",
+        )
+
+    if genre == "business" and re.search(r"確定申告|税金|住民税|経費|インボイス|青色|白色|フリーランス|開業", t):
+        return _intent_cta_box(
+            "📝 申告ミスが不安なら、ソフトに任せるのが確実です",
+            "マネーフォワード クラウド確定申告なら、質問に答えるだけで申告書が完成。経費集計もレシート撮影でラクになります。<strong>無料で試せます。</strong>",
+            "マネーフォワード確定申告を無料で試す →",
+            "https://px.a8.net/svt/ejp?a8mat=4B3HQJ+4620I+4JGQ+BXB8Z",
+            "#2c7be5",
+            sub_link='複雑なケースは <a href="https://h.accesstrade.net/sp/cc?rk=0100nplx00os2v" target="_blank" rel="noopener sponsored" style="color:#2c5f8a;text-decoration:underline;">税理士ドットコム（無料で税理士を紹介）</a> への相談も',
+        )
+
+    if genre == "business" and re.search(r"ブログ|WordPress|サーバー|アフィリエイト", t):
+        return _intent_cta_box(
+            "🚀 ブログを始めるならサーバー選びが最初の一歩",
+            "ConoHa WINGは国内最速クラス・初期費用無料。WordPressのインストールも管理画面から数クリックで完了します。",
+            "ConoHa WINGの料金を見てみる →",
+            "https://af.moshimo.com/af/c/click?a_id=5579374&p_id=2312",
+            "#26a69a",
+        )
+
+    return ""
+
+
+def insert_intent_cta(article: str, cta_block: str) -> str:
+    """「まとめ」見出しの直前に検索意図CTAを挿入。まとめが無ければFAQの直前。"""
+    if not cta_block:
+        return article
+    m = re.search(r'\n## (?:まとめ|FAQ)', article)
+    if not m:
+        return article
+    pos = m.start()
+    return article[:pos] + '\n' + cta_block + article[pos:]
+
+
 def insert_midpoint_cta(article: str, cta_block: str) -> str:
     """記事本文の2番目のH2見出しの後にCTAブロックを挿入する"""
     # frontmatterの終端を探す（--- で囲まれた部分）
@@ -1900,6 +1978,14 @@ def main():
     midpoint_cta = build_midpoint_cta(genre, rakuten_aff_id, a8_rakuten_mat)
     article = insert_midpoint_cta(article, midpoint_cta)
     logger.info("記事中盤CTAブロック挿入完了")
+
+    # ── 検索意図マッチCTA（まとめ直前・文脈が合う記事のみ）──────
+    intent_cta = build_intent_cta(genre, extract_title(article))
+    if intent_cta:
+        article = insert_intent_cta(article, intent_cta)
+        logger.info("検索意図CTA挿入完了 (genre=%s)", genre)
+    else:
+        logger.info("検索意図CTA: 該当文脈なし（スキップ）")
 
     # ── 内部リンクセクションを追加（アフィリエイトの直前）────────
     current_slug = f"{genre}_{date_str}"
