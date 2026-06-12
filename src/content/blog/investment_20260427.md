@@ -201,9 +201,7 @@ TOPIXや先進国株、新興国株のインデックスもあります。組み
 
 ## あわせて読みたい
 
-- [【初心者向け】インデックス投資の始め方｜月3万円から無理なく続ける5ステップ](https://novlify.jp/blog/investment_20260429/)
-- [【新NISA】始め方を3ステップで解説！初心者が後悔しない口座選びと商品選定のコツ](https://novlify.jp/blog/investment_20260428/)
-- [【新NISA 始め方】月1万円から始める初心者のための3ステップ完全ガイド](https://novlify.jp/blog/investment_20260426/)
+- [【新NISA】始め方を3ステップで解説！初心者が後悔しない口座選びと商品選定のコツ](https://novlify.jp/blog/investment_20260426/)
 
 
 ---
