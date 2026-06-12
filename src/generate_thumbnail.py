@@ -299,7 +299,8 @@ def create_thumbnail(
               font=font_site, fill=(60, 60, 60, 200))
 
     out = out_dir / f"{slug}.png"
-    img.save(str(out), "PNG", optimize=True)
+    # 256色に減色して保存（平均400KB→150KB程度。テキスト主体のサムネでは画質劣化ほぼ不可視）
+    img.convert("RGB").quantize(colors=256, method=Image.MEDIANCUT).save(str(out), "PNG", optimize=True)
     return out
 
 
