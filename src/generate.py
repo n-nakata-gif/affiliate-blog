@@ -1286,11 +1286,41 @@ _MIDPOINT_LABELS = {
 }
 
 
-def build_midpoint_cta(genre: str, rakuten_aff_id: str = "", a8mat: str = "") -> str:
-    """記事中盤（H2見出し後）に挿入するAmazon+楽天の両リンクCTAブロックを生成"""
-    amazon_url = _MIDPOINT_AMAZON_URLS.get(genre, "https://www.amazon.co.jp/?tag=nexigen22-22")
-    rakuten_raw_url = _MIDPOINT_RAKUTEN_URLS.get(genre, "https://www.rakuten.co.jp/")
-    label = _MIDPOINT_LABELS.get(genre, "この記事で紹介した商品をチェック")
+# タグからAmazon/楽天の商品検索キーワードを取り出す際に無視する汎用語
+_MIDPOINT_GENERIC_TAGS = {
+    "ガジェット", "家電", "テック", "テクノロジー", "比較", "グルメ", "食べ物", "食品",
+    "グルメスポット", "健康", "フィットネス", "ダイエット", "女性", "男性", "在宅ワーク",
+    "腰痛対策", "防水", "アウトドア", "キャンプ", "東京グルメ", "記念日ディナー",
+    "高級レストラン", "レストラン", "旅行", "観光", "旅", "国内旅行", "旅行先", "投資",
+    "資産運用", "NISA", "ビジネス", "副業", "会社員", "フリーランス", "住民税", "確定申告",
+    "スキルアップ", "お金", "節約", "テレワーク", "料理", "レシピ", "贈り物", "ギフト",
+}
+
+
+def _midpoint_product_keyword(genre: str, tags: list | None) -> str | None:
+    """gadget/gourmet記事で、タグから具体的な商品検索キーワードを返す（無ければNone）"""
+    if genre not in ("gadget", "gourmet") or not tags:
+        return None
+    for t in tags:
+        t = (t or "").strip()
+        if t and t not in _MIDPOINT_GENERIC_TAGS:
+            return t
+    return None
+
+
+def build_midpoint_cta(genre: str, rakuten_aff_id: str = "", a8mat: str = "", tags: list | None = None) -> str:
+    """記事中盤（H2見出し後）に挿入するAmazon+楽天の両リンクCTAブロックを生成。
+    gadget/gourmetはタグから商品名を抽出し、テーマ一致の検索リンクにする（成約率向上）。"""
+    pkw = _midpoint_product_keyword(genre, tags)
+    if pkw:
+        enc = urllib.parse.quote(pkw)
+        amazon_url = f"https://www.amazon.co.jp/s?k={enc}&tag=nexigen22-22"
+        rakuten_raw_url = f"https://search.rakuten.co.jp/search/mall/{enc}/"
+        label = f"「{pkw}」をAmazon・楽天でチェック"
+    else:
+        amazon_url = _MIDPOINT_AMAZON_URLS.get(genre, "https://www.amazon.co.jp/?tag=nexigen22-22")
+        rakuten_raw_url = _MIDPOINT_RAKUTEN_URLS.get(genre, "https://www.rakuten.co.jp/")
+        label = _MIDPOINT_LABELS.get(genre, "この記事で紹介した商品をチェック")
 
     # 楽天URLにアフィリエイトトラッキングを付与
     rakuten_url = make_rakuten_affiliate_url(rakuten_raw_url, rakuten_aff_id, a8mat) if rakuten_aff_id else rakuten_raw_url
@@ -1974,8 +2004,10 @@ def main():
             )
             logger.info("楽天商品画像補完完了: %d件", len(rakuten_claude_products))
 
-    # ── 記事中盤にAmazon+楽天CTAを挿入 ──────────────────────────
-    midpoint_cta = build_midpoint_cta(genre, rakuten_aff_id, a8_rakuten_mat)
+    # ── 記事中盤にAmazon+楽天CTAを挿入（タグからテーマ一致リンクを生成）──
+    _tag_m = re.search(r'^tags:\s*\[(.*?)\]', article, re.MULTILINE)
+    _tags = [x.strip().strip('"').strip("'") for x in _tag_m.group(1).split(",")] if _tag_m else None
+    midpoint_cta = build_midpoint_cta(genre, rakuten_aff_id, a8_rakuten_mat, tags=_tags)
     article = insert_midpoint_cta(article, midpoint_cta)
     logger.info("記事中盤CTAブロック挿入完了")
 

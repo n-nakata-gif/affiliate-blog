@@ -29,6 +29,14 @@ human_rewritten: true
 >
 > 💬 **Bさん（詳しい人）**：「指数に連動する投信を1本買うだけで、自動的に何百社にも分散できますよ。最初は1本に絞るのがおすすめです」
 
+<div style="background:linear-gradient(135deg,#fffbeb,#fff8f0);border:2px solid #FF9900;border-radius:12px;padding:18px 20px;margin:1.5rem 0;text-align:center;">
+<p style="font-size:0.88rem;font-weight:bold;color:#555;margin:0 0 12px;">📦 投資・資産運用の参考書・ツールをチェック</p>
+<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+<a href="https://www.amazon.co.jp/s?k=%E6%8A%95%E8%B3%87+%E8%B3%87%E7%94%A3%E9%81%8B%E7%94%A8&tag=nexigen22-22" target="_blank" rel="noopener sponsored" style="display:inline-flex;align-items:center;gap:6px;background:#FF9900;color:#fff;padding:11px 22px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:0.9rem;box-shadow:0 2px 8px rgba(255,153,0,0.3);">🛒 Amazonで見る</a>
+<a href="http://hb.afl.rakuten.co.jp/hgc/0ea62065.34400275.0ea62066.204f04c0/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E6%258A%2595%25E8%25B3%2587%2B%25E8%25B3%2587%25E7%2594%25A3%25E9%2581%258B%25E7%2594%25A8%2F&m=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E6%258A%2595%25E8%25B3%2587%2B%25E8%25B3%2587%25E7%2594%25A3%25E9%2581%258B%25E7%2594%25A8%2F" target="_blank" rel="noopener sponsored" style="display:inline-flex;align-items:center;gap:6px;background:#bf0000;color:#fff;padding:11px 22px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:0.9rem;box-shadow:0 2px 8px rgba(191,0,0,0.3);">🛍️ 楽天市場で見る</a>
+</div>
+</div>
+
 ## インデックス投資とはどんな仕組みなのか
 
 ### 基本の考え方
