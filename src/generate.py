@@ -846,6 +846,7 @@ def _moshimo(p_id: str) -> str:
 
 _TRAVEL_LINKS = [
     {"name": "じゃらんnet",         "url": "https://px.a8.net/svt/ejp?a8mat=4B3HQI+DYHVCI+14CS+6C9LD",    "desc": "全国の宿・ホテルをお得に予約",          "logo": _GF.format("jalan.net"),    "a8net": True},
+    {"name": "エアトリプラス（航空券＋ホテル）", "url": "https://px.a8.net/svt/ejp?a8mat=4B3UZ9+7FX302+AD2+2NBA8H", "desc": "国内航空券＋ホテルをセットでお得に予約", "logo": _GF.format("airtrip.jp"), "a8net": True},
     {"name": "楽天トラベル",        "url": "https://travel.rakuten.co.jp",                                  "desc": "楽天ポイントで宿・航空券をお得に",      "rakuten": True, "logo": _GF.format("travel.rakuten.co.jp")},
     {"name": "一休.com",            "url": "https://px.a8.net/svt/ejp?a8mat=4B3HQJ+A2L06Q+1OK+6LHDU",    "desc": "高級旅館・ホテルのタイムセールプラン",  "logo": _GF.format("ikyu.com"),     "a8net": True},
     {"name": "agoda",               "url": "https://px.a8.net/svt/ejp?a8mat=4B3HQJ+A36FSI+4X1W+5YRHE",   "desc": "国内・海外ホテルを最大85%OFFで予約",    "logo": _GF.format("agoda.com"),    "a8net": True},
