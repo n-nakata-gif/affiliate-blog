@@ -1,60 +1,36 @@
 {
-  "updated_at": "2026-06-07T23:48:30.528374+09:00",
+  "updated_at": "2026-06-15T00:05:44.669885+09:00",
   "issues": [
     {
       "type": "bad_title",
-      "file": "business_20260429.md",
-      "length": 28,
+      "file": "gourmet_20260614.md",
+      "length": 26,
       "issue": "短すぎ",
-      "title": "副業の住民税で会社にバレない方法｜普通徴収のやり方を解説",
-      "status": "done"
-    },
-    {
-      "type": "bad_title",
-      "file": "business_20260602.md",
-      "length": 21,
-      "issue": "短すぎ",
-      "title": "副業おすすめ2026｜在宅10選を徹底比較",
-      "status": "done"
-    },
-    {
-      "type": "bad_title",
-      "file": "business_20260605.md",
-      "length": 28,
-      "issue": "短すぎ",
-      "title": "スマホ副業6選｜スキマ時間で月3万円を目指す方法と注意点",
-      "status": "done"
-    },
-    {
-      "type": "bad_title",
-      "file": "gourmet_20260607.md",
-      "length": 24,
-      "issue": "短すぎ",
-      "title": "ミールキット比較2026｜お試しで選ぶ3サービス",
-      "status": "done"
-    },
-    {
-      "type": "bad_title",
-      "file": "investment_20260601.md",
-      "length": 24,
-      "issue": "短すぎ",
-      "title": "SBI証券クレカ積立×三井住友カードで賢く貯める",
+      "title": "ふるさと納税 食べ物コスパ比較2026【選び方つき】",
       "status": "done"
     },
     {
       "type": "bad_title",
       "file": "investment_20260604.md",
-      "length": 24,
+      "length": 30,
       "issue": "短すぎ",
-      "title": "円安外貨預金2026年夏どっち?初心者向け判断軸",
+      "title": "円安局面の外貨預金2026夏｜続ける？撤退？初心者向け判断軸",
       "status": "done"
     },
     {
       "type": "bad_title",
-      "file": "travel_20260606.md",
-      "length": 23,
+      "file": "investment_20260611.md",
+      "length": 31,
       "issue": "短すぎ",
-      "title": "夏休み国内旅行2026｜混雑を避ける穴場10選",
+      "title": "高配当株 日本株 おすすめ選び方｜4%以上を安全に見つける方法",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "travel_20260613.md",
+      "length": 31,
+      "issue": "短すぎ",
+      "title": "金沢1泊2日モデルコース｜兼六園・茶屋街・海鮮グルメを効率よく",
       "status": "done"
     }
   ]
