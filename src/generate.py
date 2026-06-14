@@ -862,6 +862,7 @@ _TRAVEL_LINKS = [
 ]
 
 _GOURMET_LINKS = [
+    {"name": "出前館",                        "url": "https://px.a8.net/svt/ejp?a8mat=4B3UZ9+893BN6+5W08+5YRHE",                                   "desc": "日本最大級の加盟店数。今すぐ頼めるフードデリバリー", "logo": _GF.format("demae-can.com"),        "a8net": True},
     {"name": "ホットペッパーグルメ",          "url": "https://www.hotpepper.jp",                                                                    "desc": "お得なクーポンでレストラン予約",                   "logo": _GF.format("hotpepper.jp")},
     {"name": "一休.comレストラン",            "url": "https://px.a8.net/svt/ejp?a8mat=4B3UZ9+81COS2+1OK+NTRMQ",                                    "desc": "最大53%OFF！高級レストランのタイムセール",          "logo": _GF.format("restaurant.ikyu.com"),  "a8net": True},
     {"name": "ヨシケイ（お試しミールキット）", "url": "https://px.a8.net/svt/ejp?a8mat=4B3UZ9+8C2HO2+1QM6+HZAGY",                                   "desc": "栄養士の献立で簡単バランスごはん・5日間お試し",    "logo": _GF.format("yoshikei.co.jp"),       "a8net": True},
