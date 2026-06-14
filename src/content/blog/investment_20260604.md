@@ -1,6 +1,6 @@
 ---
-title: "円安局面の外貨預金、2026年夏に向けて続けるべきか撤退すべきか？初心者向け判断軸"
-description: "2026年夏、円安局面で外貨預金やFXを始めるべきか迷うあなたへ。仕組み・比較表・始め方・リスクを初心者目線で解説。判断軸が見つかる外貨運用ガイドです。"
+title: "円安局面の外貨預金2026夏｜続ける？撤退？初心者向け判断軸"
+description: "2026年夏、円安で外貨預金・FXを始めるか迷う初心者へ。仕組み・リスク・コスト比較を解説し「続けるか撤退か」の判断軸を提示。余裕資金で始める3つのポイントも。"
 pubDate: 2026-06-04
 tags: ["投資", "資産運用", "NISA"]
 heroImage: "/thumbnails/investment_20260604.png"
@@ -182,6 +182,8 @@ FXは、証拠金を預けて為替の売買を行う取引です。金融庁の
 
 
 <figure style="margin:1.5rem 0;text-align:center;"><img src="https://images.unsplash.com/photo-1633158829585-23ba8f7c8caf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w5MzQxODZ8MHwxfHNlYXJjaHwzfHxmaW5hbmNlJTIwbW9uZXklMjBpbnZlc3RtZW50JTIwZ3Jvd3RofGVufDF8MHx8fDE3ODA1NDM4MzR8MA&ixlib=rb-4.1.0&q=80&w=1080" alt="a person stacking coins on top of a table" style="width:100%;max-width:800px;height:auto;border-radius:8px;" loading="lazy"></figure>
+
+詳しくは[新NISA初心者向けおすすめ投資信託2026年版｜最初に買うべき5本を厳選紹介](/blog/investment_20260515/)もあわせてご覧ください。
 
 ## まとめ:あなたに合う選択肢はどれ?
 
