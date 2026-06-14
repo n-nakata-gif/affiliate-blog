@@ -1,9 +1,6 @@
 品質チェック自動修正
 
-FIX bad_title: /home/runner/work/affiliate-blog/affiliate-blog/src/content/blog/business_20260429.md
-FIX bad_title: /home/runner/work/affiliate-blog/affiliate-blog/src/content/blog/business_20260602.md
-FIX bad_title: /home/runner/work/affiliate-blog/affiliate-blog/src/content/blog/business_20260605.md
-FIX bad_title: /home/runner/work/affiliate-blog/affiliate-blog/src/content/blog/gourmet_20260607.md
-FIX bad_title: /home/runner/work/affiliate-blog/affiliate-blog/src/content/blog/investment_20260601.md
+FIX bad_title: /home/runner/work/affiliate-blog/affiliate-blog/src/content/blog/gourmet_20260614.md
 FIX bad_title: /home/runner/work/affiliate-blog/affiliate-blog/src/content/blog/investment_20260604.md
-FIX bad_title: /home/runner/work/affiliate-blog/affiliate-blog/src/content/blog/travel_20260606.md
+FIX bad_title: /home/runner/work/affiliate-blog/affiliate-blog/src/content/blog/investment_20260611.md
+FIX bad_title: /home/runner/work/affiliate-blog/affiliate-blog/src/content/blog/travel_20260613.md
