@@ -25,14 +25,7 @@
     },
     {
       "genre": "investment",
-      "themes": [
-        {
-          "title": "初心者が資産運用を始める前にやめとくべき投資3選｜失敗談から学ぶ注意点",
-          "target_keyword": "資産運用 初心者 やめとけ 失敗 注意点",
-          "reason": "やめとけ・失敗軸は大手が避けるトーンで低競合。悩み深い読者が流入",
-          "priority": "medium"
-        }
-      ]
+      "themes": []
     },
     {
       "genre": "travel",
