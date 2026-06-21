@@ -1,36 +1,68 @@
 {
-  "updated_at": "2026-06-15T00:05:44.669885+09:00",
+  "updated_at": "2026-06-22T00:08:54.502785+09:00",
   "issues": [
+    {
+      "type": "bad_title",
+      "file": "business_20260616.md",
+      "length": 22,
+      "issue": "短すぎ",
+      "title": "Webライター2026年に稼ぐ差別化戦略3選",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "business_20260619.md",
+      "length": 27,
+      "issue": "短すぎ",
+      "title": "600万円起業で失敗しやすい5つのケースと安全な使い道",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "gadget_20260617.md",
+      "length": 25,
+      "issue": "短すぎ",
+      "title": "セキュリティソフト比較2026：更新前に読む選び方",
+      "status": "done"
+    },
     {
       "type": "bad_title",
       "file": "gourmet_20260614.md",
       "length": 26,
       "issue": "短すぎ",
-      "title": "ふるさと納税 食べ物コスパ比較2026【選び方つき】",
+      "title": "ふるさと納税の食べ物コスパ比較2026｜選び方ガイド",
       "status": "done"
     },
     {
       "type": "bad_title",
-      "file": "investment_20260604.md",
-      "length": 30,
+      "file": "gourmet_20260621.md",
+      "length": 25,
       "issue": "短すぎ",
-      "title": "円安局面の外貨預金2026夏｜続ける？撤退？初心者向け判断軸",
+      "title": "コーヒー定期便おすすめ比較：タイプ別サブスク選び方",
       "status": "done"
     },
     {
       "type": "bad_title",
-      "file": "investment_20260611.md",
-      "length": 31,
+      "file": "investment_20260615.md",
+      "length": 25,
       "issue": "短すぎ",
-      "title": "高配当株 日本株 おすすめ選び方｜4%以上を安全に見つける方法",
+      "title": "40代1000万円運用2026年版リスク別の選び方",
       "status": "done"
     },
     {
       "type": "bad_title",
-      "file": "travel_20260613.md",
-      "length": 31,
+      "file": "investment_20260618.md",
+      "length": 28,
       "issue": "短すぎ",
-      "title": "金沢1泊2日モデルコース｜兼六園・茶屋街・海鮮グルメを効率よく",
+      "title": "松井証券の評判は？50代から始めるNISA口座開設ガイド",
+      "status": "done"
+    },
+    {
+      "type": "bad_title",
+      "file": "travel_20260620.md",
+      "length": 24,
+      "issue": "短すぎ",
+      "title": "富士五湖観光｜河口湖を拠点にした絶景モデルコース",
       "status": "done"
     }
   ]
