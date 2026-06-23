@@ -1576,11 +1576,16 @@ def has_internal_links(content: str) -> bool:
 
 def find_related_articles(genre: str, current_slug: str, n: int = 5) -> list:
     """同ジャンルの記事から関連記事を返す（新しい順）。(slug, title) のリスト。
-    同ジャンルで不足する場合は他ジャンルの記事も補完する。"""
+    同ジャンルで不足する場合は他ジャンルの記事も補完する。
+    ※canonicalで他記事に統合された「敗者記事」へはリンクしない（評価の漏電防止）。"""
     blog_dir = Path("src/content/blog")
     patterns = _INTERNAL_LINK_GENRE_PATTERNS.get(genre, [genre])
     related = []
     seen_slugs = set()
+
+    def _is_canonical_loser(text: str) -> bool:
+        # frontmatter先頭に canonicalUrl があれば敗者（別記事を正規URL指定）
+        return bool(re.search(r'^canonicalUrl:\s*["\']', text[:600], re.MULTILINE))
 
     # まず同ジャンルを探す
     for md_file in sorted(blog_dir.glob("*.md"), reverse=True):
@@ -1593,7 +1598,10 @@ def find_related_articles(genre: str, current_slug: str, n: int = 5) -> list:
         if not any(p in name_lower for p in patterns):
             continue
         try:
-            title = extract_title(md_file.read_text(encoding="utf-8"))
+            text = md_file.read_text(encoding="utf-8")
+            if _is_canonical_loser(text):
+                continue
+            title = extract_title(text)
             if title:
                 related.append((slug, title))
                 seen_slugs.add(slug)
@@ -1611,7 +1619,10 @@ def find_related_articles(genre: str, current_slug: str, n: int = 5) -> list:
             if not re.search(r'_20\d{6}\.md$', md_file.name):
                 continue
             try:
-                title = extract_title(md_file.read_text(encoding="utf-8"))
+                text = md_file.read_text(encoding="utf-8")
+                if _is_canonical_loser(text):
+                    continue
+                title = extract_title(text)
                 if title:
                     related.append((slug, title))
                     seen_slugs.add(slug)
