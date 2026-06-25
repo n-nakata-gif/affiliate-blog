@@ -25,14 +25,7 @@
     },
     {
       "genre": "investment",
-      "themes": [
-        {
-          "title": "600万円で起業は危険？会社員が副業から始める安全な資金の使い方",
-          "target_keyword": "600万円 起業 危険 会社員 副業 資金",
-          "reason": "流入KW「600万円 起業」を拾い、怪しい・失敗回避軸で悩み深い読者を獲得。",
-          "priority": "high"
-        }
-      ]
+      "themes": []
     },
     {
       "genre": "travel",
