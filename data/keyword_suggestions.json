@@ -7,7 +7,14 @@
     },
     {
       "genre": "gadget",
-      "themes": []
+      "themes": [
+        {
+          "title": "AndroidタブレットとiPadどっちがいい？一人暮らし社会人が動画・仕事兼用で選ぶなら",
+          "target_keyword": "Android iPad 比較 一人暮らし 社会人 兼用",
+          "reason": "流入KW「android ipad 比較」を拾いつつ対象者を絞り競合を回避できる。",
+          "priority": "high"
+        }
+      ]
     },
     {
       "genre": "investment",
@@ -33,12 +40,6 @@
     {
       "genre": "gourmet",
       "themes": [
-        {
-          "title": "ファインプロテインダイエットの効果は本当？40代女性が3週間試したリアルな口コミ",
-          "target_keyword": "ファインプロテインダイエット 効果 40代女性 口コミ 実態",
-          "reason": "唯一クリックのある流入KWを直接拾える。体験談・口コミ軸で購買意欲層に刺さる。",
-          "priority": "high"
-        },
         {
           "title": "プロテインダイエットは主婦に向いてる？失敗しない選び方と続けやすいレシピ",
           "target_keyword": "プロテインダイエット 主婦 失敗 続けやすい レシピ",
