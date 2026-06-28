@@ -26,6 +26,8 @@ BLOG_URL = "https://novlify.jp"
 # 閾値設定
 DROP_ALERT_THRESHOLD = 5        # 順位が何位以上下がったら警告するか
 OUT_OF_RANK_POSITION = 30       # この順位より低い = 「圏外に近い」と判定
+MIN_IMPRESSIONS_FOR_ALERT = 10  # 先週・今週ともこの表示回数以上の記事だけ急落/改善判定する
+                                # （表示数が極小だと平均順位が統計的に暴れ、誤報になるため）
 REWRITE_CTR_MIN = 0.03          # CTRがこれ以上（3%）
 REWRITE_POSITION_MIN = 8        # かつ順位がこれより低い（8位以下）
 REWRITE_IMPRESSIONS_MIN = 30    # かつ表示回数がこれ以上
@@ -182,6 +184,12 @@ def detect_ranking_changes(
 
         prev_pos = last_week[url]["position"]
         diff = pos - prev_pos  # 正 = 順位下降（悪化）、負 = 順位上昇（改善）
+
+        # 表示回数が極小の記事は平均順位が統計ノイズで暴れるため、急落/改善判定から除外
+        prev_impr = last_week[url].get("impressions", 0)
+        cur_impr = row.get("impressions", 0)
+        if prev_impr < MIN_IMPRESSIONS_FOR_ALERT or cur_impr < MIN_IMPRESSIONS_FOR_ALERT:
+            continue
 
         if diff >= DROP_ALERT_THRESHOLD:
             dropped.append({**row, "prev_position": prev_pos, "diff": diff})
