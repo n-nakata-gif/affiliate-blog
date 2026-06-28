@@ -1,4 +1,4 @@
-Novlify 収益レポート 2026/06/22
+Novlify 収益レポート 2026/06/28
 
 ■ 収益トレンド（手動記録・直近1週）
   2026-W23  ¥0    
@@ -6,8 +6,8 @@ Novlify 収益レポート 2026/06/22
 
 ■ AdSense  未連携（ADSENSE_PUBLISHER_ID を Secrets に追加で自動集計）
 
-■ 今週の投稿  0本
-  （なし）
+■ 今週の投稿  11本
+  グルメ 2本  投資 3本  ガジェット 2本  旅行 2本  ビジネス 2本
 
 ■ 各プラットフォーム確認
   AdSense: https://adsense.google.com/adsense/
