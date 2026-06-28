@@ -9,6 +9,11 @@ heroImage: "/thumbnails/investment_20260625.png"
 ※本記事はPRを含みます  
 （2026年6月時点の情報です）
 
+<div style="background:#eff6ff;border-left:4px solid #2563eb;padding:10px 16px;margin:1rem 0;border-radius:0 6px 6px 0;font-size:0.9em;">
+📋 <strong>楽天証券NISAの口座開設手順を網羅した完全版はこちら →</strong>
+<a href="/blog/investment_20260506/">楽天証券でNISAを始める方法｜初心者向け口座開設5ステップ完全ガイド</a>
+</div>
+
 # 楽天証券キャンペーン2026|NISA口座開設の始め方
 
 <figure style="margin:1.5rem 0;text-align:center;"><img src="https://images.unsplash.com/photo-1579621970795-87facc2f976d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w5MzQxODZ8MHwxfHNlYXJjaHwxfHxmaW5hbmNlJTIwbW9uZXklMjBpbnZlc3RtZW50JTIwZ3Jvd3RofGVufDF8MHx8fDE3ODIzNTU1NjV8MA&ixlib=rb-4.1.0&q=80&w=1080" alt="green plant in clear glass vase" style="width:100%;max-width:800px;height:auto;border-radius:8px;" loading="lazy"></figure>
