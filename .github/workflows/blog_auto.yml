@@ -7,6 +7,13 @@ on:
     - cron: "0 0 * * 3"     # 水 09:00 JST     → gadget（週1本）
     - cron: "0 0 * * 6"     # 土 09:00 JST     → travel（週1本）
     - cron: "0 0 * * 0"     # 日 09:00 JST     → gourmet（週1本）
+    # ── プライムデー特別編成（2026/7/1〜7/13のみ・1日2本体制）──────────
+    # Amazon関連ジャンル(gadget/gourmet/business)だけを2本目として追加。
+    # investment(Opus・高コスト)とtravelはAmazon非関連のため対象外。
+    # 期間終了後（7/14以降）はこの3行を削除してよい。
+    - cron: "0 3 3,6,9,12 7 *"      # 7/3,6,9,12 12:00 JST → gadget 2本目
+    - cron: "0 3 1,4,7,10,13 7 *"   # 7/1,4,7,10,13 12:00 JST → gourmet 2本目
+    - cron: "0 3 2,5,8,11 7 *"      # 7/2,5,8,11 12:00 JST → business 2本目
   workflow_dispatch:
 
 env:
@@ -17,7 +24,7 @@ env:
 
 jobs:
   gadget-post:
-    if: github.event.schedule == '0 0 * * 3' || github.event_name == 'workflow_dispatch'
+    if: github.event.schedule == '0 0 * * 3' || github.event.schedule == '0 3 3,6,9,12 7 *' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -54,7 +61,7 @@ jobs:
         run: python src/auto_fix.py --mode error --job gadget-post
 
   business-post:
-    if: github.event.schedule == '0 0 * * 2,5' || github.event_name == 'workflow_dispatch'
+    if: github.event.schedule == '0 0 * * 2,5' || github.event.schedule == '0 3 2,5,8,11 7 *' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -179,7 +186,7 @@ jobs:
         run: python src/auto_fix.py --mode error --job travel-post
 
   gourmet-post:
-    if: github.event.schedule == '0 0 * * 0' || github.event_name == 'workflow_dispatch'
+    if: github.event.schedule == '0 0 * * 0' || github.event.schedule == '0 3 1,4,7,10,13 7 *' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       contents: write
