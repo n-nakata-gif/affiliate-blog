@@ -103,14 +103,7 @@
     },
     {
       "genre": "investment",
-      "themes": [
-        {
-          "title": "1000万円運用 初心者が2026年にやってはいけない方法と安全な始め方",
-          "target_keyword": "1000万円 運用 初心者 やってはいけない 2026",
-          "reason": "流入KWに該当クエリあり、初心者・否定形修飾で大手メディアが手薄な層を狙える",
-          "priority": "high"
-        }
-      ]
+      "themes": []
     },
     {
       "genre": "travel",
